@@ -1,0 +1,1 @@
+{"name":"Visha.UI.Tests","references":["Visha.UI","Unity.ugui"],"includePlatforms":["Editor"],"optionalUnityReferences":["TestAssemblies"]}
