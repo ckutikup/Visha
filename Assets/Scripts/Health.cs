@@ -33,7 +33,12 @@ public class Health : MonoBehaviour
     }
     private void Awake()
     {
-        currentHealth = maxHealth;
+        ResetHealth();
+    }
+    public void SetMaxHealth(int newMaxHealth)
+    {
+        maxHealth = newMaxHealth;
+        ResetHealth();
     }
     public void TakeDamage(int damageAmount)
     {
@@ -41,18 +46,20 @@ public class Health : MonoBehaviour
         {
             return;
         }
+        bool diedThisHit = false;
 
         currentHealth -= damageAmount;
-        if (currentHealth < 0)
+        if (currentHealth <= 0)
         {
             currentHealth = 0;
+            isDead = true;
+            diedThisHit = true;
         }
         Debug.Log(gameObject.name + " took " + damageAmount + " damage. HP: " + currentHealth + "/" + maxHealth);
         OnHealthChanged?.Invoke(currentHealth, maxHealth);
 
-        if (currentHealth == 0)
+        if (diedThisHit)
         {
-            isDead = true;
             Debug.Log(gameObject.name + " died");
             OnDied?.Invoke();
         }
@@ -69,11 +76,16 @@ public class Health : MonoBehaviour
         {
             currentHealth = maxHealth;
         }
-        Debug.Log(gameObject.name + " healed "+healAmount + ". HP: " + currentHealth+ "/" + maxHealth);
+        Debug.Log(gameObject.name + " healed " + healAmount + ". HP: " + currentHealth + "/" + maxHealth);
         OnHealthChanged?.Invoke(currentHealth, maxHealth);
     }
     public void ResetHealth()
     {
+        if (maxHealth <= 0)
+        {
+            Debug.LogWarning(gameObject.name + " max health must be above 0, Now setting it to 1");
+            maxHealth = 1;
+        }
         currentHealth = maxHealth;
         isDead = false;
         OnHealthChanged?.Invoke(currentHealth, maxHealth);
