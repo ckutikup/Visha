@@ -1,0 +1,8 @@
+{
+  "name": "Visha.Preview",
+  "references": [
+    "Visha.UI",
+    "Unity.ugui",
+    "Unity.InputSystem"
+  ]
+}
