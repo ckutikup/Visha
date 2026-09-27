@@ -105,6 +105,7 @@ public class BattleOutcomeControllerTests
     public void Retry_ClearsPoisonStacks()
     {
         Poison poison = enemyObject.AddComponent<Poison>();
+        poison.SetValues(5, 2); // Awake doesn't run in EditMode, so wire Poison up explicitly.
         poison.AddStacks(3);
         Assert.AreEqual(3, poison.PoisonStacks);
 

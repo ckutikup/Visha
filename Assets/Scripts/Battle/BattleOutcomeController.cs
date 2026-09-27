@@ -69,13 +69,16 @@ namespace Visha.Battle
 
         private void HandlePlayerDied()
         {
-            if (IsOver) return;
+            // isActiveAndEnabled guard: OnDisable isn't guaranteed to have unsubscribed
+            // (e.g. in EditMode, where Unity skips OnEnable/OnDisable), so a disabled
+            // controller must still ignore deaths.
+            if (IsOver || !isActiveAndEnabled) return;
             SetOutcome(BattleOutcome.Defeat);
         }
 
         private void HandleEnemyDied()
         {
-            if (IsOver) return;
+            if (IsOver || !isActiveAndEnabled) return;
             // A simultaneous death favors Defeat: going down still counts as losing
             // even if the killing blow also finished the enemy off.
             bool playerAlsoDown = playerHealth != null && playerHealth.IsDead;
