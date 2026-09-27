@@ -1,0 +1,1 @@
+{"name":"Visha.Battle.Tests","references":["Visha.Battle","Visha.Combat","Visha.Enemies"],"includePlatforms":["Editor"],"optionalUnityReferences":["TestAssemblies"]}
