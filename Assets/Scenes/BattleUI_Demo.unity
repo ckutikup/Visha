@@ -287,6 +287,80 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 128785206}
   m_CullTransparentMesh: 1
+--- !u!1 &277063399
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 277063403}
+  - component: {fileID: 277063401}
+  - component: {fileID: 277063402}
+  - component: {fileID: 277063400}
+  m_Layer: 0
+  m_Name: Enemy
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &277063400
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 277063399}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56f1d5e13c1117849b077f45e0a71d86, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Visha.Enemies::Visha.Enemies.EnemyPatternRunner
+  pattern: 0
+--- !u!114 &277063401
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 277063399}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1a009785a0c6b41c8b52b6f2ec3096bd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Visha.Combat::Health
+  maxHealth: 24
+--- !u!114 &277063402
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 277063399}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f02a93177b36b425281c3d34b2d78c44, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Visha.Combat::Poison
+  maxStacks: 5
+  damagePerStack: 2
+--- !u!4 &277063403
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 277063399}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &362891600
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -328,7 +402,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 494938488}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 2127a7c75956540da8ec6aaa6f58738c, type: 3}
   m_Name: 
@@ -771,6 +845,149 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.InputSystem::UnityEngine.InputSystem.InputActionReference
   m_Asset: {fileID: 1647713352}
   m_ActionId: c95b2375-e6d9-4b88-9c4c-c5e76515df4b
+--- !u!1 &798040393
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 798040397}
+  - component: {fileID: 798040395}
+  - component: {fileID: 798040396}
+  - component: {fileID: 798040394}
+  m_Layer: 0
+  m_Name: Player
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &798040394
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 798040393}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c229b0984b024c82bba166580f300b7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Visha.Combat::VenomStrike
+  stacksApplied: 2
+  testTarget: {fileID: 0}
+--- !u!114 &798040395
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 798040393}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1a009785a0c6b41c8b52b6f2ec3096bd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Visha.Combat::Health
+  maxHealth: 30
+--- !u!114 &798040396
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 798040393}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f02a93177b36b425281c3d34b2d78c44, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Visha.Combat::Poison
+  maxStacks: 5
+  damagePerStack: 2
+--- !u!4 &798040397
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 798040393}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &808548952
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 808548955}
+  - component: {fileID: 808548954}
+  - component: {fileID: 808548953}
+  m_Layer: 0
+  m_Name: CombatFlowController
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &808548953
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 808548952}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c922463c8f2fa4983b51b810cf994e8a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Visha.Combat.Flow::Visha.Combat.Flow.CombatFlowController
+  playerGameObject: {fileID: 798040393}
+  enemyGameObject: {fileID: 277063399}
+  battleHUD: {fileID: 4906326237023900643}
+  outcomeController: {fileID: 808548954}
+  enemyPatternRunner: {fileID: 277063400}
+  venomStrike: {fileID: 798040394}
+  serpentsBiteDamage: 12
+  fadeReduction: 0
+  fadeBlocksNextAttack: 1
+--- !u!114 &808548954
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 808548952}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c16c66eab20b452d8a4cb9093b077247, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Visha.Battle::Visha.Battle.BattleOutcomeController
+  playerHealth: {fileID: 798040395}
+  enemyHealth: {fileID: 277063401}
+--- !u!4 &808548955
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 808548952}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &905415709
 GameObject:
   m_ObjectHideFlags: 0
@@ -2870,3 +3087,6 @@ SceneRoots:
   - {fileID: 4906326237023900642}
   - {fileID: 7628558}
   - {fileID: 494938493}
+  - {fileID: 798040397}
+  - {fileID: 277063403}
+  - {fileID: 808548955}

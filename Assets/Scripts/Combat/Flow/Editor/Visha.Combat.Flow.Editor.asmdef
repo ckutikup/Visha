@@ -1,0 +1,23 @@
+{
+    "name": "Visha.Combat.Flow.Editor",
+    "rootNamespace": "Visha.Combat.Flow.EditorTools",
+    "references": [
+        "Visha.Combat",
+        "Visha.Combat.Flow",
+        "Visha.Battle",
+        "Visha.Enemies",
+        "Visha.UI",
+        "Visha.Preview"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

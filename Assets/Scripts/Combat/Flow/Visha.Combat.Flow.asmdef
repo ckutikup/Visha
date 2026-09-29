@@ -1,0 +1,19 @@
+{
+    "name": "Visha.Combat.Flow",
+    "rootNamespace": "Visha.Combat.Flow",
+    "references": [
+        "Visha.Battle",
+        "Visha.Combat",
+        "Visha.Enemies",
+        "Visha.UI"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
