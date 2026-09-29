@@ -41,6 +41,26 @@ Ability Rules
 
 All three balance values are inspector fields on `CombatFlowController`.
 
+## How to run
+
+`BattleUI_Demo` is already wired and committed, so the menu step is only
+needed if the scene objects are missing or you want to wire another scene.
+
+1. Open `Assets/Scenes/BattleUI_Demo.unity` as a scene (not in Prefab Mode).
+2. Optional: click **Visha > Setup Combat Flow In Open Scene** in the menu bar
+   (on macOS, the menu bar at the top of the screen). It adds Player, Enemy
+   and CombatFlowController, fills in every reference and disables
+   BattleHUDPreview. It is safe to run more than once.
+3. If you ran the menu item, save the scene (Cmd+S / Ctrl+S).
+4. Press **Play**.
+5. Click the enemy to target it, then use **Venom Strike**. The venom counter
+   fills, the phase switches to the enemy turn and back, and both health
+   bars drop.
+6. Once the enemy has poison, use **Serpent's Bite** to spend the stacks, or
+   use **Fade** before the telegraphed Heavy Blow.
+7. Keep playing until either side reaches 0 HP to see Victory or Defeat. To
+   play again, stop and re-enter Play mode (there is no Retry button yet).
+
 ## Scene integration
 
 `BattleUI_Demo` now runs the real turn loop instead of the preview:
