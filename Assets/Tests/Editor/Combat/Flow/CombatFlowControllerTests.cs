@@ -187,6 +187,27 @@ namespace Visha.Combat.Flow.Tests
             Assert.AreEqual(25, viewState.playerHealth, "ViewState should reflect damage taken");
         }
 
+        [Test]
+        public void UpdateViewState_ShowsEnemyPoisonStacks()
+        {
+            CallPrivate("Awake");
+            CallPrivate("Start");
+            enemyPoison.AddStacks(3);
+
+            var updateMethod = controller.GetType().GetMethod("UpdateViewState",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            updateMethod?.Invoke(controller, null);
+
+            var viewStateField = controller.GetType().GetField("viewState",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            var viewState = (BattleViewState)viewStateField?.GetValue(controller);
+
+            Assert.AreEqual(3, viewState.poison,
+                "HUD poison should show the enemy's stacks so Serpent's Bite can be enabled");
+            Assert.AreEqual(enemyPoison.MaxStacks, viewState.poisonCap,
+                "HUD poison cap should come from the enemy's Poison component");
+        }
+
 
         [Test]
         public void EnterPlayerTurn_SetsCorrectPhase()

@@ -83,8 +83,8 @@ namespace Visha.Combat.Flow
                 playerMaxHealth = playerHealth?.MaxHealth ?? 30,
                 enemyHealth = enemyHealth?.CurrentHealth ?? 0,
                 enemyMaxHealth = enemyHealth?.MaxHealth ?? 24,
-                poison = playerPoison?.PoisonStacks ?? 0,
-                poisonCap = playerPoison?.MaxStacks ?? 5,
+                poison = enemyPoison?.PoisonStacks ?? 0,
+                poisonCap = enemyPoison?.MaxStacks ?? 5,
                 enemyName = enemyPatternRunner?.EnemyName ?? "Enemy",
                 intention = enemyPatternRunner?.IntentLabel ?? "...",
                 incomingDamage = enemyPatternRunner?.IncomingDamage ?? 0,
@@ -342,8 +342,9 @@ namespace Visha.Combat.Flow
             viewState.playerMaxHealth = playerHealth?.MaxHealth ?? 30;
             viewState.enemyHealth = enemyHealth?.CurrentHealth ?? 0;
             viewState.enemyMaxHealth = enemyHealth?.MaxHealth ?? 24;
-            viewState.poison = playerPoison?.PoisonStacks ?? 0;
-            viewState.poisonCap = playerPoison?.MaxStacks ?? 5;
+            // The HUD's venom counter shows stacks on the enemy (where Venom Strike applies them)
+            viewState.poison = enemyPoison?.PoisonStacks ?? 0;
+            viewState.poisonCap = enemyPoison?.MaxStacks ?? 5;
             viewState.enemyName = enemyPatternRunner?.EnemyName ?? "Enemy";
             viewState.intention = enemyPatternRunner?.IntentLabel ?? "...";
             viewState.incomingDamage = enemyPatternRunner?.IncomingDamage ?? 0;
