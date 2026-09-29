@@ -26,6 +26,9 @@ public class PlaceholderUnit : MonoBehaviour
         if (spriteRenderer == null)
             spriteRenderer = GetComponentInChildren<SpriteRenderer>();
 
+        if (spriteRenderer == null)
+            return;
+
         spriteRenderer.color = side == UnitSide.Player ? playerColor : enemyColor;
     }
 }

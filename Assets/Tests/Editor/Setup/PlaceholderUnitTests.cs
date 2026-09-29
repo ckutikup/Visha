@@ -31,4 +31,15 @@ public class PlaceholderUnitTests
         var unit = testObject.AddComponent<PlaceholderUnit>();
         Assert.AreEqual(UnitSide.Player, unit.side);
     }
+
+    [Test]
+    public void Awake_DoesNotThrow_WhenNoSpriteRenderer()
+    {
+        var bareObject = new GameObject("NoSpriteUnit");
+        Assert.DoesNotThrow(() =>
+        {
+            bareObject.AddComponent<PlaceholderUnit>();
+        });
+        Object.DestroyImmediate(bareObject);
+    }
 }
