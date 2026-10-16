@@ -29,6 +29,7 @@ namespace Visha.Enemies
         }
 
         private EnemyAttackPattern _pattern;
+        private string _displayNameOverride;
 
         /// <summary>The pattern instance, created on first use so it works in play and in tests.</summary>
         private EnemyAttackPattern Pattern => _pattern ??= Build(pattern);
@@ -36,6 +37,18 @@ namespace Visha.Enemies
         private void Awake()
         {
             _pattern ??= Build(pattern);
+        }
+
+        /// <summary>
+        /// Switches this enemy to another pattern for a new encounter. The pattern
+        /// restarts from its first move. A non-empty displayName replaces the
+        /// pattern's own name in <see cref="EnemyName"/>.
+        /// </summary>
+        public void Configure(PatternKind kind, string displayName = null)
+        {
+            pattern = kind;
+            _pattern = Build(kind);
+            _displayNameOverride = string.IsNullOrEmpty(displayName) ? null : displayName;
         }
 
         private static EnemyAttackPattern Build(PatternKind kind)
@@ -49,7 +62,7 @@ namespace Visha.Enemies
         }
 
         /// <summary>Display name of this enemy, for BattleViewState.enemyName.</summary>
-        public string EnemyName => Pattern.Name;
+        public string EnemyName => _displayNameOverride ?? Pattern.Name;
 
         /// <summary>The move the enemy will perform on its next turn — the value to telegraph.</summary>
         public EnemyAction NextAction => Pattern.Current;

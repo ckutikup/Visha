@@ -1,0 +1,22 @@
+{
+    "name": "Visha.Campaign.Editor",
+    "rootNamespace": "Visha.Campaign.EditorTools",
+    "references": [
+        "Visha.Campaign",
+        "Visha.Battle",
+        "Visha.Combat",
+        "Visha.Enemies",
+        "Unity.ugui"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
