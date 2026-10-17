@@ -116,4 +116,19 @@ public class PoisonTests
         poison.Tick();
         Assert.AreEqual(49, health.CurrentHealth);
     }
+        [Test]
+    public void ResetStacks_ClearsAndNotifies()
+    {
+        int reportedStacks = -1;
+        poison.OnPoisonChanged += (stacks) =>
+        {
+            reportedStacks = stacks;
+        };
+
+        poison.AddStacks(4);
+        poison.ResetStacks();
+
+        Assert.AreEqual(0, poison.PoisonStacks);
+        Assert.AreEqual(0, reportedStacks);
+    }
 }

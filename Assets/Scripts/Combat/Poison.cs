@@ -85,6 +85,11 @@ public class Poison : MonoBehaviour
         OnPoisonChanged?.Invoke(poisonStacks);
         return consumedStacks;
     }
+    public void ResetStacks()
+    {
+        poisonStacks = 0;
+        OnPoisonChanged?.Invoke(poisonStacks);
+    }
     [ContextMenu("Test Add 2 Stacks")]
     private void TestAddStacks()
     {
@@ -100,4 +105,5 @@ public class Poison : MonoBehaviour
     {
         ConsumeAllStacks();
     }
+    
 }
