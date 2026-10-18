@@ -3,10 +3,10 @@ using Visha.Enemies;
 
 public class VaultSentinelPatternTests
 {
-    // ---- Vault Sentinel cycle: Defend -> Crushing Blow -> Shield Bash ----
+    // ---- Vault Sentinel cycle: Defend -> Crush -> Shield Bash ----
 
     [Test]
-    public void SentinelCycleFollowsDefendCrushingBlowShieldBashInOrder()
+    public void SentinelCycleFollowsDefendCrushShieldBashInOrder()
     {
         var p = VaultSentinelPattern.Create();
 
@@ -17,7 +17,7 @@ public class VaultSentinelPatternTests
         Assert.AreEqual(EnemyActionKind.Defend, p.Current.Kind);
 
         p.Advance();
-        Assert.AreEqual("Crushing Blow", p.Current.Label);
+        Assert.AreEqual("Crush", p.Current.Label);
         Assert.AreEqual(16, p.Current.Damage);
         Assert.AreEqual(EnemyActionKind.Attack, p.Current.Kind);
 

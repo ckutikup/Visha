@@ -87,7 +87,7 @@ public class EnemyPatternRunnerTests
     {
         _runner.Configure(EnemyPatternRunner.PatternKind.VaultSentinel);
         _runner.TakeTurn(); // Defend
-        _runner.TakeTurn(); // Crushing Blow
+        _runner.TakeTurn(); // Crush
         _runner.ResetPattern();
         Assert.AreEqual("Defend", _runner.IntentLabel);
     }
@@ -112,6 +112,24 @@ public class EnemyPatternRunnerTests
             Assert.AreEqual(shownLabel, executed.Label, $"{kind} turn {turn}: label");
             Assert.AreEqual(shownDamage, executed.Damage, $"{kind} turn {turn}: damage");
             Assert.AreEqual(shownKind, executed.Kind, $"{kind} turn {turn}: kind");
+        }
+    }
+
+    [Test]
+    public void EveryMoveLabelFitsTheHudIntentBox()
+    {
+        // The HUD's intent box shows about 11 characters ("Shield Bash" fits,
+        // "Crushing Blow" was cut to "CRUSHING"). A clipped label would show the
+        // player a different move name from the one that executes.
+        const int maxLabelLength = 11;
+        foreach (EnemyPatternRunner.PatternKind kind in Enum.GetValues(typeof(EnemyPatternRunner.PatternKind)))
+        {
+            _runner.Configure(kind);
+            for (int i = 0; i < 6; i++)
+            {
+                string label = _runner.PeekAhead(i).Label;
+                Assert.LessOrEqual(label.Length, maxLabelLength, $"{kind}: '{label}' is too long for the HUD");
+            }
         }
     }
 

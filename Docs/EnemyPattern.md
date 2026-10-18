@@ -24,11 +24,15 @@ player learns to read.
 | Step | Move          | Kind   | Damage | Why it is there |
 | ---- | ------------- | ------ | ------ | --------------- |
 | 0    | Defend        | Defend | 0      | Opens with a free turn to start poison. |
-| 1    | Crushing Blow | Attack | 16     | The biggest regular hit. Fade halves it to 8. |
+| 1    | Crush         | Attack | 16     | The biggest regular hit. Fade halves it to 8. |
 | 2    | Shield Bash   | Attack | 8      | Comes straight after. Fade can't be used twice in a row, so only one of the two hits can be softened. |
 
 The Guardian asks *when* to Fade. The Sentinel asks *which* hit to Fade, and
-whether to Bite it down before the next Crushing Blow.
+whether to Bite it down before the next Crush.
+
+Move labels are kept to 11 characters or fewer, because the HUD's intent box
+shows about that many ("Shield Bash" fits; "Crushing Blow" was cut to
+"CRUSHING"). A test guards this for every enemy type.
 
 ## Defend
 
