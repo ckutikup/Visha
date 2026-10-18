@@ -1,0 +1,41 @@
+namespace Visha.Enemies
+{
+    /// <summary>
+    /// The second regular enemy type: the Vault Sentinel, from the team's approved
+    /// concept (Defend, then a big hit, then a medium hit).
+    ///
+    /// It plays differently from the Temple Guardian:
+    ///
+    ///   0. Defend        — the Sentinel braces and deals no damage. The fight opens
+    ///                      with a free turn to start building poison.
+    ///   1. Crushing Blow — telegraphed 16-damage hit, the biggest regular hit in the
+    ///                      demo. Fade halves it to 8, so Fade timing matters most here.
+    ///   2. Shield Bash   — 8-damage hit straight after. Fade can't be used two turns in
+    ///                      a row, so the player can only soften one of the two hits.
+    ///
+    /// The Guardian asks "when do I Fade?"; the Sentinel asks "which hit do I Fade,
+    /// and can I Bite it down before the next Crushing Blow?".
+    ///
+    /// Damage values are this milestone's starting point for playtesting, not final
+    /// balance. They are easy to tune in one place here.
+    /// </summary>
+    public static class VaultSentinelPattern
+    {
+        public const string EnemyName = "Vault Sentinel";
+
+        public static EnemyAction Brace        => EnemyAction.Defend("Defend");
+        public static EnemyAction CrushingBlow => EnemyAction.Attack("Crushing Blow", 16);
+        public static EnemyAction ShieldBash   => EnemyAction.Attack("Shield Bash", 8);
+
+        /// <summary>Builds a fresh Vault Sentinel pattern, starting on Defend.</summary>
+        public static EnemyAttackPattern Create()
+        {
+            return new EnemyAttackPattern(EnemyName, new[]
+            {
+                Brace,
+                CrushingBlow,
+                ShieldBash
+            });
+        }
+    }
+}
