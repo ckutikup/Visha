@@ -67,7 +67,7 @@ public class EnemyPatternTests
         var p = TempleGuardianPattern.Create();
         Assert.AreEqual("Strike", p.Peek(0).Label);
         Assert.AreEqual("Heavy Blow", p.Peek(1).Label);
-        Assert.AreEqual("Defend", p.Peek(2).Label);
+        Assert.AreEqual("Recover", p.Peek(2).Label);
         Assert.AreEqual("Strike", p.Peek(3).Label); // wraps
         Assert.AreEqual(0, p.CurrentIndex);
     }

@@ -70,6 +70,14 @@ namespace Visha.Combat.Flow
                 fadeAura.transform.localScale = fadeScale * (1f + Mathf.Sin(time * 4.5f) * 0.035f);
         }
 
+        private void LateUpdate()
+        {
+            if (characterRenderer == null) return;
+            Color color = characterRenderer.color;
+            color.a = health != null && health.IsDead ? .3f : fade != null && fade.IsActive ? .58f : originalColor.a;
+            characterRenderer.color = color;
+        }
+
         public void PlayBiteEffect()
         {
             if (biteFlash == null || !isActiveAndEnabled) return;
@@ -110,7 +118,7 @@ namespace Visha.Combat.Flow
 
         private IEnumerator HitRoutine()
         {
-            const float duration = 0.2f;
+            const float duration = 0.32f;
             float elapsed = 0f;
             Color hitColor = new Color(1f, 0.34f, 0.28f, 1f);
             while (elapsed < duration)

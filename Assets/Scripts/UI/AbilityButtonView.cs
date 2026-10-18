@@ -10,9 +10,13 @@ namespace Visha.UI
         [SerializeField] private Image accent;
         [SerializeField] private Text description;
         [SerializeField] private string defaultDescription;
+        [SerializeField] private AudioSource selectionSource;
+        [SerializeField] private AudioClip selectionClip;
         private Button button;
         private bool hovered, selected;
-        private void Awake() { button=GetComponent<Button>(); }
+        private void Awake() { button=GetComponent<Button>(); button.onClick.AddListener(PlaySelection); }
+        private void PlaySelection() { if (selectionSource != null && selectionClip != null) selectionSource.PlayOneShot(selectionClip, .16f); }
+        private void OnDestroy() { if (button != null) button.onClick.RemoveListener(PlaySelection); }
         public void SetState(bool isSelected, string reason)
         {
             selected=isSelected;

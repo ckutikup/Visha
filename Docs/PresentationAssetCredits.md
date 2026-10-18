@@ -11,3 +11,11 @@ This inventory lists the presentation assets included in the project. Earlier in
 
 | Current character atlas | Project presentation revision | `Assets/Art/Characters/TempleCombatants.png` | Included project asset | None |
 | Current courtyard backdrop | Project presentation revision | `Assets/Art/Environment/TempleCourtyardDusk.png` | Included project asset | None |
+
+MenuConfirm.wav is a short synthesized two-note interface cue. Ground shadows are procedural ellipses created at runtime.
+
+CourtyardCombatants.png supplies the current simplified character sprites. TempleCombatants.png is the earlier presentation variant.
+
+TempleVault.png is the background for the first Vault encounter. Barlow Regular and SemiBold come from https://github.com/google/fonts/tree/main/ofl/barlow; the SIL Open Font License and copyright notice are included in Assets/Fonts/Barlow-License.txt.
+
+The quiet TempleDrone ambience is synthesized at runtime from sine tones in DemoSoundControl. Dust is drawn from Unity’s white texture. These add no external media dependencies.

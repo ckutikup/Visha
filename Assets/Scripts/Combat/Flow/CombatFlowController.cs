@@ -22,6 +22,8 @@ namespace Visha.Combat.Flow
         [SerializeField] private SerpentsBite serpentsBite;
         [SerializeField] private Fade fade;
 
+        [SerializeField] private CombatActionPresentation presentation;
+
         [Header("Campaign (optional)")]
         [Tooltip("When set, combat only accepts actions while an encounter is InBattle. " +
                  "Found automatically if the scene has one. Leave empty for a single battle.")]
@@ -156,6 +158,7 @@ namespace Visha.Combat.Flow
             if (!active)
             {
                 StopAllCoroutines();
+                if (presentation != null) presentation.ResetPose();
                 if (!IsBattleOver())
                 {
                     turnInProgress = false;
@@ -213,38 +216,53 @@ namespace Visha.Combat.Flow
 
         private IEnumerator ExecuteEnemyActionNextFrame()
         {
-            yield return new WaitForSeconds(0.45f); // keep the accepted action visible before the enemy responds
-            ResolveEnemyTurn();
+            yield return new WaitForSeconds(.12f);
+            if (IsBattleOver() || !combatActive) yield break;
+            if (enemyPoison != null && enemyPoison.PoisonStacks > 0)
+            {
+                SetPhase(BattlePhase.Poison);
+                if (battleHUD != null) battleHUD.SetFeedback($"Poison · {enemyPoison.PoisonStacks * enemyPoison.DamagePerStack} damage");
+                enemyPoison.Tick();
+                if (IsBattleOver()) yield break;
+                yield return new WaitForSeconds(.3f);
+            }
+            SetPhase(BattlePhase.EnemyTurn);
+            int incoming = enemyPatternRunner.IncomingDamage;
+            int predicted = fade != null ? fade.ReduceDamage(incoming) : incoming;
+            if (battleHUD != null) battleHUD.SetFeedback(incoming > 0
+                ? $"{enemyPatternRunner.IntentLabel} · {predicted} damage"
+                : "The enemy holds position · no attack");
+            if (presentation != null)
+                yield return presentation.EnemyAction(incoming > 0, ApplyEnemyAction, incoming >= 9);
+            else
+                ApplyEnemyAction();
+            FinishRound();
         }
 
         private void ResolveEnemyTurn()
         {
-            if (IsBattleOver() || !combatActive)
-            {
-                return;
-            }
+            if (IsBattleOver() || !combatActive) return;
+            if (enemyPoison != null) enemyPoison.Tick();
+            if (IsBattleOver()) return;
+            ApplyEnemyAction();
+            FinishRound();
+        }
 
-            EnemyAction action = enemyPatternRunner.TakeTurn();
+        private void ApplyEnemyAction()
+        {
+            if (IsBattleOver() || !combatActive) return;
+            EnemyAction action = enemyPatternRunner.NextAction;
             int damage = action.Damage;
             if (action.Kind == EnemyActionKind.Attack && fade != null)
-            {
                 damage = fade.ReduceDamage(damage);
-            }
-
-            Debug.Log($"Combat: Enemy used {action.Label} for {damage} (telegraphed {action.Damage})");
             if (damage > 0 && playerHealth != null) playerHealth.TakeDamage(damage);
+        }
 
-            if (IsBattleOver())
-            {
-                if (fade != null) fade.EndEnemyPhase();
-                return;
-            }
-
-            if (enemyPoison != null) enemyPoison.Tick();
+        private void FinishRound()
+        {
+            if (IsBattleOver() || !combatActive) return;
+            enemyPatternRunner.TakeTurn();
             if (fade != null) fade.EndEnemyPhase();
-
-            if (IsBattleOver()) return;
-
             turnInProgress = false;
             EnterPlayerTurn();
         }
@@ -252,31 +270,67 @@ namespace Visha.Combat.Flow
         /// <summary>Handles ability requests from the BattleHUD.</summary>
         private void HandleAbilityRequested(BattleAbility ability, int targetIndex)
         {
+            if (ability != BattleAbility.Fade && targetIndex != 0) return;
             if (!CanAcceptAction())
             {
                 Debug.LogWarning($"Combat: {ability} ignored (phase {currentPhase}, active {combatActive}, busy {turnInProgress})");
                 return;
             }
 
-            turnInProgress = true;
+            if (presentation != null)
+            {
+                string error = ValidateAbility(ability);
+                if (error != null)
+                {
+                    if (battleHUD != null) battleHUD.RejectAction(error);
+                    return;
+                }
+                turnInProgress = true;
+                SetPhase(BattlePhase.Resolving);
+                StartCoroutine(AnimatePlayerAction(ability));
+            }
+            else
+            {
+                turnInProgress = true;
+                if (ApplyPlayerAbility(ability) && !IsBattleOver()) EnterEnemyTurn();
+            }
+        }
 
+        private string ValidateAbility(BattleAbility ability)
+        {
+            if (playerHealth == null || enemyHealth == null) return "Combatants are missing";
+            if (ability == BattleAbility.VenomStrike)
+                return venomStrike != null && enemyPoison != null ? null : "Venom Strike is not set up";
+            if (ability == BattleAbility.SerpentsBite)
+                return serpentsBite != null && serpentsBite.CanUseOn(enemyGameObject) ? null : "Bite needs poison";
+            if (ability == BattleAbility.Fade)
+                return fade != null && fade.CanUse ? null : "Fade needs another ability first";
+            return "Unknown ability";
+        }
+
+        private IEnumerator AnimatePlayerAction(BattleAbility ability)
+        {
+            bool applied = false;
+            if (battleHUD != null) battleHUD.SetFeedback(ability == BattleAbility.VenomStrike ? "Venom Strike"
+                : ability == BattleAbility.SerpentsBite ? "Serpent's Bite" : "Fade · incoming damage reduced");
+            yield return presentation.PlayerAction(ability, () => applied = ApplyPlayerAbility(ability));
+            if (applied && !IsBattleOver() && combatActive) EnterEnemyTurn();
+        }
+
+        private bool ApplyPlayerAbility(BattleAbility ability)
+        {
+            if (!combatActive || IsBattleOver()) return false;
             string reason = ExecuteAbility(ability);
             if (reason != null)
             {
                 turnInProgress = false;
-                Debug.LogWarning($"Combat: {ability} refused - {reason}");
+                SetPhase(BattlePhase.PlayerTurn);
                 if (battleHUD != null) battleHUD.RejectAction(reason);
-                return;
+                return false;
             }
-
             if (ability != BattleAbility.Fade && fade != null) fade.OnOtherAbilityUsed();
-
             OnAbilityUsed?.Invoke(ability);
-            Debug.Log($"Combat: Player used {ability}");
-
-            if (IsBattleOver()) return;
-
-            EnterEnemyTurn();
+            return true;
         }
 
         private string ExecuteAbility(BattleAbility ability)
@@ -320,10 +374,13 @@ namespace Visha.Combat.Flow
             viewState.enemyHealth = enemyHealth != null ? enemyHealth.CurrentHealth : 0;
             viewState.enemyMaxHealth = enemyHealth != null ? enemyHealth.MaxHealth : 0;
             viewState.poison = enemyPoison != null ? enemyPoison.PoisonStacks : 0;
+            viewState.poisonDamagePerStack = enemyPoison != null ? enemyPoison.DamagePerStack : 0;
             viewState.poisonCap = enemyPoison != null ? enemyPoison.MaxStacks : 5;
             viewState.enemyName = enemyPatternRunner != null ? enemyPatternRunner.EnemyName : "Enemy";
             viewState.intention = enemyPatternRunner != null ? enemyPatternRunner.IntentLabel : "...";
             viewState.incomingDamage = enemyPatternRunner != null ? enemyPatternRunner.IncomingDamage : 0;
+            if (fade != null) viewState.incomingDamage = fade.ReduceDamage(viewState.incomingDamage);
+            viewState.fadeActive = fade != null && fade.IsActive;
             viewState.fadeAvailable = fade != null && fade.CanUse;
             viewState.venomStacks = venomStrike != null ? venomStrike.StacksApplied : 0;
             viewState.biteDamagePerStack = serpentsBite != null ? serpentsBite.DamagePerStack : 0;
@@ -348,6 +405,7 @@ namespace Visha.Combat.Flow
         private void HandleBattleEnded(BattleOutcome outcome)
         {
             StopAllCoroutines();
+            if (presentation != null) presentation.ResetPose();
             turnInProgress = true;
             SetPhase(outcome == BattleOutcome.Victory ? BattlePhase.Victory : BattlePhase.Defeat);
             Debug.Log($"Combat: Battle ended - {outcome}");
@@ -356,6 +414,7 @@ namespace Visha.Combat.Flow
         private void HandleRetry()
         {
             StopAllCoroutines();
+            if (presentation != null) presentation.ResetPose();
             turnInProgress = false;
             if (fade != null) fade.ResetFade();
 

@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
@@ -6,7 +7,7 @@ using UnityEngine.EventSystems;
 namespace Visha.UI
 {
     public enum BattleAbility { VenomStrike, SerpentsBite, Fade }
-    public enum BattlePhase { Waiting, PlayerTurn, EnemyTurn, Victory, Defeat }
+    public enum BattlePhase { Waiting, PlayerTurn, EnemyTurn, Victory, Defeat, Resolving, Poison }
 
     // A display snapshot supplied by the combat controller. No combat rules run here.
     [Serializable]
@@ -18,6 +19,7 @@ namespace Visha.UI
         public int enemyMaxHealth = 24;
         public int poison;
         public int poisonCap = 5;
+        public int poisonDamagePerStack = 2;
         public string enemyName = "Temple Guardian";
         public string intention = "Attack";
         public int incomingDamage = 4;
@@ -25,6 +27,7 @@ namespace Visha.UI
         public int biteDamagePerStack = 4;
         public int fadeReductionPercent = 50;
         public bool fadeAvailable = true;
+        public bool fadeActive;
         public BattlePhase phase = BattlePhase.Waiting;
     }
 
@@ -50,6 +53,9 @@ namespace Visha.UI
         [SerializeField] private PoisonIndicatorView poisonView;
         [SerializeField] private IntentView intentView;
         private bool hasRendered;
+        private int previousPlayerHealth = -1;
+        private Text playerDamage;
+        private Coroutine damageRoutine;
         [SerializeField] private AbilityButtonView venomView, biteView, fadeView;
         [SerializeField] private TargetIndicator targetIndicator;
         private BattleAbility? pendingAbility;
@@ -62,6 +68,7 @@ namespace Visha.UI
         private bool actorsAlive;
         private bool fadeAvailable;
         private int poison;
+        private int poisonDamagePerStack = 2;
         private int venomStacks = 2, biteDamagePerStack = 4, fadeReductionPercent = 50;
         private bool inputEnabled = true;
         private string enemyName = "enemy";
@@ -97,6 +104,7 @@ namespace Visha.UI
             int enemyHP = Mathf.Clamp(state.enemyHealth, 0, enemyMax);
             int cap = Mathf.Max(0, state.poisonCap);
             poison = Mathf.Clamp(state.poison, 0, cap);
+            poisonDamagePerStack = state.poisonDamagePerStack;
             actorsAlive = playerHP > 0 && enemyHP > 0;
             fadeAvailable = state.fadeAvailable;
             venomStacks = Mathf.Max(0, state.venomStacks);
@@ -108,6 +116,11 @@ namespace Visha.UI
                 pendingAbility = null;
                 selected = false;
             }
+            if (previousPlayerHealth >= 0 && playerHP < previousPlayerHealth)
+                ShowPlayerDamage(previousPlayerHealth - playerHP, state.fadeActive);
+            else if (playerHP > previousPlayerHealth || phase == BattlePhase.Waiting)
+                ClearPlayerDamage();
+            previousPlayerHealth = playerHP;
             playerHealthLabel.text = $"{playerHP} / {playerMax}";
             enemyHealthLabel.text = $"{enemyHP} / {enemyMax}";
             if(playerHealthView) playerHealthView.SetValue(playerHP,playerMax,!hasRendered);
@@ -123,6 +136,8 @@ namespace Visha.UI
             phaseLabel.text = phase switch
             {
                 BattlePhase.PlayerTurn => "YOUR TURN",
+                BattlePhase.Resolving => "YOUR ACTION",
+                BattlePhase.Poison => "POISON",
                 BattlePhase.EnemyTurn => "ENEMY TURN",
                 BattlePhase.Victory => "VICTORY",
                 BattlePhase.Defeat => "DEFEAT",
@@ -132,6 +147,54 @@ namespace Visha.UI
                 SetFeedback(phase == BattlePhase.PlayerTurn ? "Choose an ability" : string.Empty);
             RefreshControls();
         }
+
+        private void ShowPlayerDamage(int damage, bool guarded)
+        {
+            if (playerDamage == null)
+            {
+                var popup = new GameObject("PlayerDamage", typeof(RectTransform), typeof(Text), typeof(Shadow));
+                popup.transform.SetParent(playerHealthLabel.transform.parent, false);
+                playerDamage = popup.GetComponent<Text>();
+                playerDamage.font = playerHealthLabel.font;
+                playerDamage.fontSize = 34;
+                playerDamage.alignment = TextAnchor.MiddleCenter;
+                playerDamage.raycastTarget = false;
+                playerDamage.rectTransform.anchorMin = playerDamage.rectTransform.anchorMax = new Vector2(.5f, .5f);
+                playerDamage.rectTransform.sizeDelta = new Vector2(340, 56);
+                var shadow = popup.GetComponent<Shadow>();
+                shadow.effectColor = new Color(0, 0, 0, .95f);
+                shadow.effectDistance = new Vector2(2, -2);
+            }
+            ClearPlayerDamage();
+            playerDamage.text = guarded ? $"−{damage}  GUARDED" : $"−{damage} HP";
+            playerDamage.gameObject.SetActive(true);
+            damageRoutine = StartCoroutine(AnimatePlayerDamage(guarded));
+        }
+
+        private IEnumerator AnimatePlayerDamage(bool guarded)
+        {
+            float elapsed = 0;
+            Color color = guarded ? new Color(.6f, .95f, .8f) : new Color(1f, .53f, .4f);
+            while (elapsed < .9f)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                playerDamage.rectTransform.anchoredPosition = new Vector2(0, 170 + elapsed * 38);
+                color.a = 1f - Mathf.InverseLerp(.5f, .9f, elapsed);
+                playerDamage.color = color;
+                yield return null;
+            }
+            playerDamage.gameObject.SetActive(false);
+            damageRoutine = null;
+        }
+
+        private void ClearPlayerDamage()
+        {
+            if (damageRoutine != null) StopCoroutine(damageRoutine);
+            damageRoutine = null;
+            if (playerDamage != null) playerDamage.gameObject.SetActive(false);
+        }
+
+        private void OnDisable() => ClearPlayerDamage();
 
         /// <summary>Campaign overlays disable combat input without changing the battle state.</summary>
         public void SetInputEnabled(bool value)
@@ -176,7 +239,11 @@ namespace Visha.UI
             if(ability==BattleAbility.Fade) { Submit(ability); return; }
             pendingAbility=ability;selected=false;
             if(EventSystem.current) EventSystem.current.SetSelectedGameObject(gameObject);
-            SetFeedback($"Click {enemyName} to confirm  /  Esc to cancel");RefreshControls();
+            string preview = ability == BattleAbility.SerpentsBite
+                ? $"{poison * biteDamagePerStack} damage; consumes {poison} poison"
+                : $"Adds up to {venomStacks} poison; each stack deals {poisonDamagePerStack}/turn and stays";
+            SetFeedback($"{preview} · click {enemyName} to confirm / Esc to cancel");
+            RefreshControls();
         }
         public void CancelTargeting()
         {
@@ -223,7 +290,7 @@ namespace Visha.UI
             fadeButton.interactable=CanChoose(BattleAbility.Fade);
             if(venomView)venomView.SetState(pendingAbility==BattleAbility.VenomStrike, $"+{venomStacks} poison · persists each turn");
             if(biteView)biteView.SetState(pendingAbility==BattleAbility.SerpentsBite,poison==0?"Requires poison":$"{poison * biteDamagePerStack} damage · consumes poison");
-            if(fadeView)fadeView.SetState(false,fadeAvailable?$"Reduce next hit by {fadeReductionPercent}%":"Recovering · use another ability");
+            if(fadeView)fadeView.SetState(false,fadeAvailable?$"Reduce enemy phase by {fadeReductionPercent}%":"Recovering · use another ability");
         }
     }
 }

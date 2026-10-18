@@ -179,20 +179,20 @@ namespace Visha.Combat.Flow.Tests
 
 
         [Test]
-        public void Poison_TicksAfterTheEnemyActs()
+        public void Poison_TicksBeforeTheEnemyActs()
         {
             Request(BattleAbility.VenomStrike);
-            Assert.AreEqual(30, enemyHealth.CurrentHealth, "no tick before the enemy has acted");
+            Assert.AreEqual(30, enemyHealth.CurrentHealth, "poison waits for round resolution");
 
             FinishEnemyTurn();
 
-            Assert.AreEqual(30 - 4, enemyHealth.CurrentHealth, "2 stacks x 2 after the enemy turn");
-            Assert.AreEqual(50 - 4, playerHealth.CurrentHealth, "Strike hit first");
+            Assert.AreEqual(30 - 4, enemyHealth.CurrentHealth, "2 stacks x 2 during round resolution");
+            Assert.AreEqual(50 - 4, playerHealth.CurrentHealth, "the surviving enemy still attacks");
             Assert.AreEqual(BattlePhase.PlayerTurn, controller.CurrentPhase);
         }
 
         [Test]
-        public void PlayerDeath_StopsTheTurnBeforePoisonTicks()
+        public void PoisonResolvesBeforeALethalEnemyAttack()
         {
             enemyPoison.AddStacks(2);
             playerHealth.TakeDamage(48);
@@ -201,8 +201,19 @@ namespace Visha.Combat.Flow.Tests
             FinishEnemyTurn();
 
             Assert.IsTrue(playerHealth.IsDead);
-            Assert.AreEqual(30, enemyHealth.CurrentHealth, "no poison tick after the player died");
+            Assert.AreEqual(26, enemyHealth.CurrentHealth, "poison resolves before the lethal attack");
             Assert.AreNotEqual(BattlePhase.PlayerTurn, controller.CurrentPhase);
+        }
+
+        [Test]
+        public void EnemyKilledByPoison_DoesNotAttackOrAdvanceItsPattern()
+        {
+            enemyHealth.TakeDamage(26);
+            Request(BattleAbility.VenomStrike);
+            FinishEnemyTurn();
+            Assert.IsTrue(enemyHealth.IsDead);
+            Assert.AreEqual(50, playerHealth.CurrentHealth);
+            Assert.AreEqual("Strike", enemyPatternRunner.IntentLabel);
         }
 
         [Test]

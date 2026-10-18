@@ -69,7 +69,8 @@ namespace Visha.Combat.Flow
 
         private void HandleEnemyHealthChanged(int current, int maximum)
         {
-            if (previousEnemyHealth >= 0 && current < previousEnemyHealth) Play(hitClip);
+            if (previousEnemyHealth >= 0 && current < previousEnemyHealth)
+                Play(combatFlow != null && combatFlow.CurrentPhase == BattlePhase.Poison ? venomStrikeClip : hitClip);
             previousEnemyHealth = current;
         }
 

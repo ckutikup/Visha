@@ -16,4 +16,4 @@ MonoBehaviour:
   pattern: 1
   maxHealth: 46
   startingHealth: 0
-  enemySprite: {fileID: 5437605104120397899, guid: e3d3d8be47f464dacac35945a6f2fef3, type: 3}
+  enemySprite: {fileID: 5437605104120397899, guid: 98191c3ff30d34f54a93b4d5137b893b, type: 3}

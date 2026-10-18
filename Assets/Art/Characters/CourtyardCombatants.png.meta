@@ -1,0 +1,324 @@
+fileFormatVersion: 2
+guid: 98191c3ff30d34f54a93b4d5137b893b
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 2252677331422319225
+    second: CourtyardCombatants_0
+  - first:
+      213: -3848406886677269873
+    second: CourtyardCombatants_1
+  - first:
+      213: 6798052311872657531
+    second: CourtyardCombatants_2
+  - first:
+      213: 183002883853035375
+    second: CourtyardCombatants_3
+  - first:
+      213: -5609945404948474472
+    second: CourtyardCombatants_4
+  - first:
+      213: -6233102758887600995
+    second: CourtyardCombatants_5
+  - first:
+      213: -7031406756298210042
+    second: CourtyardCombatants_6
+  - first:
+      213: -7761633026854374838
+    second: CourtyardCombatants_7
+  - first:
+      213: -8027906263278763570
+    second: CourtyardCombatants_8
+  - first:
+      213: 7284604769749916442
+    second: CourtyardCombatants_9
+  - first:
+      213: 3265829020214365955
+    second: CourtyardCombatants_10
+  - first:
+      213: 757667935645381918
+    second: CourtyardCombatants_11
+  - first:
+      213: 58992670923663068
+    second: CourtyardCombatants_12
+  - first:
+      213: 4417553462427745608
+    second: CourtyardCombatants_13
+  - first:
+      213: -5268017157031950049
+    second: CourtyardCombatants_14
+  - first:
+      213: -854618956904510781
+    second: CourtyardCombatants_15
+  - first:
+      213: 5626008434264623935
+    second: CourtyardCombatants_16
+  - first:
+      213: 429366579683332443
+    second: CourtyardCombatants_17
+  - first:
+      213: -8436217559575654865
+    second: CourtyardCombatants_18
+  - first:
+      213: -2124350466824278591
+    second: CourtyardCombatants_19
+  - first:
+      213: 841311816940969927
+    second: CourtyardCombatants_20
+  - first:
+      213: 4343579715480774898
+    second: CourtyardCombatants_21
+  - first:
+      213: 7078101424988488193
+    second: Vishakanya
+  - first:
+      213: 6567668504794634820
+    second: TempleGuardian
+  - first:
+      213: 2445852733116413872
+    second: GuardianWarden
+  - first:
+      213: 5437605104120397899
+    second: VaultSentinel
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 170
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationMethod: 0
+  spriteTessellationDetail: -1
+  spriteGeometrySubdivision: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Vishakanya
+      rect:
+        serializedVersion: 2
+        x: 125
+        y: 646
+        width: 470
+        height: 550
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 10200a0aeb77a3260800000000000000
+      internalID: 7078101424988488193
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TempleGuardian
+      rect:
+        serializedVersion: 2
+        x: 680
+        y: 642
+        width: 550
+        height: 586
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 44a1ec645bb052b50800000000000000
+      internalID: 6567668504794634820
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: GuardianWarden
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 32
+        width: 594
+        height: 594
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0b772522a1a61f120800000000000000
+      internalID: 2445852733116413872
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: VaultSentinel
+      rect:
+        serializedVersion: 2
+        x: 670
+        y: 32
+        width: 570
+        height: 603
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b4082f35801467b40800000000000000
+      internalID: 5437605104120397899
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      CourtyardCombatants_0: 2252677331422319225
+      CourtyardCombatants_1: -3848406886677269873
+      CourtyardCombatants_10: 3265829020214365955
+      CourtyardCombatants_11: 757667935645381918
+      CourtyardCombatants_12: 58992670923663068
+      CourtyardCombatants_13: 4417553462427745608
+      CourtyardCombatants_14: -5268017157031950049
+      CourtyardCombatants_15: -854618956904510781
+      CourtyardCombatants_16: 5626008434264623935
+      CourtyardCombatants_17: 429366579683332443
+      CourtyardCombatants_18: -8436217559575654865
+      CourtyardCombatants_19: -2124350466824278591
+      CourtyardCombatants_2: 6798052311872657531
+      CourtyardCombatants_20: 841311816940969927
+      CourtyardCombatants_21: 4343579715480774898
+      CourtyardCombatants_3: 183002883853035375
+      CourtyardCombatants_4: -5609945404948474472
+      CourtyardCombatants_5: -6233102758887600995
+      CourtyardCombatants_6: -7031406756298210042
+      CourtyardCombatants_7: -7761633026854374838
+      CourtyardCombatants_8: -8027906263278763570
+      CourtyardCombatants_9: 7284604769749916442
+      GuardianWarden: 2445852733116413872
+      TempleGuardian: 6567668504794634820
+      VaultSentinel: 5437605104120397899
+      Vishakanya: 7078101424988488193
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

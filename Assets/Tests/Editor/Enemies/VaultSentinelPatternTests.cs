@@ -12,7 +12,7 @@ public class VaultSentinelPatternTests
 
         Assert.AreEqual("Vault Sentinel", p.Name);
 
-        Assert.AreEqual("Defend", p.Current.Label);
+        Assert.AreEqual("Recover", p.Current.Label);
         Assert.AreEqual(0, p.Current.Damage);
         Assert.AreEqual(EnemyActionKind.Defend, p.Current.Kind);
 
@@ -36,7 +36,7 @@ public class VaultSentinelPatternTests
         p.Advance();
         p.Advance();
         Assert.AreEqual(0, p.CurrentIndex);
-        Assert.AreEqual("Defend", p.Current.Label);
+        Assert.AreEqual("Recover", p.Current.Label);
     }
 
     [Test]
@@ -57,9 +57,10 @@ public class VaultSentinelPatternTests
     [Test]
     public void SentinelDefendLabelShowsTheShieldIcon()
     {
-        // IntentView shows the defend icon when the label contains "defend".
+        // Recovery is a zero-damage opening; it grants no armour.
         var p = VaultSentinelPattern.Create();
-        StringAssert.Contains("defend", p.Current.Label.ToLowerInvariant());
+        Assert.AreEqual("Recover", p.Current.Label);
+        Assert.AreEqual(0, p.Current.Damage);
     }
 
     [Test]
@@ -69,7 +70,7 @@ public class VaultSentinelPatternTests
         for (int i = 0; i < p.Length; i++)
         {
             EnemyAction move = p.Peek(i);
-            bool showsShield = move.Label.ToLowerInvariant().Contains("defend");
+            bool showsShield = move.Damage == 0;
             Assert.AreEqual(move.Kind == EnemyActionKind.Defend, showsShield,
                 $"'{move.Label}' icon does not match its kind");
         }

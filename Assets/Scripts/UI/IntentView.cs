@@ -23,8 +23,12 @@ namespace Visha.UI
             actionLabel.resizeTextMinSize = 14;
             actionLabel.resizeTextMaxSize = actionLabel.fontSize;
             actionLabel.horizontalOverflow = HorizontalWrapMode.Wrap;
-            actionLabel.text=action.ToUpperInvariant();damageLabel.text=damage>0?damage.ToString():string.Empty;
-            icon.sprite=action.ToLowerInvariant().Contains("defend")?defendIcon:attackIcon;
+            damageLabel.resizeTextForBestFit = true;
+            damageLabel.resizeTextMinSize = 12;
+            damageLabel.resizeTextMaxSize = damage > 0 ? 28 : 17;
+            damageLabel.horizontalOverflow = HorizontalWrapMode.Overflow;
+            actionLabel.text=action.ToUpperInvariant();damageLabel.text=damage>0?damage.ToString():"NO ATTACK";
+            icon.sprite=damage == 0?defendIcon:attackIcon;
         }
         private void Update()
         {

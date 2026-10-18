@@ -164,7 +164,7 @@ namespace Visha.Campaign
         {
             EncounterConfig config = CurrentEncounter;
 
-            if (enemyPattern != null) enemyPattern.Configure(config.Pattern, config.DisplayName);
+            if (enemyPattern != null) enemyPattern.Configure(config.Pattern, config.DisplayName, config.OpeningOffset);
             if (enemyHealth != null) enemyHealth.SetMaxHealth(config.MaxHealth);
             if (enemySpriteRenderer != null && config.EnemySprite != null) enemySpriteRenderer.sprite = config.EnemySprite;
 
