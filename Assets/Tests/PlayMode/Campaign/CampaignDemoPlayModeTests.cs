@@ -25,7 +25,7 @@ public class CampaignDemoPlayModeTests
     private Health enemyHealth;
     private Poison enemyPoison;
     private EnemyPatternRunner enemyPattern;
-    private Transform canvas;
+    private BattleScreenView screens;
 
     [UnitySetUp]
     public IEnumerator LoadScene()
@@ -39,15 +39,18 @@ public class CampaignDemoPlayModeTests
         enemyHealth = enemyPattern.GetComponent<Health>();
         enemyPoison = enemyPattern.GetComponent<Poison>();
         playerHealth = GameObject.Find("Player").GetComponent<Health>();
-        canvas = GameObject.Find("CampaignCanvas").transform;
+        screens = Object.FindAnyObjectByType<BattleScreenView>();
+        Assert.IsNull(Object.FindAnyObjectByType<BattleScreenPresenter>(),
+            "only the campaign should drive the battle screens");
     }
 
-    private bool ScreenVisible(string name) => canvas.Find(name).gameObject.activeSelf;
+    private bool ScreenVisible(BattleScreen screen) => screens.Screen == screen;
 
     private void Click(string path)
     {
-        Button button = canvas.Find(path).GetComponent<Button>();
+        Button button = screens.transform.Find(path).GetComponent<Button>();
         Assert.IsTrue(button.gameObject.activeInHierarchy, $"{path} should be visible");
+        Assert.IsTrue(button.interactable, $"{path} should be enabled");
         button.onClick.Invoke();
     }
 
@@ -66,11 +69,11 @@ public class CampaignDemoPlayModeTests
     public IEnumerator FullCampaign_StartWinNextLoseRetryFinishRestart()
     {
         Assert.AreEqual(CampaignState.Title, campaign.State);
-        Assert.IsTrue(ScreenVisible("TitleScreen"));
+        Assert.IsTrue(ScreenVisible(BattleScreen.Title));
 
-        Click("TitleScreen/StartButton");
+        Click("TitlePanel/StartButton");
         yield return null;
-        Assert.IsFalse(ScreenVisible("TitleScreen"));
+        Assert.IsFalse(ScreenVisible(BattleScreen.Title));
         Assert.AreEqual(1, campaign.EncounterNumber);
         Assert.AreEqual("Temple Guardian", enemyPattern.EnemyName);
         yield return AssertBattleAcceptsActions();
@@ -79,14 +82,15 @@ public class CampaignDemoPlayModeTests
         enemyHealth.TakeDamage(999);
         yield return null;
         Assert.AreEqual(CampaignState.Victory, campaign.State);
-        Assert.IsTrue(ScreenVisible("VictoryScreen"));
+        Assert.IsTrue(ScreenVisible(BattleScreen.Victory));
         Assert.AreEqual(1, campaign.EncounterNumber);
 
-        Click("VictoryScreen/Card/NextButton");
+        Click("VictoryPanel/Card/NextButton");
         yield return null;
-        Assert.IsFalse(ScreenVisible("VictoryScreen"));
+        Assert.IsFalse(ScreenVisible(BattleScreen.Victory));
         Assert.AreEqual(2, campaign.EncounterNumber);
         Assert.AreEqual("Guardian Warden", enemyPattern.EnemyName);
+        Assert.AreEqual("ENCOUNTER 2 / 3", screens.transform.Find("Encounter").GetComponent<Text>().text);
         Assert.AreEqual(44, enemyHealth.CurrentHealth);
         Assert.AreEqual(0, enemyPoison.PoisonStacks);
         yield return AssertBattleAcceptsActions();
@@ -95,11 +99,11 @@ public class CampaignDemoPlayModeTests
         playerHealth.TakeDamage(999);
         yield return null;
         Assert.AreEqual(CampaignState.Defeat, campaign.State);
-        Assert.IsTrue(ScreenVisible("DefeatScreen"));
+        Assert.IsTrue(ScreenVisible(BattleScreen.Defeat));
 
-        Click("DefeatScreen/Card/RetryButton");
+        Click("DefeatPanel/Card/RetryButton");
         yield return null;
-        Assert.IsFalse(ScreenVisible("DefeatScreen"));
+        Assert.IsFalse(ScreenVisible(BattleScreen.Defeat));
         Assert.AreEqual(2, campaign.EncounterNumber);
         Assert.AreEqual(playerHealth.MaxHealth, playerHealth.CurrentHealth);
         Assert.AreEqual(44, enemyHealth.CurrentHealth);
@@ -110,7 +114,7 @@ public class CampaignDemoPlayModeTests
         // Encounters 2 and 3: win both, the last one ends the demo
         enemyHealth.TakeDamage(999);
         yield return null;
-        Click("VictoryScreen/Card/NextButton");
+        Click("VictoryPanel/Card/NextButton");
         yield return null;
         Assert.AreEqual(3, campaign.EncounterNumber);
         Assert.AreEqual("Vault Sentinel", enemyPattern.EnemyName);
@@ -120,13 +124,13 @@ public class CampaignDemoPlayModeTests
         enemyHealth.TakeDamage(999);
         yield return null;
         Assert.AreEqual(CampaignState.DemoComplete, campaign.State);
-        Assert.IsTrue(ScreenVisible("EndScreen"));
-        Assert.IsFalse(ScreenVisible("VictoryScreen"));
+        Assert.IsTrue(ScreenVisible(BattleScreen.Complete));
+        Assert.IsFalse(ScreenVisible(BattleScreen.Victory));
 
         // Restart: back to encounter 1 with a fresh battle
-        Click("EndScreen/RestartButton");
+        Click("CompletePanel/RestartButton");
         yield return null;
-        Assert.IsFalse(ScreenVisible("EndScreen"));
+        Assert.IsFalse(ScreenVisible(BattleScreen.Complete));
         Assert.AreEqual(CampaignState.InBattle, campaign.State);
         Assert.AreEqual(1, campaign.EncounterNumber);
         Assert.AreEqual("Temple Guardian", enemyPattern.EnemyName);
@@ -138,21 +142,21 @@ public class CampaignDemoPlayModeTests
     [UnityTest]
     public IEnumerator ReturnToStart_FromDefeat_ShowsTitleAndStartsFresh()
     {
-        Click("TitleScreen/StartButton");
+        Click("TitlePanel/StartButton");
         yield return null;
         enemyHealth.TakeDamage(999);
         yield return null;
-        Click("VictoryScreen/Card/NextButton");
+        Click("VictoryPanel/Card/NextButton");
         yield return null;
         playerHealth.TakeDamage(999);
         yield return null;
 
-        Click("DefeatScreen/Card/ReturnToStartButton");
+        Click("DefeatPanel/Card/ReturnButton");
         yield return null;
-        Assert.IsTrue(ScreenVisible("TitleScreen"));
-        Assert.IsFalse(ScreenVisible("DefeatScreen"));
+        Assert.IsTrue(ScreenVisible(BattleScreen.Title));
+        Assert.IsFalse(ScreenVisible(BattleScreen.Defeat));
 
-        Click("TitleScreen/StartButton");
+        Click("TitlePanel/StartButton");
         yield return null;
         Assert.AreEqual(1, campaign.EncounterNumber);
         Assert.AreEqual(playerHealth.MaxHealth, playerHealth.CurrentHealth);

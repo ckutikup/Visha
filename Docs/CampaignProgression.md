@@ -7,6 +7,10 @@ logic. Every reset goes through the existing `BattleOutcomeController.Retry()`
 and Rahul's `CombatFlowController`. Everything lives in a new `Visha.Campaign`
 assembly, and the shared `BattleUI_Demo` scene is not modified.
 
+The screens themselves are Charith's shared `BattleScreens` (`BattleScreenView`).
+The campaign only decides which screen to show and what its buttons do, so
+there is one set of screens in the game.
+
 ## The flow
 
 ```
@@ -23,8 +27,9 @@ Victory panel ──Next──▶ Encounter 2 ──▶ … ──▶ Encounter 
                                                └──Return to Start──▶ Title
 ```
 
-- **Start screen.** It shows the title and short instructions for enemy
-  intentions, Venom Strike/poison, Serpent's Bite and Fade, plus a Start button.
+- **Start screen.** Charith's title panel shows the title and short
+  instructions for enemy intentions, Venom Strike/poison, Serpent's Bite and
+  Fade, plus a Start button.
 - **Encounters in order.** The encounters come from the `EncounterConfig`
   assets listed on `CampaignController`.
 - **Victory waits for Next.** The defeated enemy stays down until the player
@@ -109,6 +114,12 @@ Campaign In Open Scene**. That scene must already have the combat flow from
 Visha > Setup Combat Flow. Both menu items can be run more than once.
 Existing encounter assets are never overwritten.
 
+Setup reuses the scene's `BattleScreens` (or adds the prefab if missing) and
+removes `BattleScreenPresenter` from that scene. The presenter drives the
+screens for a single battle with Retry only; in a campaign scene,
+`CampaignScreens` drives them instead, and running both would make them
+fight over the buttons.
+
 ## Files
 
 | File under Assets | Purpose |
@@ -117,8 +128,8 @@ Existing encounter assets are never overwritten.
 | Scripts/Campaign/CampaignProgress.cs | Encounter index and allowed transitions, no Unity dependencies |
 | Scripts/Campaign/CampaignController.cs | Loads encounters, starts/retries/restarts them, applies the health rule |
 | Scripts/Campaign/EncounterConfig.cs | Per-encounter data asset |
-| Scripts/Campaign/CampaignScreens.cs | Shows the screen for each state; buttons forward to CampaignController |
-| Scripts/Campaign/Editor/CampaignSceneSetup.cs | Menu items that create the configs, screens and Campaign_Demo scene |
+| Scripts/Campaign/CampaignScreens.cs | Connects Charith's BattleScreenView to CampaignController: binds its buttons and shows the screen for each state |
+| Scripts/Campaign/Editor/CampaignSceneSetup.cs | Menu items that create the configs, connect the screens and build the Campaign_Demo scene |
 | Data/Encounters/*.asset | The three encounters |
 | Scenes/Campaign_Demo.unity | Playable campaign scene |
 | Tests/Editor/Campaign/*.cs | EditMode tests for progression rules and controller resets |
@@ -153,10 +164,9 @@ In **Window > General > Test Runner**:
 ## Work remaining with the team
 
 - **Anshul:** tune balance on the encounter assets.
-- **Charith / Shivani:** Charith's `BattleScreenView` (merged) has Title,
-  Victory, Defeat and Complete screens and `BindNavigation(start, next, retry,
-  restart, returnToStart)`. A follow-up PR will bind it to `CampaignController`
-  and remove the placeholder panels in `CampaignScreens`.
+- **Charith:** screen layout and wording stay in `BattleScreens.prefab` and
+  `BattleScreenView`. If their button names or `BindNavigation` change, the
+  campaign PlayMode test will catch it.
 - **Rahul / Balaji:** when the combat flow switches to the `Fade` component,
   call `Fade.ResetFade()` on `OnRetry`, so Fade is ready after a retry and at
   the start of every new encounter.

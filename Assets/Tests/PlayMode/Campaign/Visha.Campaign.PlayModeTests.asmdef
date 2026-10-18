@@ -8,6 +8,7 @@
         "Visha.Combat",
         "Visha.Enemies",
         "Visha.UI",
+        "Visha.UI.BattleIntegration",
         "Unity.ugui"
     ],
     "includePlatforms": [],

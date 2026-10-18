@@ -1,83 +1,73 @@
 using UnityEngine;
-using UnityEngine.UI;
+using Visha.UI;
 
 namespace Visha.Campaign
 {
     /// <summary>
-    /// Shows the campaign's overlay screens: the title/tutorial screen, the
-    /// victory panel with Next, the defeat panel with Retry, and the end-of-demo
-    /// screen with Restart. Buttons only forward to <see cref="CampaignController"/>;
-    /// no progression rules live here.
+    /// Drives Charith's shared <see cref="BattleScreenView"/> from the campaign:
+    /// binds its Start, Next, Retry, Restart and Return to Start buttons to
+    /// <see cref="CampaignController"/>, and shows the screen that matches each
+    /// <see cref="CampaignState"/>. It replaces BattleScreenPresenter, which only
+    /// knows a single battle, so the scene must not run both.
+    ///
+    /// No progression rules or screen layout live here.
     /// </summary>
     public class CampaignScreens : MonoBehaviour
     {
         [SerializeField] private CampaignController campaign;
+        [SerializeField] private BattleScreenView view;
+        [Tooltip("Lets the screens block combat input while an overlay is shown.")]
+        [SerializeField] private BattleHUD hud;
 
-        [Header("Screens")]
-        [SerializeField] private GameObject titleScreen;
-        [SerializeField] private GameObject victoryScreen;
-        [SerializeField] private GameObject defeatScreen;
-        [SerializeField] private GameObject endScreen;
-
-        [Header("Labels")]
-        [SerializeField] private Text encounterLabel;
-        [SerializeField] private Text victoryMessage;
-        [SerializeField] private Text defeatMessage;
-
-        [Header("Buttons")]
-        [SerializeField] private Button startButton;
-        [SerializeField] private Button nextButton;
-        [SerializeField] private Button retryButton;
-        [SerializeField] private Button restartButton;
-        [Tooltip("Optional buttons that return to the start screen.")]
-        [SerializeField] private Button[] titleButtons = new Button[0];
-
-        private void OnEnable()
+        /// <summary>Assigns every reference at runtime, for tests and tooling.</summary>
+        public void SetReferences(CampaignController newCampaign, BattleScreenView newView, BattleHUD newHud)
         {
-            if (campaign == null) return;
-            campaign.StateChanged += Show;
-            startButton.onClick.AddListener(campaign.StartCampaign);
-            nextButton.onClick.AddListener(campaign.NextEncounter);
-            retryButton.onClick.AddListener(campaign.RetryEncounter);
-            restartButton.onClick.AddListener(campaign.RestartCampaign);
-            foreach (Button button in titleButtons) if (button) button.onClick.AddListener(campaign.ReturnToTitle);
+            if (isActiveAndEnabled) Unbind();
+            campaign = newCampaign;
+            view = newView;
+            hud = newHud;
+            if (isActiveAndEnabled) Bind();
         }
 
-        private void OnDisable()
-        {
-            if (campaign == null) return;
-            campaign.StateChanged -= Show;
-            startButton.onClick.RemoveListener(campaign.StartCampaign);
-            nextButton.onClick.RemoveListener(campaign.NextEncounter);
-            retryButton.onClick.RemoveListener(campaign.RetryEncounter);
-            restartButton.onClick.RemoveListener(campaign.RestartCampaign);
-            foreach (Button button in titleButtons) if (button) button.onClick.RemoveListener(campaign.ReturnToTitle);
-        }
+        private void OnEnable() => Bind();
+        private void OnDisable() => Unbind();
 
         private void Start()
         {
-            Show(campaign != null ? campaign.State : CampaignState.Title);
+            if (campaign != null) Show(campaign.State);
+        }
+
+        private void Bind()
+        {
+            if (campaign == null || view == null) return;
+            if (hud != null) view.SetHUD(hud);
+            view.BindNavigation(campaign.StartCampaign, campaign.NextEncounter, campaign.RetryEncounter,
+                                campaign.RestartCampaign, campaign.ReturnToTitle);
+            campaign.StateChanged += Show;
+        }
+
+        private void Unbind()
+        {
+            if (campaign != null) campaign.StateChanged -= Show;
+            if (view != null) view.BindNavigation(null, null, null, null, null);
         }
 
         public void Show(CampaignState state)
         {
-            titleScreen.SetActive(state == CampaignState.Title);
-            victoryScreen.SetActive(state == CampaignState.Victory);
-            defeatScreen.SetActive(state == CampaignState.Defeat);
-            endScreen.SetActive(state == CampaignState.DemoComplete);
+            if (campaign == null || view == null) return;
 
-            if (campaign == null) return;
-            int number = campaign.EncounterNumber;
-            int count = campaign.EncounterCount;
-            string enemy = campaign.CurrentEncounter != null ? campaign.CurrentEncounter.DisplayName : "";
+            int number = state == CampaignState.Title ? 0 : campaign.EncounterNumber;
+            view.SetEncounter(number, campaign.EncounterCount);
+            string enemy = campaign.CurrentEncounter != null ? campaign.CurrentEncounter.DisplayName : null;
 
-            if (encounterLabel)
+            switch (state)
             {
-                encounterLabel.gameObject.SetActive(state != CampaignState.Title);
-                encounterLabel.text = $"ENCOUNTER {number} / {count}";
+                case CampaignState.Title: view.ShowTitle(); break;
+                case CampaignState.InBattle: view.ShowBattle(); break;
+                case CampaignState.Victory: view.ShowVictory(enemy); break;
+                case CampaignState.Defeat: view.ShowDefeat(enemy); break;
+                case CampaignState.DemoComplete: view.ShowComplete(); break;
             }
-            if (victoryMessage) victoryMessage.text = $"{enemy} defeated.\nEncounter {number} of {count} cleared.";
-            if (defeatMessage) defeatMessage.text = $"Visha has fallen to the {enemy}.\nRetry encounter {number} from the start.";
         }
     }
 }
