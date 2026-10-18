@@ -21,6 +21,17 @@ public class EnemyPatternRunnerTests
         UnityEngine.Object.DestroyImmediate(_enemy);
     }
 
+    [Test]
+    public void OpeningOffsetIsTelegraphedAndRestoredOnRetry()
+    {
+        _runner.Configure(EnemyPatternRunner.PatternKind.TempleGuardian, "Guardian Warden", 1);
+        Assert.AreEqual("Heavy Blow", _runner.IntentLabel);
+        _runner.TakeTurn();
+        Assert.AreEqual("Recover", _runner.IntentLabel);
+        _runner.ResetPattern();
+        Assert.AreEqual("Heavy Blow", _runner.IntentLabel);
+    }
+
     // ---- Defaults ----
 
     [Test]
@@ -51,7 +62,7 @@ public class EnemyPatternRunnerTests
 
         Assert.AreEqual(EnemyPatternRunner.PatternKind.VaultSentinel, _runner.Kind);
         Assert.AreEqual("Vault Sentinel", _runner.EnemyName);
-        Assert.AreEqual("Defend", _runner.IntentLabel);
+        Assert.AreEqual("Recover", _runner.IntentLabel);
         Assert.AreEqual(0, _runner.IncomingDamage);
         Assert.AreEqual(EnemyActionKind.Defend, _runner.IntentKind);
         Assert.IsTrue(_runner.NextIsDefend);
@@ -89,7 +100,7 @@ public class EnemyPatternRunnerTests
         _runner.TakeTurn(); // Defend
         _runner.TakeTurn(); // Crush
         _runner.ResetPattern();
-        Assert.AreEqual("Defend", _runner.IntentLabel);
+        Assert.AreEqual("Recover", _runner.IntentLabel);
     }
 
     // ---- The telegraph always matches the move that executes ----

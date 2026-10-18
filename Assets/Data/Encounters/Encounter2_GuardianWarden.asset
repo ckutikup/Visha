@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Visha.Campaign::Visha.Campaign.EncounterConfig
   displayName: Guardian Warden
   pattern: 0
+  openingOffset: 1
   maxHealth: 44
   startingHealth: 0
-  enemySprite: {fileID: 0}
+  enemySprite: {fileID: 2445852733116413872, guid: 98191c3ff30d34f54a93b4d5137b893b, type: 3}

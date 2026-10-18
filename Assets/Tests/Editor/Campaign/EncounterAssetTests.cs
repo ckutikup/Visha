@@ -42,6 +42,38 @@ public class EncounterAssetTests
     }
 
     [Test]
+    public void EncounterAssets_HaveSpritesForTheirEnemies()
+    {
+        foreach (var (path, _, _, _) in Expected)
+        {
+            var config = AssetDatabase.LoadAssetAtPath<EncounterConfig>(path);
+            Assert.IsNotNull(config.EnemySprite, $"{path} should assign its campaign enemy sprite");
+        }
+    }
+
+    [Test]
+    public void CampaignScene_ReferencesItsEnemySpriteRenderer()
+    {
+        var scene = UnityEditor.SceneManagement.EditorSceneManager.OpenScene(ScenePath, UnityEditor.SceneManagement.OpenSceneMode.Additive);
+        try
+        {
+            CampaignController campaign = null;
+            foreach (var root in scene.GetRootGameObjects())
+            {
+                campaign = root.GetComponentInChildren<CampaignController>(true);
+                if (campaign != null) break;
+            }
+            Assert.IsNotNull(campaign);
+            var data = new SerializedObject(campaign);
+            Assert.IsNotNull(data.FindProperty("enemySpriteRenderer").objectReferenceValue);
+        }
+        finally
+        {
+            UnityEditor.SceneManagement.EditorSceneManager.CloseScene(scene, true);
+        }
+    }
+
+    [Test]
     public void CampaignScene_ListsEncountersInOrder()
     {
         string[] dependencies = AssetDatabase.GetDependencies(ScenePath, false);

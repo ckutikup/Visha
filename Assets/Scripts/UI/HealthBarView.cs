@@ -10,7 +10,9 @@ namespace Visha.UI
         private float goal = 1f;
         public void SetValue(int current, int maximum, bool immediate = false)
         {
-            goal = maximum > 0 ? Mathf.Clamp01((float)current / maximum) : 0;
+            float next = maximum > 0 ? Mathf.Clamp01((float)current / maximum) : 0;
+            if (next > goal) immediate = true;
+            goal = next;
             if (immediate || !Application.isPlaying) { SetWidth(fill, goal); SetWidth(trail, goal); }
         }
         private void Update()

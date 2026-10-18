@@ -9,7 +9,7 @@ namespace Visha.Enemies
     ///   0. Strike      — light 4-damage hit. A normal turn.
     ///   1. Heavy Blow  — telegraphed 9-damage hit. Because the player is warned a full
     ///                    turn ahead, this is the turn to use Fade. It teaches Fade timing.
-    ///   2. Defend      — the Guardian braces and deals no damage. A safe window to stack
+    ///   2. Recover      — the Guardian recovers and deals no damage. A safe window to stack
     ///                    Venom Strike (build poison) instead of playing defensively.
     ///
     /// The cycle then repeats. Nothing here is random: the same sequence plays every
@@ -24,7 +24,7 @@ namespace Visha.Enemies
 
         public static EnemyAction Strike    => EnemyAction.Attack("Strike", 4);
         public static EnemyAction HeavyBlow => EnemyAction.Attack("Heavy Blow", 9);
-        public static EnemyAction Brace     => EnemyAction.Defend("Defend");
+        public static EnemyAction Brace     => EnemyAction.Defend("Recover");
 
         /// <summary>Builds a fresh Temple Guardian pattern, starting on Strike.</summary>
         public static EnemyAttackPattern Create()

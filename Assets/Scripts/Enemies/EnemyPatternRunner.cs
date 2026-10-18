@@ -35,6 +35,7 @@ namespace Visha.Enemies
 
         private EnemyAttackPattern _pattern;
         private string _displayNameOverride;
+        private int _openingOffset;
 
         /// <summary>The pattern instance, created on first use so it works in play and in tests.</summary>
         private EnemyAttackPattern Pattern => _pattern ??= Build(pattern);
@@ -49,10 +50,12 @@ namespace Visha.Enemies
         /// restarts from its first move. A non-empty displayName replaces the
         /// pattern's own name in <see cref="EnemyName"/>.
         /// </summary>
-        public void Configure(PatternKind kind, string displayName = null)
+        public void Configure(PatternKind kind, string displayName = null, int openingOffset = 0)
         {
             pattern = kind;
             _pattern = Build(kind);
+            _openingOffset = Mathf.Max(0, openingOffset) % _pattern.Length;
+            ResetPattern();
             _displayNameOverride = string.IsNullOrEmpty(displayName) ? null : displayName;
         }
 
@@ -99,6 +102,10 @@ namespace Visha.Enemies
         public EnemyAction TakeTurn() => Pattern.TakeTurn();
 
         /// <summary>Restarts the pattern from its first move.</summary>
-        public void ResetPattern() => Pattern.Reset();
+        public void ResetPattern()
+        {
+            Pattern.Reset();
+            for (int i = 0; i < _openingOffset; i++) Pattern.Advance();
+        }
     }
 }

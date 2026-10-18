@@ -2,11 +2,11 @@ namespace Visha.Enemies
 {
     /// <summary>
     /// The second regular enemy type: the Vault Sentinel, from the team's approved
-    /// concept (Defend, then a big hit, then a medium hit).
+    /// concept (Recover, then a big hit, then a medium hit).
     ///
     /// It plays differently from the Temple Guardian:
     ///
-    ///   0. Defend      — the Sentinel braces and deals no damage. The fight opens
+    ///   0. Recover      — the Sentinel recovers and deals no damage. The fight opens
     ///                    with a free turn to start building poison.
     ///   1. Crush       — telegraphed 16-damage hit, the biggest regular hit in the
     ///                    demo. Fade halves it to 8, so Fade timing matters most here.
@@ -25,11 +25,11 @@ namespace Visha.Enemies
     {
         public const string EnemyName = "Vault Sentinel";
 
-        public static EnemyAction Brace      => EnemyAction.Defend("Defend");
+        public static EnemyAction Brace      => EnemyAction.Defend("Recover");
         public static EnemyAction Crush      => EnemyAction.Attack("Crush", 16);
         public static EnemyAction ShieldBash => EnemyAction.Attack("Shield Bash", 8);
 
-        /// <summary>Builds a fresh Vault Sentinel pattern, starting on Defend.</summary>
+        /// <summary>Builds a fresh Vault Sentinel pattern, starting on Recover.</summary>
         public static EnemyAttackPattern Create()
         {
             return new EnemyAttackPattern(EnemyName, new[]

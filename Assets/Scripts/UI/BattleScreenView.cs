@@ -18,6 +18,12 @@ namespace Visha.UI
         private bool pending;
         private BattleScreen screen = BattleScreen.Battle;
         private int encounter, count;
+        private string area;
+        public void SetArea(string value) { area = value; UpdateEncounterLabel(); }
+        private void UpdateEncounterLabel()
+        {
+            encounterLabel.text = encounter > 0 ? (string.IsNullOrEmpty(area) ? $"ENCOUNTER {encounter} / {count}" : $"{area.ToUpperInvariant()}  /  {encounter} OF {count}") : string.Empty;
+        }
         public BattleScreen Screen => screen;
 
         private void Awake()
@@ -56,7 +62,7 @@ namespace Visha.UI
         {
             count = Mathf.Max(0, total);
             encounter = Mathf.Clamp(number, 0, count);
-            encounterLabel.text = encounter > 0 ? $"ENCOUNTER {encounter} / {count}" : string.Empty;
+            UpdateEncounterLabel();
             Refresh();
         }
 

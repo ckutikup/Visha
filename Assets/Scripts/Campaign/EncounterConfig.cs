@@ -20,6 +20,10 @@ namespace Visha.Campaign
         [Tooltip("Which enemy type and action pattern this encounter uses.")]
         [SerializeField] private EnemyPatternRunner.PatternKind pattern = EnemyPatternRunner.PatternKind.TempleGuardian;
 
+        [Min(0)]
+        [SerializeField] private int openingOffset;
+        public int OpeningOffset => Mathf.Max(0, openingOffset);
+
         [Min(1)]
         [SerializeField] private int maxHealth = 24;
 
@@ -38,13 +42,14 @@ namespace Visha.Campaign
 
         /// <summary>Sets every field at once, for tests and editor tooling.</summary>
         public void Set(string newDisplayName, EnemyPatternRunner.PatternKind newPattern,
-                        int newMaxHealth, int newStartingHealth = 0, Sprite newSprite = null)
+                        int newMaxHealth, int newStartingHealth = 0, Sprite newSprite = null, int newOpeningOffset = 0)
         {
             displayName = newDisplayName;
             pattern = newPattern;
             maxHealth = newMaxHealth;
             startingHealth = newStartingHealth;
             enemySprite = newSprite;
+            openingOffset = Mathf.Max(0, newOpeningOffset);
         }
     }
 }

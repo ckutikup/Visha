@@ -7,6 +7,7 @@ public class Poison : MonoBehaviour
     [SerializeField] private int maxStacks = 5;
     [SerializeField] private int damagePerStack = 2;
 
+    public int DamagePerStack => damagePerStack;
     private int poisonStacks = 0;
     private Health health;
 
@@ -34,7 +35,7 @@ public class Poison : MonoBehaviour
     {
         maxStacks = newMaxStacks;
         damagePerStack = newDamagePerStack;
-        health = health = GetComponent<Health>();
+        health = GetComponent<Health>();
         ValidateValues();
         poisonStacks = 0;
     }
