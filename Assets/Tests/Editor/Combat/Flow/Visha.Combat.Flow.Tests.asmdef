@@ -8,7 +8,8 @@
     "Visha.Combat",
     "Visha.Battle",
     "Visha.Enemies",
-    "Visha.UI"
+    "Visha.UI",
+    "Visha.Campaign"
   ],
   "includePlatforms": [
     "Editor"

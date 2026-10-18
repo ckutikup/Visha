@@ -965,6 +965,8 @@ GameObject:
   - component: {fileID: 798040395}
   - component: {fileID: 798040396}
   - component: {fileID: 798040394}
+  - component: {fileID: 798040399}
+  - component: {fileID: 798040398}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -998,7 +1000,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1a009785a0c6b41c8b52b6f2ec3096bd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Visha.Combat::Health
-  maxHealth: 30
+  maxHealth: 50
 --- !u!114 &798040396
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1028,6 +1030,33 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &798040398
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 798040393}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 224bb25158e2345018a2c203c16f5935, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Visha.Combat::Fade
+  reductionPercent: 50
+--- !u!114 &798040399
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 798040393}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 37e4aac6d6e56463f86b1d0d7e493316, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Visha.Combat::SerpentsBite
+  damagePerStack: 4
+  testTarget: {fileID: 0}
 --- !u!1 &808548952
 GameObject:
   m_ObjectHideFlags: 0
@@ -1064,9 +1093,9 @@ MonoBehaviour:
   outcomeController: {fileID: 808548954}
   enemyPatternRunner: {fileID: 277063400}
   venomStrike: {fileID: 798040394}
-  serpentsBiteDamage: 12
-  fadeReduction: 0
-  fadeBlocksNextAttack: 1
+  serpentsBite: {fileID: 798040399}
+  fade: {fileID: 798040398}
+  campaign: {fileID: 1513577504}
 --- !u!114 &808548954
 MonoBehaviour:
   m_ObjectHideFlags: 0

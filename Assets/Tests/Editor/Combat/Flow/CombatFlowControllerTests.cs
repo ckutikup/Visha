@@ -1,3 +1,4 @@
+using System.Reflection;
 using NUnit.Framework;
 using UnityEngine;
 using Visha.Battle;
@@ -9,6 +10,8 @@ namespace Visha.Combat.Flow.Tests
 {
     public class CombatFlowControllerTests
     {
+        private const BindingFlags Private = BindingFlags.NonPublic | BindingFlags.Instance;
+
         private GameObject playerGO;
         private GameObject enemyGO;
         private GameObject controllerGO;
@@ -17,38 +20,46 @@ namespace Visha.Combat.Flow.Tests
         private Health enemyHealth;
         private Poison playerPoison;
         private Poison enemyPoison;
+        private VenomStrike venomStrike;
+        private SerpentsBite serpentsBite;
+        private Fade fade;
         private EnemyPatternRunner enemyPatternRunner;
         private BattleOutcomeController outcomeController;
-        private BattleHUD battleHUD;
 
         [SetUp]
         public void Setup()
         {
-            // Create player
             playerGO = new GameObject("Player");
             playerHealth = playerGO.AddComponent<Health>();
-            playerHealth.SetMaxHealth(30);
+            playerHealth.SetMaxHealth(50);
             playerPoison = playerGO.AddComponent<Poison>();
             playerPoison.SetValues(5, 2);
+            venomStrike = playerGO.AddComponent<VenomStrike>();
+            venomStrike.SetStacksApplied(2);
+            serpentsBite = playerGO.AddComponent<SerpentsBite>();
+            serpentsBite.SetDamagePerStack(4);
+            fade = playerGO.AddComponent<Fade>();
+            fade.SetReductionPercent(50);
 
-            // Create enemy
             enemyGO = new GameObject("Enemy");
             enemyHealth = enemyGO.AddComponent<Health>();
-            enemyHealth.SetMaxHealth(24);
+            enemyHealth.SetMaxHealth(30);
             enemyPoison = enemyGO.AddComponent<Poison>();
             enemyPoison.SetValues(5, 2);
             enemyPatternRunner = enemyGO.AddComponent<EnemyPatternRunner>();
 
-            // Create controller
             controllerGO = new GameObject("CombatFlowController");
-            controller = controllerGO.AddComponent<CombatFlowController>();
-
-            // Initialize battle outcome controller before wiring references into the controller
             outcomeController = controllerGO.AddComponent<BattleOutcomeController>();
             outcomeController.SetCombatants(playerHealth, enemyHealth);
+            controller = controllerGO.AddComponent<CombatFlowController>();
 
-            // Manually assign references (since we can't use SerializeField in tests)
-            SetControllerReferences();
+            Set("playerGameObject", playerGO);
+            Set("enemyGameObject", enemyGO);
+            Set("outcomeController", outcomeController);
+            Set("enemyPatternRunner", enemyPatternRunner);
+
+            Call("Awake");
+            Call("Start");
         }
 
         [TearDown]
@@ -59,233 +70,223 @@ namespace Visha.Combat.Flow.Tests
             Object.DestroyImmediate(controllerGO);
         }
 
-        private void CallPrivate(string methodName)
+        private void Set(string field, object value)
         {
-            var method = typeof(CombatFlowController).GetMethod(methodName,
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            Assert.IsNotNull(method, $"CombatFlowController should define {methodName}");
-            method.Invoke(controller, null);
+            FieldInfo info = typeof(CombatFlowController).GetField(field, Private);
+            Assert.IsNotNull(info, $"CombatFlowController should have field {field}");
+            info.SetValue(controller, value);
         }
 
-        private void SetControllerReferences()
-        {
-            var playerField = controller.GetType().GetField("playerGameObject",
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            var enemyField = controller.GetType().GetField("enemyGameObject",
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            var outcomeField = controller.GetType().GetField("outcomeController",
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            var enemyPatternField = controller.GetType().GetField("enemyPatternRunner",
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        private T Get<T>(string field) => (T)typeof(CombatFlowController).GetField(field, Private).GetValue(controller);
 
-            playerField?.SetValue(controller, playerGO);
-            enemyField?.SetValue(controller, enemyGO);
-            outcomeField?.SetValue(controller, outcomeController);
-            enemyPatternField?.SetValue(controller, enemyPatternRunner);
+        private object Call(string method, params object[] args)
+        {
+            MethodInfo info = typeof(CombatFlowController).GetMethod(method, Private);
+            Assert.IsNotNull(info, $"CombatFlowController should define {method}");
+            return info.Invoke(controller, args.Length == 0 ? null : args);
         }
 
-        [Test]
-        public void VenomStrike_AppliesPoisonToEnemy()
+        private void Request(BattleAbility ability) => Call("HandleAbilityRequested", ability, 0);
+
+        private void FinishEnemyTurn() => Call("ResolveEnemyTurn");
+
+        private void PlayTurn(BattleAbility ability)
         {
-            int initialPoison = enemyPoison.PoisonStacks;
-            var venomStrike = playerGO.AddComponent<VenomStrike>();
-            venomStrike.SetStacksApplied(2);
-
-            SetControllerReferences();
-            var venomField = controller.GetType().GetField("venomStrike",
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            venomField?.SetValue(controller, venomStrike);
-
-            CallPrivate("Awake");
-            CallPrivate("Start");
-
-            var executeMethod = controller.GetType().GetMethod("UseVenomStrike",
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            var result = executeMethod?.Invoke(controller, new object[] { 0 });
-
-            Assert.IsTrue((bool)result, "Venom Strike should succeed");
-            Assert.AreEqual(initialPoison + 2, enemyPoison.PoisonStacks,
-                "Enemy should have 2 more poison stacks");
+            Request(ability);
+            FinishEnemyTurn();
         }
 
-        [Test]
-        public void SerpentsBite_RequiresPoisonToUse()
-        {
-            CallPrivate("Awake");
-            CallPrivate("Start");
-            enemyPoison.ConsumeAllStacks();
-
-            var executeMethod = controller.GetType().GetMethod("UseSerpentsBite",
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            var result = executeMethod?.Invoke(controller, new object[] { 0 });
-
-            Assert.IsFalse((bool)result, "Serpent's Bite should fail without poison");
-            Assert.AreEqual(24, enemyHealth.CurrentHealth, "Enemy should take no damage");
-        }
-
-        [Test]
-        public void SerpentsBite_DealsDamageAndConsumesPoison()
-        {
-            CallPrivate("Awake");
-            CallPrivate("Start");
-            enemyPoison.AddStacks(3);
-            int initialHealth = enemyHealth.CurrentHealth;
-
-            var executeMethod = controller.GetType().GetMethod("UseSerpentsBite",
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            var result = executeMethod?.Invoke(controller, new object[] { 0 });
-
-            Assert.IsTrue((bool)result, "Serpent's Bite should succeed with poison");
-            Assert.AreEqual(0, enemyPoison.PoisonStacks, "Enemy poison should be consumed");
-            Assert.Less(enemyHealth.CurrentHealth, initialHealth, "Enemy should take damage");
-        }
-
-        [Test]
-        public void Fade_ActivatesShield()
-        {
-            CallPrivate("Awake");
-            CallPrivate("Start");
-
-            var executeMethod = controller.GetType().GetMethod("UseFade",
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            var result = executeMethod?.Invoke(controller, new object[] { });
-
-            Assert.IsTrue((bool)result, "Fade should succeed");
-        }
+        private BattleViewState View => Get<BattleViewState>("viewState");
 
 
         [Test]
-        public void InitializeViewState_CreatesValidSnapshot()
+        public void VenomStrike_AppliesStacksThroughComponent()
         {
-            CallPrivate("Awake");
+            Request(BattleAbility.VenomStrike);
 
-            var viewStateField = controller.GetType().GetField("viewState",
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            var viewState = (BattleViewState)viewStateField?.GetValue(controller);
-
-            Assert.IsNotNull(viewState, "ViewState should be initialized");
-            Assert.AreEqual(30, viewState.playerMaxHealth, "Player max health should be 30");
-            Assert.AreEqual(24, viewState.enemyMaxHealth, "Enemy max health should be 24");
-            Assert.AreEqual(BattlePhase.Waiting, viewState.phase, "Initial phase should be Waiting");
+            Assert.AreEqual(2, enemyPoison.PoisonStacks);
+            Assert.AreEqual(BattlePhase.EnemyTurn, controller.CurrentPhase, "a successful ability hands over to the enemy");
         }
 
         [Test]
-        public void UpdateViewState_ReflectsCurrentHealth()
+        public void SerpentsBite_WithoutPoison_IsRefusedAndKeepsTheTurn()
         {
-            CallPrivate("Awake");
-            CallPrivate("Start");
-            playerHealth.TakeDamage(5);
+            Request(BattleAbility.SerpentsBite);
 
-            var updateMethod = controller.GetType().GetMethod("UpdateViewState",
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            updateMethod?.Invoke(controller, null);
-
-            var viewStateField = controller.GetType().GetField("viewState",
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            var viewState = (BattleViewState)viewStateField?.GetValue(controller);
-
-            Assert.AreEqual(25, viewState.playerHealth, "ViewState should reflect damage taken");
+            Assert.AreEqual(30, enemyHealth.CurrentHealth);
+            Assert.AreEqual(BattlePhase.PlayerTurn, controller.CurrentPhase, "a refused ability must not use the turn");
+            Assert.IsFalse(Get<bool>("turnInProgress"), "the player can choose again");
         }
 
         [Test]
-        public void UpdateViewState_ShowsEnemyPoisonStacks()
+        public void SerpentsBite_DealsFourPerStackAndConsumesPoison()
         {
-            CallPrivate("Awake");
-            CallPrivate("Start");
             enemyPoison.AddStacks(3);
 
-            var updateMethod = controller.GetType().GetMethod("UpdateViewState",
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            updateMethod?.Invoke(controller, null);
+            Request(BattleAbility.SerpentsBite);
 
-            var viewStateField = controller.GetType().GetField("viewState",
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            var viewState = (BattleViewState)viewStateField?.GetValue(controller);
+            Assert.AreEqual(30 - 12, enemyHealth.CurrentHealth, "3 stacks x 4");
+            Assert.AreEqual(0, enemyPoison.PoisonStacks);
+        }
 
-            Assert.AreEqual(3, viewState.poison,
-                "HUD poison should show the enemy's stacks so Serpent's Bite can be enabled");
-            Assert.AreEqual(enemyPoison.MaxStacks, viewState.poisonCap,
-                "HUD poison cap should come from the enemy's Poison component");
+        [Test]
+        public void Fade_HalvesTheTelegraphedAttack()
+        {
+            PlayTurn(BattleAbility.VenomStrike);
+            Assert.AreEqual(9, enemyPatternRunner.IncomingDamage, "Heavy Blow is telegraphed next");
+
+            PlayTurn(BattleAbility.Fade);
+
+            Assert.AreEqual(46 - 4, playerHealth.CurrentHealth, "Fade halves Heavy Blow 9 to 4");
+            Assert.IsFalse(fade.IsActive, "Fade only lasts for one enemy phase");
+        }
+
+        [Test]
+        public void Fade_CannotBeUsedOnConsecutiveTurns()
+        {
+            PlayTurn(BattleAbility.Fade);
+            Assert.IsFalse(View.fadeAvailable, "HUD should show Fade unavailable next turn");
+
+            Request(BattleAbility.Fade);
+            Assert.AreEqual(BattlePhase.PlayerTurn, controller.CurrentPhase, "second Fade in a row is refused");
+
+            PlayTurn(BattleAbility.VenomStrike);
+            Assert.IsTrue(View.fadeAvailable, "another ability makes Fade available again");
+            Assert.IsTrue(fade.CanUse);
         }
 
 
         [Test]
-        public void EnterPlayerTurn_SetsCorrectPhase()
+        public void Poison_TicksAfterTheEnemyActs()
         {
-            CallPrivate("Awake");
+            Request(BattleAbility.VenomStrike);
+            Assert.AreEqual(30, enemyHealth.CurrentHealth, "no tick before the enemy has acted");
 
-            var enterPlayerMethod = controller.GetType().GetMethod("EnterPlayerTurn",
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            enterPlayerMethod?.Invoke(controller, null);
+            FinishEnemyTurn();
 
-            var currentPhaseField = controller.GetType().GetField("currentPhase",
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            var phase = (BattlePhase)currentPhaseField?.GetValue(controller);
-
-            Assert.AreEqual(BattlePhase.PlayerTurn, phase, "Should enter PlayerTurn phase");
+            Assert.AreEqual(30 - 4, enemyHealth.CurrentHealth, "2 stacks x 2 after the enemy turn");
+            Assert.AreEqual(50 - 4, playerHealth.CurrentHealth, "Strike hit first");
+            Assert.AreEqual(BattlePhase.PlayerTurn, controller.CurrentPhase);
         }
 
         [Test]
-        public void EnterEnemyTurn_SetsCorrectPhase()
+        public void PlayerDeath_StopsTheTurnBeforePoisonTicks()
         {
-            CallPrivate("Awake");
-            CallPrivate("Start");
+            enemyPoison.AddStacks(2);
+            playerHealth.TakeDamage(48);
 
-            var enterEnemyMethod = controller.GetType().GetMethod("EnterEnemyTurn",
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            enterEnemyMethod?.Invoke(controller, null);
+            Request(BattleAbility.Fade);
+            FinishEnemyTurn();
 
-            var currentPhaseField = controller.GetType().GetField("currentPhase",
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            var phase = (BattlePhase)currentPhaseField?.GetValue(controller);
+            Assert.IsTrue(playerHealth.IsDead);
+            Assert.AreEqual(30, enemyHealth.CurrentHealth, "no poison tick after the player died");
+            Assert.AreNotEqual(BattlePhase.PlayerTurn, controller.CurrentPhase);
+        }
 
-            Assert.AreEqual(BattlePhase.EnemyTurn, phase, "Should enter EnemyTurn phase");
+        [Test]
+        public void EnemyKilledByBite_GetsNoEnemyTurn()
+        {
+            enemyHealth.TakeDamage(26);
+            enemyPoison.AddStacks(1);
+
+            Request(BattleAbility.SerpentsBite);
+
+            Assert.IsTrue(enemyHealth.IsDead);
+            Assert.AreEqual("Strike", enemyPatternRunner.IntentLabel, "enemy pattern must not advance");
+            Assert.AreEqual(50, playerHealth.CurrentHealth);
+            Assert.AreNotEqual(BattlePhase.EnemyTurn, controller.CurrentPhase);
+        }
+
+        [Test]
+        public void SecondSubmission_DuringEnemyTurn_IsIgnored()
+        {
+            Request(BattleAbility.VenomStrike);
+            Request(BattleAbility.VenomStrike);
+
+            Assert.AreEqual(2, enemyPoison.PoisonStacks, "only the first submission resolves");
+        }
+
+        [Test]
+        public void ResolveEnemyTurn_AfterBattleEnds_DoesNothing()
+        {
+            Request(BattleAbility.VenomStrike);
+            enemyHealth.TakeDamage(1000);
+
+            FinishEnemyTurn();
+
+            Assert.AreEqual(50, playerHealth.CurrentHealth, "a dead enemy must not attack");
         }
 
 
         [Test]
-        public void ComponentInitialization_FindsAllRequiredComponents()
+        public void Retry_ResetsFadeTurnStateAndCombatants()
         {
-            CallPrivate("Awake");
-
-            var playerHealthField = controller.GetType().GetField("playerHealth",
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            var enemyHealthField = controller.GetType().GetField("enemyHealth",
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-
-            Assert.IsNotNull(playerHealthField?.GetValue(controller), "Player health should be found");
-            Assert.IsNotNull(enemyHealthField?.GetValue(controller), "Enemy health should be found");
-        }
-
-        [Test]
-        public void BattleOutcomeIntegration_ReadsOutcomeCorrectly()
-        {
-            CallPrivate("Awake");
-            CallPrivate("Start");
-
-            playerHealth.TakeDamage(1000);
-
-            Assert.IsTrue(outcomeController.IsOver, "Battle should be over");
-            Assert.AreEqual(BattleOutcome.Defeat, outcomeController.Outcome,
-                "Outcome should be Defeat");
-        }
-
-        [Test]
-        public void Retry_ResetsGameState()
-        {
-            CallPrivate("Awake");
-            CallPrivate("Start");
-            int initialHealth = playerHealth.CurrentHealth;
-            playerHealth.TakeDamage(10);
+            PlayTurn(BattleAbility.VenomStrike);
+            Request(BattleAbility.Fade);
+            Assert.IsFalse(fade.CanUse);
 
             outcomeController.Retry();
 
-            Assert.AreEqual(initialHealth, playerHealth.CurrentHealth,
-                "Player health should be reset");
-            Assert.AreEqual(0, playerPoison.PoisonStacks,
-                "Player poison should be cleared");
-            Assert.AreEqual(0, enemyPoison.PoisonStacks,
-                "Enemy poison should be cleared");
+            Assert.AreEqual(50, playerHealth.CurrentHealth);
+            Assert.AreEqual(0, enemyPoison.PoisonStacks);
+            Assert.IsTrue(fade.CanUse, "Fade is ready after retry");
+            Assert.IsFalse(fade.IsActive);
+            Assert.IsFalse(Get<bool>("turnInProgress"));
+            Assert.AreEqual(BattlePhase.PlayerTurn, controller.CurrentPhase);
+            Assert.AreEqual("Strike", enemyPatternRunner.IntentLabel, "pattern restarts");
+        }
+
+        [Test]
+        public void Retry_AfterDefeat_AcceptsActionsAgain()
+        {
+            playerHealth.TakeDamage(1000);
+            outcomeController.Retry();
+
+            Request(BattleAbility.VenomStrike);
+
+            Assert.AreEqual(2, enemyPoison.PoisonStacks);
+        }
+
+        [Test]
+        public void InactiveCombat_IgnoresActionsUntilReactivated()
+        {
+            controller.SetCombatActive(false);
+            Assert.AreEqual(BattlePhase.Waiting, controller.CurrentPhase);
+
+            Request(BattleAbility.VenomStrike);
+            Assert.AreEqual(0, enemyPoison.PoisonStacks, "no actions while no encounter is active");
+
+            controller.SetCombatActive(true);
+            Assert.AreEqual(BattlePhase.PlayerTurn, controller.CurrentPhase);
+            Request(BattleAbility.VenomStrike);
+            Assert.AreEqual(2, enemyPoison.PoisonStacks);
+        }
+
+
+        [Test]
+        public void ViewState_ReportsRealValues()
+        {
+            enemyPoison.AddStacks(3);
+            playerHealth.TakeDamage(5);
+
+            Assert.AreEqual(45, View.playerHealth);
+            Assert.AreEqual(50, View.playerMaxHealth);
+            Assert.AreEqual(30, View.enemyMaxHealth);
+            Assert.AreEqual(3, View.poison, "enemy stacks, so the HUD can enable Bite");
+            Assert.AreEqual(enemyPoison.MaxStacks, View.poisonCap);
+            Assert.AreEqual(enemyPatternRunner.EnemyName, View.enemyName);
+            Assert.AreEqual("Strike", View.intention);
+            Assert.AreEqual(4, View.incomingDamage);
+            Assert.IsTrue(View.fadeAvailable);
+            Assert.AreEqual(BattlePhase.PlayerTurn, View.phase);
+        }
+
+        [Test]
+        public void Abilities_AreFoundOnThePlayerWhenUnassigned()
+        {
+            Assert.AreSame(venomStrike, Get<VenomStrike>("venomStrike"));
+            Assert.AreSame(serpentsBite, Get<SerpentsBite>("serpentsBite"));
+            Assert.AreSame(fade, Get<Fade>("fade"));
         }
     }
 }
