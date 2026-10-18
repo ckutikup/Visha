@@ -59,6 +59,9 @@ namespace Visha.UI
         private bool actorsAlive;
         private bool fadeAvailable;
         private int poison;
+        private bool inputEnabled = true;
+        private string enemyName = "enemy";
+        public string EnemyName => enemyName;
 
         private void Awake()
         {
@@ -81,7 +84,8 @@ namespace Visha.UI
         public void Render(BattleViewState state)
         {
             if (state == null) throw new ArgumentNullException(nameof(state));
-            if (phase != state.phase) { submitted = false; pendingAbility=null; selected=false; }
+            bool phaseChanged = phase != state.phase;
+            if (phaseChanged) { submitted = false; pendingAbility=null; selected=false; }
             phase = state.phase;
             int playerMax = Mathf.Max(0, state.playerMaxHealth);
             int enemyMax = Mathf.Max(0, state.enemyMaxHealth);
@@ -91,7 +95,12 @@ namespace Visha.UI
             poison = Mathf.Clamp(state.poison, 0, cap);
             actorsAlive = playerHP > 0 && enemyHP > 0;
             fadeAvailable = state.fadeAvailable;
-            if (!actorsAlive || phase == BattlePhase.Waiting) selected = false;
+            enemyName = string.IsNullOrWhiteSpace(state.enemyName) ? "enemy" : state.enemyName;
+            if (!actorsAlive || (pendingAbility.HasValue && !CanChoose(pendingAbility.Value)))
+            {
+                pendingAbility = null;
+                selected = false;
+            }
             playerHealthLabel.text = $"{playerHP} / {playerMax}";
             enemyHealthLabel.text = $"{enemyHP} / {enemyMax}";
             if(playerHealthView) playerHealthView.SetValue(playerHP,playerMax,!hasRendered);
@@ -101,7 +110,7 @@ namespace Visha.UI
             if(poisonView) poisonView.SetValue(poison,cap);
             if(intentView) intentView.SetIntent(state.intention,Mathf.Max(0,state.incomingDamage),enemyHP>0);
             hasRendered=true;
-            enemyNameLabel.text = state.enemyName;
+            enemyNameLabel.text = enemyName;
             poisonLabel.text = $"Poison  {poison} / {cap}";
             if(intentionLabel) intentionLabel.text = enemyHP > 0 ? (state.intention ?? "").ToUpperInvariant() : "";
             phaseLabel.text = phase switch
@@ -112,6 +121,27 @@ namespace Visha.UI
                 BattlePhase.Defeat => "DEFEAT",
                 _ => "PREPARE"
             };
+            if (phaseChanged)
+                SetFeedback(phase == BattlePhase.PlayerTurn ? "Choose an ability" : string.Empty);
+            RefreshControls();
+        }
+
+        /// <summary>Campaign overlays disable combat input without changing the battle state.</summary>
+        public void SetInputEnabled(bool value)
+        {
+            inputEnabled = value;
+            if (!value) { pendingAbility = null; selected = false; }
+            RefreshControls();
+        }
+
+        /// <summary>The controller calls this when it rejects a request without consuming a turn.</summary>
+        public void RejectAction(string reason)
+        {
+            if (phase != BattlePhase.PlayerTurn) return;
+            submitted = false;
+            pendingAbility = null;
+            selected = false;
+            SetFeedback(reason);
             RefreshControls();
         }
 
@@ -125,7 +155,7 @@ namespace Visha.UI
         public void SetFeedback(string message) => feedbackLabel.text = message ?? string.Empty;
         public void SelectTarget()
         {
-            if (phase != BattlePhase.PlayerTurn || submitted || !actorsAlive) return;
+            if (!inputEnabled || phase != BattlePhase.PlayerTurn || submitted || !actorsAlive) return;
             selected = true;
             if(pendingAbility.HasValue) Submit(pendingAbility.Value);
             else RefreshControls();
@@ -139,16 +169,16 @@ namespace Visha.UI
             if(ability==BattleAbility.Fade) { Submit(ability); return; }
             pendingAbility=ability;selected=false;
             if(EventSystem.current) EventSystem.current.SetSelectedGameObject(gameObject);
-            SetFeedback("Click the guardian to confirm  /  Esc to cancel");RefreshControls();
+            SetFeedback($"Click {enemyName} to confirm  /  Esc to cancel");RefreshControls();
         }
         public void CancelTargeting()
         {
-            if(submitted)return;
+            if(submitted || !inputEnabled || phase != BattlePhase.PlayerTurn)return;
             pendingAbility=null;selected=false;SetFeedback("Choose an ability");RefreshControls();
         }
         private bool CanChoose(BattleAbility ability)
         {
-            if(phase!=BattlePhase.PlayerTurn || submitted || !actorsAlive || AbilityRequested==null) return false;
+            if(!inputEnabled || phase!=BattlePhase.PlayerTurn || submitted || !actorsAlive || AbilityRequested==null) return false;
             if(ability==BattleAbility.Fade) return fadeAvailable;
             return ability!=BattleAbility.SerpentsBite || poison>0;
         }
@@ -158,7 +188,7 @@ namespace Visha.UI
 
         private bool CanRequest(BattleAbility ability)
         {
-            if (phase != BattlePhase.PlayerTurn || submitted || !actorsAlive || AbilityRequested == null)
+            if (!inputEnabled || phase != BattlePhase.PlayerTurn || submitted || !actorsAlive || AbilityRequested == null)
                 return false;
             if (ability == BattleAbility.Fade) return fadeAvailable;
             return selected && (ability != BattleAbility.SerpentsBite || poison > 0);
@@ -177,9 +207,9 @@ namespace Visha.UI
 
         private void RefreshControls()
         {
-            bool targeting=phase==BattlePhase.PlayerTurn && actorsAlive && !submitted && pendingAbility.HasValue;
+            bool targeting=inputEnabled && phase==BattlePhase.PlayerTurn && actorsAlive && !submitted && pendingAbility.HasValue;
             targetButton.interactable=targeting;
-            targetLabel.text="";
+            targetLabel.text=targeting ? "SELECT TARGET" : string.Empty;
             if(targetIndicator)targetIndicator.SetEligible(targeting);
             venomButton.interactable=CanChoose(BattleAbility.VenomStrike);
             biteButton.interactable=CanChoose(BattleAbility.SerpentsBite);

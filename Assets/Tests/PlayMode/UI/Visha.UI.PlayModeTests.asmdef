@@ -1,0 +1,22 @@
+{
+  "name": "Visha.UI.PlayModeTests",
+  "references": [
+    "UnityEngine.TestRunner",
+    "UnityEditor.TestRunner",
+    "Visha.Battle",
+    "Visha.Combat",
+    "Visha.Enemies",
+    "Visha.UI",
+    "Visha.UI.BattleIntegration",
+    "Unity.ugui"
+  ],
+  "includePlatforms": [],
+  "overrideReferences": true,
+  "precompiledReferences": [
+    "nunit.framework.dll"
+  ],
+  "autoReferenced": false,
+  "defineConstraints": [
+    "UNITY_INCLUDE_TESTS"
+  ]
+}

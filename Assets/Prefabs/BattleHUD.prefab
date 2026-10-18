@@ -603,7 +603,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: SINGLE-ENEMY UI DEMO
+  m_Text: BATTLE
 --- !u!1 &1071790216922115609
 GameObject:
   m_ObjectHideFlags: 0
@@ -1698,7 +1698,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: BATTLE INTERFACE PROTOTYPE
+  m_Text: THE LAST GUARDIAN
 --- !u!1 &2748298436787465725
 GameObject:
   m_ObjectHideFlags: 0
@@ -2085,7 +2085,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "UI PREVIEW  \xB7  SAMPLE VALUES  \xB7  F1 SAMPLE CONTROLS"
+  m_Text: "CHOOSE AN ABILITY  /  SELECT THE ENEMY  /  ESC TO CANCEL"
 --- !u!1 &3213271995544827501
 GameObject:
   m_ObjectHideFlags: 0
@@ -3836,7 +3836,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: PLACEHOLDER ART / SAMPLE DATA
+  m_Text: READ THE INTENT BEFORE YOU ACT
 --- !u!1 &6586677276375906673
 GameObject:
   m_ObjectHideFlags: 0

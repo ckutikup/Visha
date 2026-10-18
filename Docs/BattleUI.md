@@ -1,91 +1,49 @@
-# Battle UI milestone
+# Battle UI
 
-This contribution implements Charith's assigned interface: skill buttons, target
-selection, health displays, poison indicators, and enemy intention displays.
-It contains no combat resolution, enemy patterns, world art, animation, campaign
-progression, retry logic, or victory screen. The original BattlePrototype scene is
-unchanged. The demo uses its existing player and enemy placeholders.
+Charith owns the battle HUD, targeting, health and poison displays, enemy intention display, and reusable navigation screens. Gameplay rules and campaign progression stay with their assigned controllers.
 
-## Open and demonstrate
+## Try the integrated battle
 
-Use Unity 6000.6.3f1. Open Assets/Scenes/BattleUI_Demo.unity and press Play.
-No extra packages or manual wiring are required for this scene.
+Use Unity 6000.6.3f1. Open `Assets/Scenes/BattleUI_Demo.unity` and press Play. Choose Venom Strike or Serpent's Bite, then click the enemy; Escape cancels targeting. Fade targets the player. The scene uses the existing combat controller and real health/poison values. Winning or losing opens the corresponding screen. Retry resets the current battle through `BattleOutcomeController`.
 
-1. Click Venom Strike. The guardian's target marker appears. Escape cancels.
-2. Click the guardian. The HUD sends an action request and disables further input.
-   The preview switches to an enemy-phase sample; it does not perform an attack.
-3. Press F1 (fn+F1 if macOS uses the key for brightness) to show sample controls.
-4. Player sample displays 22/30 player HP, 16/24 enemy HP and three poison stacks.
-   Serpent's Bite is available; Fade is marked unavailable.
-5. Enemy, Victory and Defeat samples demonstrate status labels and input blocking.
-   These are HUD states, not enemy logic or campaign/result screens.
-6. Reset preview restores the initial sample. Fade sends a self-targeted request.
+This scene starts directly in battle. Campaign Start, Next, Restart and Return are connected by the campaign owner; the UI does not create encounters or advance progression.
 
-F1 controls are available only in the Editor or a development build. Sample values
-are demonstration inputs, not agreed damage or balance values.
+## HUD contract for Rahul
 
-## Integration contract
+- Supply current gameplay data through `BattleHUD.Render(BattleViewState)`.
+- Subscribe to `AbilityRequested(BattleAbility, int)`; target 0 is the current enemy and -1 is self. Validate and resolve actions in the controller.
+- Render EnemyTurn while resolving, then PlayerTurn with updated state. Duplicate submissions remain blocked until a phase transition.
+- Call `RejectAction(reason)` when validation fails so the player can choose again. This only unlocks actions during PlayerTurn.
+- Supply the actual enemy name, intention, incoming damage, poison count and Fade availability. The HUD does not calculate combat rules.
+- `SetInputEnabled(false)` cancels targeting and blocks all ability requests while another screen owns input.
 
-The dependency direction is controller -> BattleViewState -> BattleHUD.Render.
-The UI sends intent back through BattleHUD.AbilityRequested(BattleAbility, int).
-The snapshot is display data, not a second gameplay state model.
+## Screen contract for Shivani
 
-- Subscribe to AbilityRequested before the first Render; without a subscriber the
-  ability controls are disabled. Unsubscribe when the controller is disabled.
-- Target index 0 is the single enemy; -1 is self for Fade. Two-enemy UI support is a
-  later milestone to coordinate with Rahul and Anshul.
-- The owning controller validates requests and calculates all health, poison,
-  Fade restrictions, targeting validity, turn order, and deaths.
-- The HUD prevents duplicate clicks immediately after sending one request.
-  Re-rendering the same phase cannot reopen input. A phase transition unlocks it.
-- Render EnemyTurn when the accepted action resolves, then PlayerTurn with the
-  next actual state. For a new encounter or a rejected action, render Waiting
-  before the current PlayerTurn snapshot. SetFeedback can explain rejection.
-- Serpent's Bite uses the supplied poison count for availability; Fade uses the
-  supplied fadeAvailable flag. These UI hints do not replace rule validation.
-- Health and poison are clamped only for display. Render does not mutate input.
+Reuse `Assets/Prefabs/BattleScreens.prefab`. It contains a title/tutorial panel, victory, defeat and completion panels, and an encounter counter. No campaign assembly is required.
 
-Add Assets/Prefabs/BattleHUD.prefab to the integration scene. Use one EventSystem
-with InputSystemUIInputModule. For the four WorldHUDAnchor components, assign the
-scene camera and the appropriate player/enemy Transform; the demo contains wired
-examples. Offsets are world units and may need adjustment when art changes.
-The prefab uses a 1920x1080 reference Canvas and is intended for 16:9 screens.
-Do not copy PreviewControls or BattleHUDPreview into the real combat scene.
+1. In the campaign scene, disable or omit `BattleScreenPresenter` before binding your controller. That presenter only connects the existing single-battle outcome and retry.
+2. Call `screens.SetHUD(hud)` and bind your handlers with `BindNavigation(start, next, retry, restart, returnToStart)`. Each argument is a parameterless Action; null disables or hides unavailable navigation.
+3. Drive the view from campaign state: `ShowTitle()`, `ShowBattle()`, `ShowVictory(enemyName)`, `ShowDefeat(enemyName)`, or `ShowComplete()`.
+4. Call `SetEncounter(number, total)` with the active encounter; `(0, 0)` hides the counter. The view never increments it.
+5. A navigation request locks buttons until the controller changes screens. If navigation fails or remains on the same screen, call `RejectNavigation(reason)` to unlock it. Repeated renders of the same screen do not release the duplicate-click guard.
+6. Unbind with `BindNavigation(null, null, null, null, null)` when your controller is disabled. Keep one navigation owner active at a time.
 
-## Files and responsibilities
+Start/Next/Retry/Restart callbacks must load or reset gameplay state before showing Battle. Stop combat while title/result screens are open; UI input locking alone does not pause a controller. Transition through Battle when restarting or loading another encounter.
 
-| File under Assets | Purpose |
-| --- | --- |
-| Scripts/UI/BattleHUD.cs | Display snapshot, labels, availability, ability-first targeting and request event |
-| Scripts/UI/AbilityButtonView.cs | Hover/selected/disabled UI feedback |
-| Scripts/UI/TargetIndicator.cs | Eligible-target marker and hover emphasis |
-| Scripts/UI/HealthBarView.cs | Display interpolation and delayed damage trail |
-| Scripts/UI/PoisonIndicatorView.cs | Five visual segments with numerical count retained in the HUD |
-| Scripts/UI/IntentView.cs | Short action label, icon and incoming value |
-| Scripts/UI/WorldHUDAnchor.cs | Attach the UI to supplied world transforms |
-| Scripts/Preview/BattleHUDPreview.cs | Fixed sample states for testing without a gameplay controller |
-| Prefabs/BattleHUD.prefab | Reusable, wired interface |
-| Scenes/BattleUI_Demo.unity | Separate demonstration scene with existing placeholders |
-| Art/UI/Diamond.png, GuardianHelm.png | Simple placeholder UI icons; replace during art integration |
-| Tests/Editor/BattleHUDTests.cs | Input guards, targeting, snapshot integrity and scene-reference checks |
+With no Next handler, victory offers Retry Battle when a Retry handler exists. No dummy encounter progression is supplied. Campaign completion copy and encounter counts should match the playable milestone.
 
-Assembly definitions separate runtime UI, preview controls and Editor tests.
-Unity .meta files accompany the assets so references survive cloning.
+## Assets and verification
 
-## Work remaining with the team
+`BattleHUD.prefab` holds the battle interface. `BattleScreens.prefab` holds navigation overlays. `BattleScreenSetup` builds the overlays and installs them in the existing battle scene; regeneration overwrites prefab edits, so normal layout changes can be made directly in the prefab instead.
 
-Rahul owns combat flow and authoritative action/target handling; Balaji owns
-abilities, health changes and poison/Fade rules; Anshul supplies enemy intention
-data and encounters; Shivani owns campaign, retries and result screens; Akshat
-owns sprites, backgrounds, sound, hit feedback and builds.
+Both canvases use a 1920x1080 reference layout for 16:9. WorldHUDAnchor supports overlay and camera canvases. Keep one EventSystem with InputSystemUIInputModule in an integrated scene.
 
-Our initial integration target is one real player/enemy exchange using this HUD.
-Later UI milestones can add two-target support, actual-state integration tests,
-readability/accessibility improvements and final art compatibility. The semester
-reports should describe completed, demonstrable work rather than future features.
+Run EditMode tests for UI request guards and navigation callbacks. Run PlayMode `Visha.UI.PlayModeTests` for actual battle victory/defeat/retry and campaign-controller handoff. The tests force lethal damage to isolate navigation from balance.
 
-## Verification
+## Team integration still needed
 
-Window > General > Test Runner > EditMode > Visha.UI.Tests runs the HUD tests.
-Use Play mode to check ability selection, Escape cancellation, target confirmation,
-poison/Fade availability, F1 sample states and duplicate-click locking.
+- Rahul: connect Balaji's ability components, enforce turn/Fade rules, and gate combat during campaign transitions.
+- Balaji: maintain ability/health/poison behavior and agreed balance values.
+- Anshul: supply encounter enemy patterns and intention data.
+- Shivani: connect the screen callbacks to encounter loading, progression, retry, restart and completion.
+- Akshat: replace placeholders, add audio/visual feedback, and produce a tested build.
