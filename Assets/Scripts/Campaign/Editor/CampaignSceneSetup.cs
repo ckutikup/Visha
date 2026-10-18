@@ -26,16 +26,12 @@ namespace Visha.Campaign.EditorTools
         private const string CampaignName = "Campaign";
         private const string CanvasName = "CampaignCanvas";
 
-        // PatternKind.VaultSentinel (= 1) is added by the enemy-encounters branch. Until
-        // that is merged, EnemyPatternRunner falls back to the Temple Guardian for it.
-        private const EnemyPatternRunner.PatternKind VaultSentinelKind = (EnemyPatternRunner.PatternKind)1;
-
         // The three encounters agreed with Anshul (see Docs/EnemyPattern.md).
         private static readonly (string file, string name, EnemyPatternRunner.PatternKind kind, int maxHealth)[] DefaultEncounters =
         {
             ("Encounter1_TempleGuardian", "Temple Guardian", EnemyPatternRunner.PatternKind.TempleGuardian, 30),
             ("Encounter2_GuardianWarden", "Guardian Warden", EnemyPatternRunner.PatternKind.TempleGuardian, 44),
-            ("Encounter3_VaultSentinel", "Vault Sentinel", VaultSentinelKind, 46)
+            ("Encounter3_VaultSentinel", "Vault Sentinel", EnemyPatternRunner.PatternKind.VaultSentinel, 46)
         };
 
         private static readonly Color Overlay = new Color(0.03f, 0.05f, 0.06f, 0.94f);

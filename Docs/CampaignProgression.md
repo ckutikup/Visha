@@ -64,7 +64,7 @@ This is the `playerHealthRule` setting on `CampaignController`.
   with. A retry restores the health the encounter started with, not full.
 
 The team chose **RestoreToFull**, and Anshul balanced the encounters for it
-(Docs/EnemyPattern.md on the enemy-encounters branch). CarryOver is still
+(Docs/EnemyPattern.md). CarryOver is still
 implemented and tested, so switching is one inspector setting, but the
 encounters would then need rebalancing.
 
@@ -90,12 +90,9 @@ and encounter 3 switches to the second enemy type.
 | 2 | Encounter2_GuardianWarden | Guardian Warden | TempleGuardian (0) | 44 |
 | 3 | Encounter3_VaultSentinel | Vault Sentinel | VaultSentinel (1) | 46 |
 
-`PatternKind.VaultSentinel` comes from Anshul's enemy-encounters branch.
-Encounter 3 already stores `1`. Until that branch is merged,
-`EnemyPatternRunner` falls back to the Temple Guardian moves for it, and the
-inspector shows the field as blank. After the merge it plays as the Vault
-Sentinel with no further change. Balance values are starting points for
-playtesting and can be edited on the assets.
+The assets store the enemy type as a number, so `PatternKind` values must
+never be renumbered. Balance values are starting points for playtesting and
+can be edited on the assets.
 
 ## How to run
 
@@ -155,15 +152,14 @@ In **Window > General > Test Runner**:
 
 ## Work remaining with the team
 
-- **Anshul:** merge the enemy-encounters branch so encounter 3 uses the Vault
-  Sentinel. Both branches add the same `Configure()` method, so they merge
-  without conflicts in either order. Tune balance on the encounter assets.
-- **Charith:** the outcome panels are functional placeholders. Restyle them, or
-  point the HUD's own Next / Retry / Return to Start buttons at
-  `CampaignController.NextEncounter()`, `RetryEncounter()`,
-  `RestartCampaign()` and `ReturnToTitle()`, and then remove these. The HUD
-  can show the encounter number from `CampaignController.EncounterNumber` /
-  `EncounterCount`.
+- **Anshul:** tune balance on the encounter assets.
+- **Charith / Shivani:** Charith's `BattleScreenView` (merged) has Title,
+  Victory, Defeat and Complete screens and `BindNavigation(start, next, retry,
+  restart, returnToStart)`. A follow-up PR will bind it to `CampaignController`
+  and remove the placeholder panels in `CampaignScreens`.
+- **Rahul / Balaji:** when the combat flow switches to the `Fade` component,
+  call `Fade.ResetFade()` on `OnRetry`, so Fade is ready after a retry and at
+  the start of every new encounter.
 - **Akshat:** add `Campaign_Demo` to Build Settings as the first scene for the
   standalone build.
 - **Rahul:** move the campaign into the final integrated battle scene with
