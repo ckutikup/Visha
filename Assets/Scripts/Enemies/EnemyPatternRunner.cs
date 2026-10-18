@@ -20,15 +20,21 @@ namespace Visha.Enemies
     /// </summary>
     public sealed class EnemyPatternRunner : MonoBehaviour
     {
-        [Tooltip("Which built-in pattern this enemy uses. Only the Temple Guardian exists this milestone.")]
+        [Tooltip("Which built-in pattern this enemy uses: the Temple Guardian or the Vault Sentinel.")]
         [SerializeField] private PatternKind pattern = PatternKind.TempleGuardian;
 
+        /// <summary>
+        /// The enemy types. Values are explicit because encounter assets store the
+        /// number, so existing entries must never be renumbered.
+        /// </summary>
         public enum PatternKind
         {
-            TempleGuardian
+            TempleGuardian = 0,
+            VaultSentinel = 1
         }
 
         private EnemyAttackPattern _pattern;
+        private string _displayNameOverride;
 
         /// <summary>The pattern instance, created on first use so it works in play and in tests.</summary>
         private EnemyAttackPattern Pattern => _pattern ??= Build(pattern);
@@ -38,10 +44,24 @@ namespace Visha.Enemies
             _pattern ??= Build(pattern);
         }
 
+        /// <summary>
+        /// Switches this enemy to another pattern for a new encounter. The pattern
+        /// restarts from its first move. A non-empty displayName replaces the
+        /// pattern's own name in <see cref="EnemyName"/>.
+        /// </summary>
+        public void Configure(PatternKind kind, string displayName = null)
+        {
+            pattern = kind;
+            _pattern = Build(kind);
+            _displayNameOverride = string.IsNullOrEmpty(displayName) ? null : displayName;
+        }
+
         private static EnemyAttackPattern Build(PatternKind kind)
         {
             switch (kind)
             {
+                case PatternKind.VaultSentinel:
+                    return VaultSentinelPattern.Create();
                 case PatternKind.TempleGuardian:
                 default:
                     return TempleGuardianPattern.Create();
@@ -49,7 +69,7 @@ namespace Visha.Enemies
         }
 
         /// <summary>Display name of this enemy, for BattleViewState.enemyName.</summary>
-        public string EnemyName => Pattern.Name;
+        public string EnemyName => _displayNameOverride ?? Pattern.Name;
 
         /// <summary>The move the enemy will perform on its next turn — the value to telegraph.</summary>
         public EnemyAction NextAction => Pattern.Current;
@@ -62,6 +82,12 @@ namespace Visha.Enemies
 
         /// <summary>True when the next move is a defend rather than an attack.</summary>
         public bool NextIsDefend => Pattern.Current.Kind == EnemyActionKind.Defend;
+
+        /// <summary>Attack or Defend for the telegraphed move, for the HUD's action type.</summary>
+        public EnemyActionKind IntentKind => Pattern.Current.Kind;
+
+        /// <summary>Which enemy type this runner is currently using.</summary>
+        public PatternKind Kind => pattern;
 
         /// <summary>Look further down the cycle without changing it (0 = the next move).</summary>
         public EnemyAction PeekAhead(int turnsAhead) => Pattern.Peek(turnsAhead);
