@@ -86,8 +86,8 @@ public class CampaignDemoPlayModeTests
         yield return null;
         Assert.IsFalse(ScreenVisible("VictoryScreen"));
         Assert.AreEqual(2, campaign.EncounterNumber);
-        Assert.AreEqual("Guardian Sentinel", enemyPattern.EnemyName);
-        Assert.AreEqual(30, enemyHealth.CurrentHealth);
+        Assert.AreEqual("Guardian Warden", enemyPattern.EnemyName);
+        Assert.AreEqual(44, enemyHealth.CurrentHealth);
         Assert.AreEqual(0, enemyPoison.PoisonStacks);
         yield return AssertBattleAcceptsActions();
 
@@ -102,7 +102,7 @@ public class CampaignDemoPlayModeTests
         Assert.IsFalse(ScreenVisible("DefeatScreen"));
         Assert.AreEqual(2, campaign.EncounterNumber);
         Assert.AreEqual(playerHealth.MaxHealth, playerHealth.CurrentHealth);
-        Assert.AreEqual(30, enemyHealth.CurrentHealth);
+        Assert.AreEqual(44, enemyHealth.CurrentHealth);
         Assert.AreEqual(0, enemyPoison.PoisonStacks);
         Assert.AreEqual(TempleGuardianPattern.Strike.Label, enemyPattern.IntentLabel);
         yield return AssertBattleAcceptsActions();
@@ -113,7 +113,8 @@ public class CampaignDemoPlayModeTests
         Click("VictoryScreen/Card/NextButton");
         yield return null;
         Assert.AreEqual(3, campaign.EncounterNumber);
-        Assert.AreEqual("Guardian Warden", enemyPattern.EnemyName);
+        Assert.AreEqual("Vault Sentinel", enemyPattern.EnemyName);
+        Assert.AreEqual(46, enemyHealth.CurrentHealth);
         yield return AssertBattleAcceptsActions();
 
         enemyHealth.TakeDamage(999);
@@ -129,7 +130,7 @@ public class CampaignDemoPlayModeTests
         Assert.AreEqual(CampaignState.InBattle, campaign.State);
         Assert.AreEqual(1, campaign.EncounterNumber);
         Assert.AreEqual("Temple Guardian", enemyPattern.EnemyName);
-        Assert.AreEqual(24, enemyHealth.CurrentHealth);
+        Assert.AreEqual(30, enemyHealth.CurrentHealth);
         Assert.AreEqual(playerHealth.MaxHealth, playerHealth.CurrentHealth);
         yield return AssertBattleAcceptsActions();
     }
@@ -155,7 +156,7 @@ public class CampaignDemoPlayModeTests
         yield return null;
         Assert.AreEqual(1, campaign.EncounterNumber);
         Assert.AreEqual(playerHealth.MaxHealth, playerHealth.CurrentHealth);
-        Assert.AreEqual(24, enemyHealth.CurrentHealth);
+        Assert.AreEqual(30, enemyHealth.CurrentHealth);
         yield return AssertBattleAcceptsActions();
     }
 }

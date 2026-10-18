@@ -26,13 +26,16 @@ namespace Visha.Campaign.EditorTools
         private const string CampaignName = "Campaign";
         private const string CanvasName = "CampaignCanvas";
 
-        // Placeholder encounters until the enemy configurations are finalised.
-        // Only the Temple Guardian pattern exists so far, so difficulty rises through health.
-        private static readonly (string file, string name, int maxHealth)[] DefaultEncounters =
+        // PatternKind.VaultSentinel (= 1) is added by the enemy-encounters branch. Until
+        // that is merged, EnemyPatternRunner falls back to the Temple Guardian for it.
+        private const EnemyPatternRunner.PatternKind VaultSentinelKind = (EnemyPatternRunner.PatternKind)1;
+
+        // The three encounters agreed with Anshul (see Docs/EnemyPattern.md).
+        private static readonly (string file, string name, EnemyPatternRunner.PatternKind kind, int maxHealth)[] DefaultEncounters =
         {
-            ("Encounter1_TempleGuardian", "Temple Guardian", 24),
-            ("Encounter2_GuardianSentinel", "Guardian Sentinel", 30),
-            ("Encounter3_GuardianWarden", "Guardian Warden", 36)
+            ("Encounter1_TempleGuardian", "Temple Guardian", EnemyPatternRunner.PatternKind.TempleGuardian, 30),
+            ("Encounter2_GuardianWarden", "Guardian Warden", EnemyPatternRunner.PatternKind.TempleGuardian, 44),
+            ("Encounter3_VaultSentinel", "Vault Sentinel", VaultSentinelKind, 46)
         };
 
         private static readonly Color Overlay = new Color(0.03f, 0.05f, 0.06f, 0.94f);
@@ -154,14 +157,14 @@ namespace Visha.Campaign.EditorTools
             if (!AssetDatabase.IsValidFolder(EncounterFolder)) AssetDatabase.CreateFolder("Assets/Data", "Encounters");
 
             var result = new List<EncounterConfig>();
-            foreach (var (file, name, maxHealth) in DefaultEncounters)
+            foreach (var (file, name, kind, maxHealth) in DefaultEncounters)
             {
                 string path = $"{EncounterFolder}/{file}.asset";
                 EncounterConfig config = AssetDatabase.LoadAssetAtPath<EncounterConfig>(path);
                 if (config == null)
                 {
                     config = ScriptableObject.CreateInstance<EncounterConfig>();
-                    config.Set(name, EnemyPatternRunner.PatternKind.TempleGuardian, maxHealth);
+                    config.Set(name, kind, maxHealth);
                     AssetDatabase.CreateAsset(config, path);
                 }
                 result.Add(config);

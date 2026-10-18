@@ -63,8 +63,10 @@ This is the `playerHealthRule` setting on `CampaignController`.
 - **CarryOver**: the player keeps the health they won the previous encounter
   with. A retry restores the health the encounter started with, not full.
 
-The team still needs to confirm this rule. Both options are implemented and
-tested, so changing it is one inspector setting.
+The team chose **RestoreToFull**, and Anshul balanced the encounters for it
+(Docs/EnemyPattern.md on the enemy-encounters branch). CarryOver is still
+implemented and tested, so switching is one inspector setting, but the
+encounters would then need rebalancing.
 
 ## Encounter configs
 
@@ -78,17 +80,22 @@ tested, so changing it is one inspector setting.
 
 Damage stays in the pattern definitions, so it is tuned in one place.
 
-`Assets/Data/Encounters` holds three placeholder configs. Only the Temple
-Guardian pattern exists so far, so difficulty rises through health:
+`Assets/Data/Encounters` holds the three encounters agreed with Anshul. Only
+one value rises at each step: encounter 2 is the same enemy with more health,
+and encounter 3 switches to the second enemy type.
 
-| # | Asset | Name | Max HP |
-| --- | --- | --- | --- |
-| 1 | Encounter1_TempleGuardian | Temple Guardian | 24 |
-| 2 | Encounter2_GuardianSentinel | Guardian Sentinel | 30 |
-| 3 | Encounter3_GuardianWarden | Guardian Warden | 36 |
+| # | Asset | Name | Enemy type (`pattern`) | Max HP |
+| --- | --- | --- | --- | --- |
+| 1 | Encounter1_TempleGuardian | Temple Guardian | TempleGuardian (0) | 30 |
+| 2 | Encounter2_GuardianWarden | Guardian Warden | TempleGuardian (0) | 44 |
+| 3 | Encounter3_VaultSentinel | Vault Sentinel | VaultSentinel (1) | 46 |
 
-Anshul can edit these assets or replace them with the final configs. To
-use the second enemy type, add it to `PatternKind` and select it here.
+`PatternKind.VaultSentinel` comes from Anshul's enemy-encounters branch.
+Encounter 3 already stores `1`. Until that branch is merged,
+`EnemyPatternRunner` falls back to the Temple Guardian moves for it, and the
+inspector shows the field as blank. After the merge it plays as the Vault
+Sentinel with no further change. Balance values are starting points for
+playtesting and can be edited on the assets.
 
 ## How to run
 
@@ -115,7 +122,7 @@ Existing encounter assets are never overwritten.
 | Scripts/Campaign/EncounterConfig.cs | Per-encounter data asset |
 | Scripts/Campaign/CampaignScreens.cs | Shows the screen for each state; buttons forward to CampaignController |
 | Scripts/Campaign/Editor/CampaignSceneSetup.cs | Menu items that create the configs, screens and Campaign_Demo scene |
-| Data/Encounters/*.asset | The three placeholder encounters |
+| Data/Encounters/*.asset | The three encounters |
 | Scenes/Campaign_Demo.unity | Playable campaign scene |
 | Tests/Editor/Campaign/*.cs | EditMode tests for progression rules and controller resets |
 | Tests/PlayMode/Campaign/CampaignDemoPlayModeTests.cs | Plays Campaign_Demo through its real buttons |
@@ -128,7 +135,9 @@ changed behaviour.
 
 In **Window > General > Test Runner**:
 
-- **EditMode > Visha.Campaign.Tests** (25 tests):
+- **EditMode > Visha.Campaign.Tests** (28 tests):
+  - the shipped encounter assets: names, enemy types, health, and their
+    order in Campaign_Demo
   - encounter order
   - Next only after victory, and only once
   - Retry only after defeat, staying on the same encounter
@@ -146,8 +155,9 @@ In **Window > General > Test Runner**:
 
 ## Work remaining with the team
 
-- **Everyone:** confirm the health carryover rule.
-- **Anshul:** final encounter configs and the second enemy type.
+- **Anshul:** merge the enemy-encounters branch so encounter 3 uses the Vault
+  Sentinel. Both branches add the same `Configure()` method, so they merge
+  without conflicts in either order. Tune balance on the encounter assets.
 - **Charith:** the outcome panels are functional placeholders. Restyle them, or
   point the HUD's own Next / Retry / Return to Start buttons at
   `CampaignController.NextEncounter()`, `RetryEncounter()`,

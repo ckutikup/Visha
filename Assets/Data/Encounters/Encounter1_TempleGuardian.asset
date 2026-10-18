@@ -14,6 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Visha.Campaign::Visha.Campaign.EncounterConfig
   displayName: Temple Guardian
   pattern: 0
-  maxHealth: 24
+  maxHealth: 30
   startingHealth: 0
   enemySprite: {fileID: 0}
