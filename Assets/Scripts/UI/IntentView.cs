@@ -19,6 +19,10 @@ namespace Visha.UI
             action=action??string.Empty;
             if(action!=lastAction || damage!=lastDamage) pulse=1;
             lastAction=action;lastDamage=damage;
+            actionLabel.resizeTextForBestFit = true;
+            actionLabel.resizeTextMinSize = 14;
+            actionLabel.resizeTextMaxSize = actionLabel.fontSize;
+            actionLabel.horizontalOverflow = HorizontalWrapMode.Wrap;
             actionLabel.text=action.ToUpperInvariant();damageLabel.text=damage>0?damage.ToString():string.Empty;
             icon.sprite=action.ToLowerInvariant().Contains("defend")?defendIcon:attackIcon;
         }

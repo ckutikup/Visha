@@ -251,7 +251,7 @@ namespace Visha.Combat.Flow
             if (!success)
             {
                 Debug.LogWarning($"Combat: Ability {ability} validation failed");
-                ShowFeedback($"{ability} cannot be used");
+                if (battleHUD != null) battleHUD.RejectAction($"{ability} cannot be used");
                 return;
             }
 
