@@ -13,12 +13,14 @@ namespace Visha.Campaign
         [SerializeField] private int vaultFirstEncounter = 3;
 
         private Color targetColor = Color.white;
+        private Vector3 backgroundScale;
         private int previousEncounter = -1;
         private readonly Transform[] dust = new Transform[16];
         private Sprite dustSprite;
         private void OnDestroy() { if (dustSprite != null) Destroy(dustSprite); }
         private void Awake()
         {
+            backgroundScale = background != null ? background.transform.localScale : Vector3.one;
             dustSprite = Sprite.Create(Texture2D.whiteTexture, new Rect(0, 0, 1, 1), new Vector2(.5f, .5f), 1);
             for (int i = 0; i < dust.Length; i++)
             {
@@ -42,6 +44,19 @@ namespace Visha.Campaign
                         -1.5f + Mathf.Repeat(i * .83f + Time.time * .035f, 4.5f), 0);
             if (background != null) background.color = Color.Lerp(background.color, targetColor, 1f - Mathf.Exp(-5f * Time.unscaledDeltaTime));
         }
+        private void LateUpdate()
+        {
+            var camera = Camera.main;
+            if (background == null || background.sprite == null || camera == null) return;
+            Vector2 size = background.sprite.bounds.size;
+            float height = camera.orthographicSize * 2;
+            float width = height * camera.pixelWidth / Mathf.Max(1, camera.pixelHeight);
+            float scale = Mathf.Max(1, Mathf.Max(width / (size.x * backgroundScale.x), height / (size.y * backgroundScale.y)));
+            float lowerHalf = size.y * backgroundScale.y * .5f - 3f;
+            if (lowerHalf > .1f) scale = Mathf.Max(scale, (camera.orthographicSize - 3f) / lowerHalf);
+            background.transform.localScale = backgroundScale * scale;
+            background.transform.position = new Vector3(0, 3f * (scale - 1f), background.transform.position.z);
+        }
         private void OnEnable() { if (campaign != null) campaign.StateChanged += Refresh; }
         private void Start() { if (campaign != null) Refresh(campaign.State); }
         private void OnDisable() { if (campaign != null) campaign.StateChanged -= Refresh; }
@@ -56,7 +71,7 @@ namespace Visha.Campaign
             }
             previousEncounter = campaign.EncounterNumber;
             bool won = state == CampaignState.Victory || state == CampaignState.DemoComplete;
-            targetColor = won ? new Color(1f, 1f, .86f) : Color.white;
+            targetColor = won ? new Color(1f, .95f, .82f) : inVault ? new Color(.83f, .88f, .93f) : new Color(.94f, .91f, .83f);
             if (screens != null) screens.SetArea(inVault ? "Vault" : "Courtyard");
         }
     }

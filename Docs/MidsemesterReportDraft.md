@@ -11,21 +11,23 @@ Since our second biweekly report, we have connected the combat systems into a pl
 
 All three player abilities work. Venom Strike adds poison, Serpent’s Bite consumes it for immediate damage, and Fade reduces damage during the next enemy phase. Poison resolves before the enemy attacks, and an enemy defeated by poison cannot act. Enemy intentions show the upcoming move and damage. The zero-damage turn previously called Defend is now called Recover because it does not provide armour.
 
-The player can start from the title screen, complete encounters, advance to the next fight, retry after defeat, and reach an end-of-demo screen. Health, poison and ability state reset between encounters. The interface displays health, poison stacks, enemy intentions, target selection and ability availability.
+The player can start from the title screen, complete encounters, advance to the next fight, retry after defeat, and reach a sealed-path ending. A temple map shows completed, available, locked and unfinished encounters. Completed encounters can be replayed; the inner Vault and Sanctum are labelled unavailable. Health, poison and ability state reset between encounters. The interface displays health, poison stacks, enemy intentions, target selection and ability availability.
 
-The presentation now includes simpler character sprites, separate Courtyard and Vault backgrounds, moving attacks, hit reactions, damage feedback, sound effects and a mute control. Enemy attacks visibly approach the player before applying damage. Fade’s damage feedback is labelled GUARDED so the reduction is clear.
+The presentation now includes compact corner ability controls, simpler character sprites, separate Courtyard and Vault backgrounds, moving attacks, hit reactions, damage feedback, sound effects and a mute control. Enemy attacks visibly approach the player before applying damage. Fade’s damage feedback is labelled GUARDED so the reduction is clear.
+
+We added a small optional mechanic called Breaking the Routine. Surviving a marked heavy attack with Fade earns one curse fragment per encounter. The next valid Venom Strike applies one additional poison stack, within the existing five-stack cap. The boon clears between attempts and encounters. This is a deliberate extension to the original pitch; it adds no new ability, inventory or permanent upgrade.
 
 For the recorded demo, we will show:
 
-1. The title screen and controls.
+1. The title screen, temple map, available encounters and sealed future areas.
 2. Venom Strike adding poison and poison resolving before the enemy response.
-3. Fade reducing a heavy attack, followed by its temporary unavailability.
+3. Fade reducing a marked heavy attack, earning the one-use boon, followed by its temporary unavailability.
 4. Serpent’s Bite consuming poison to finish an enemy before it can attack.
 5. Victory, the next encounter, and the different enemy opening.
-6. Defeat and retry, the Vault environment, and the end-of-demo screen.
+6. Defeat and retry, the Vault environment, and the sealed-path ending.
 7. The corresponding code, tests and repository progress.
 
-The latest code passed 157 Edit Mode checks and 16 Play Mode checks. Automated checks cover combat rules, campaign progression, reset behavior, input locking, movement, damage feedback and mute. These checks do not replace first-time player feedback or establish the final game’s duration.
+The latest code passed 162 Edit Mode checks and 23 Play Mode checks. Automated checks cover combat rules, campaign progression, reset behavior, input locking, movement, damage feedback, mute, map locks, replay, and the boon’s trigger, cap and reset behavior. Two Play Mode checks capture presentation evidence; they are not independent gameplay regressions. These checks do not replace first-time player feedback or establish the final game’s duration.
 
 ## Future Plans for the Project Till Final Presentation
 

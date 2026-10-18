@@ -15,6 +15,7 @@ namespace Visha.Combat.Flow
         private int previousHealth;
         private float recoil;
         public Vector3 ActionOffset { get; set; }
+        public float ActionTilt { get; set; }
         public Vector3 HomePosition => transform.parent == null ? restPosition : transform.parent.TransformPoint(restPosition);
 
         private void Awake()
@@ -58,13 +59,13 @@ namespace Visha.Combat.Flow
                 shadow.transform.localScale = new Vector3(1.25f + breath * .008f, .28f, 1);
                 shadow.transform.position = transform.position + new Vector3(0, .025f, 0);
             }
-            transform.localRotation = restRotation * Quaternion.Euler(0, 0, (alive ? Mathf.Sin(Time.time * 1.3f + phase) * .25f : 0) + recoil * (restPosition.x > 0 ? -14f : 14f));
+            transform.localRotation = restRotation * Quaternion.Euler(0, 0, (alive ? Mathf.Sin(Time.time * 1.3f + phase) * .25f : 0) + ActionTilt + recoil * (restPosition.x > 0 ? -14f : 14f));
         }
         private void OnDisable()
         {
             if (health != null) health.OnHealthChanged -= HandleHealthChanged;
             transform.localScale = restScale; transform.localRotation = restRotation;
-            transform.localPosition = restPosition; recoil = 0; ActionOffset = Vector3.zero;
+            transform.localPosition = restPosition; recoil = 0; ActionOffset = Vector3.zero; ActionTilt = 0;
             if (shadow != null) shadow.SetActive(false);
         }
         private void OnEnable()

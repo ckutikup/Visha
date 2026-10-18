@@ -28,6 +28,7 @@ namespace Visha.UI
         public int fadeReductionPercent = 50;
         public bool fadeAvailable = true;
         public bool fadeActive;
+        public bool routineOpportunity, routineBoon;
         public BattlePhase phase = BattlePhase.Waiting;
     }
 
@@ -52,9 +53,11 @@ namespace Visha.UI
         [SerializeField] private HealthBarView enemyHealthView;
         [SerializeField] private PoisonIndicatorView poisonView;
         [SerializeField] private IntentView intentView;
+        [SerializeField] private bool compactAbilities;
         private bool hasRendered;
         private int previousPlayerHealth = -1;
         private Text playerDamage;
+        private Text routineLabel;
         private Coroutine damageRoutine;
         [SerializeField] private AbilityButtonView venomView, biteView, fadeView;
         [SerializeField] private TargetIndicator targetIndicator;
@@ -130,6 +133,24 @@ namespace Visha.UI
             if(poisonView) poisonView.SetValue(poison,cap);
             if(intentView) intentView.SetIntent(state.intention,Mathf.Max(0,state.incomingDamage),enemyHP>0);
             hasRendered=true;
+            if (routineLabel == null)
+            {
+                var go = new GameObject("RoutineHint", typeof(RectTransform), typeof(CanvasRenderer), typeof(Text));
+                go.transform.SetParent(transform, false);
+                routineLabel = go.GetComponent<Text>();
+                routineLabel.font = phaseLabel.font;
+                routineLabel.fontSize = 22;
+                routineLabel.color = new Color(.63f, .91f, .76f);
+                routineLabel.alignment = TextAnchor.MiddleCenter;
+                routineLabel.raycastTarget = false;
+                var rect = (RectTransform)go.transform;
+                rect.anchorMin = rect.anchorMax = new Vector2(.5f, 1f);
+                rect.anchoredPosition = new Vector2(0, -110);
+                rect.sizeDelta = new Vector2(880, 40);
+            }
+            routineLabel.text = state.routineBoon ? "CURSE FRAGMENT · next Venom +1 poison (cap 5)"
+                : state.routineOpportunity ? "BREAK THE ROUTINE · Fade through this heavy attack" : "";
+            routineLabel.gameObject.SetActive(actorsAlive && phase != BattlePhase.Waiting);
             enemyNameLabel.text = enemyName;
             poisonLabel.text = $"Poison  {poison} / {cap}";
             if(intentionLabel) intentionLabel.text = enemyHP > 0 ? (state.intention ?? "").ToUpperInvariant() : "";
@@ -235,16 +256,38 @@ namespace Visha.UI
         private void ChooseFade() => ChooseAbility(BattleAbility.Fade);
         public void ChooseAbility(BattleAbility ability)
         {
-            if(!CanChoose(ability)) return;
+            if (!CanChoose(ability))
+            {
+                PreviewAbility(ability);
+                return;
+            }
             if(ability==BattleAbility.Fade) { Submit(ability); return; }
             pendingAbility=ability;selected=false;
             if(EventSystem.current) EventSystem.current.SetSelectedGameObject(gameObject);
             string preview = ability == BattleAbility.SerpentsBite
                 ? $"{poison * biteDamagePerStack} damage; consumes {poison} poison"
                 : $"Adds up to {venomStacks} poison; each stack deals {poisonDamagePerStack}/turn and stays";
-            SetFeedback($"{preview} · click {enemyName} to confirm / Esc to cancel");
+            if (compactAbilities)
+                preview = ability == BattleAbility.SerpentsBite ? $"{poison * biteDamagePerStack} damage · consumes poison" : $"+{venomStacks} poison · {poisonDamagePerStack}/stack each turn";
+            SetFeedback(compactAbilities ? $"{preview} · click enemy or Enter · Esc cancels" : $"{preview} · click {enemyName} to confirm / Esc to cancel");
             RefreshControls();
         }
+        public void PreviewAbility(BattleAbility ability)
+        {
+            if (!inputEnabled || !compactAbilities || phase != BattlePhase.PlayerTurn || submitted || pendingAbility.HasValue) return;
+            string message = ability == BattleAbility.VenomStrike
+                ? $"Venom Strike · +{venomStacks} poison; each stack deals {poisonDamagePerStack} damage per turn"
+                : ability == BattleAbility.SerpentsBite
+                    ? poison > 0 ? $"Serpent's Bite · {poison * biteDamagePerStack} damage; consumes all poison" : "Serpent's Bite · use Venom Strike to add poison first"
+                    : fadeAvailable ? $"Fade · reduce the next enemy phase by {fadeReductionPercent}%" : "Fade is recovering · use Venom Strike or Bite first";
+            SetFeedback(message);
+        }
+        public void EndAbilityPreview()
+        {
+            if (inputEnabled && compactAbilities && phase == BattlePhase.PlayerTurn && !submitted && !pendingAbility.HasValue)
+                SetFeedback("Choose an ability");
+        }
+
         public void CancelTargeting()
         {
             if(submitted || !inputEnabled || phase != BattlePhase.PlayerTurn)return;
@@ -288,9 +331,9 @@ namespace Visha.UI
             venomButton.interactable=CanChoose(BattleAbility.VenomStrike);
             biteButton.interactable=CanChoose(BattleAbility.SerpentsBite);
             fadeButton.interactable=CanChoose(BattleAbility.Fade);
-            if(venomView)venomView.SetState(pendingAbility==BattleAbility.VenomStrike, $"+{venomStacks} poison · persists each turn");
-            if(biteView)biteView.SetState(pendingAbility==BattleAbility.SerpentsBite,poison==0?"Requires poison":$"{poison * biteDamagePerStack} damage · consumes poison");
-            if(fadeView)fadeView.SetState(false,fadeAvailable?$"Reduce enemy phase by {fadeReductionPercent}%":"Recovering · use another ability");
+            if(venomView)venomView.SetState(pendingAbility==BattleAbility.VenomStrike, compactAbilities ? $"+{venomStacks} poison" : $"+{venomStacks} poison · persists each turn");
+            if(biteView)biteView.SetState(pendingAbility==BattleAbility.SerpentsBite,poison==0?"Needs poison":compactAbilities ? $"{poison * biteDamagePerStack} DMG" : $"{poison * biteDamagePerStack} damage · consumes poison");
+            if(fadeView)fadeView.SetState(false,fadeAvailable ? (compactAbilities ? $"{fadeReductionPercent}% guard" : $"Reduce enemy phase by {fadeReductionPercent}%") : (compactAbilities ? "Recover" : "Recovering · use another ability"));
         }
     }
 }

@@ -29,6 +29,8 @@ namespace Visha.Combat.Flow
                  "Found automatically if the scene has one. Leave empty for a single battle.")]
         [SerializeField] private CampaignController campaign;
 
+        private RoutineBreak routine;
+        private BattleAudio sound;
         private Health playerHealth;
         private Health enemyHealth;
         private Poison playerPoison;
@@ -49,6 +51,8 @@ namespace Visha.Combat.Flow
 
         private void Awake()
         {
+            routine = GetComponent<RoutineBreak>();
+            sound = FindAnyObjectByType<BattleAudio>();
             InitializeCombatants();
             InitializeViewState();
         }
@@ -157,6 +161,7 @@ namespace Visha.Combat.Flow
 
             if (!active)
             {
+                if (routine != null) routine.ResetEncounter();
                 StopAllCoroutines();
                 if (presentation != null) presentation.ResetPose();
                 if (!IsBattleOver())
@@ -233,7 +238,7 @@ namespace Visha.Combat.Flow
                 ? $"{enemyPatternRunner.IntentLabel} · {predicted} damage"
                 : "The enemy holds position · no attack");
             if (presentation != null)
-                yield return presentation.EnemyAction(incoming > 0, ApplyEnemyAction, incoming >= 9);
+                yield return presentation.EnemyAction(incoming > 0, ApplyEnemyAction, incoming >= 9, enemyPatternRunner.IntentLabel);
             else
                 ApplyEnemyAction();
             FinishRound();
@@ -255,7 +260,16 @@ namespace Visha.Combat.Flow
             int damage = action.Damage;
             if (action.Kind == EnemyActionKind.Attack && fade != null)
                 damage = fade.ReduceDamage(damage);
+            bool guarded = fade != null && fade.IsActive;
             if (damage > 0 && playerHealth != null) playerHealth.TakeDamage(damage);
+            if (routine != null && routine.TryGuard(enemyPatternRunner.IntentLabel, guarded,
+                    playerHealth != null && !playerHealth.IsDead))
+            {
+                if (presentation != null) presentation.ShowCurseFragment();
+                if (sound != null) sound.PlayRoutineBreak();
+                if (battleHUD != null) battleHUD.SetFeedback("Routine Broken · next Venom +1 poison");
+                Refresh();
+            }
         }
 
         private void FinishRound()
@@ -349,14 +363,25 @@ namespace Visha.Combat.Flow
         private string UseVenomStrike()
         {
             if (venomStrike == null) return "Venom Strike is not set up";
-            return venomStrike.TryUseOn(enemyGameObject) ? null : "Venom Strike cannot be used";
+            if (!venomStrike.TryUseOn(enemyGameObject)) return "Venom Strike cannot be used";
+            int bonus = routine != null ? routine.ConsumeBonus() : 0;
+            if (bonus > 0) enemyPoison.AddStacks(bonus);
+            return null;
         }
 
         private string UseSerpentsBite()
         {
             if (serpentsBite == null) return "Serpent's Bite is not set up";
             if (!serpentsBite.CanUseOn(enemyGameObject)) return "Serpent's Bite needs poison on the enemy";
-            return serpentsBite.TryUseOn(enemyGameObject) ? null : "Serpent's Bite cannot be used";
+            bool heavyThreat = enemyPatternRunner != null &&
+                (enemyPatternRunner.IntentLabel == "Heavy Blow" || enemyPatternRunner.IntentLabel == "Crush");
+            if (!serpentsBite.TryUseOn(enemyGameObject)) return "Serpent's Bite cannot be used";
+            if (heavyThreat && enemyHealth.IsDead)
+            {
+                var screens = FindAnyObjectByType<BattleScreenView>();
+                if (screens != null) screens.SetVictoryDetail("Threat Silenced · Bite stopped the heavy attack.");
+            }
+            return null;
         }
 
         private string UseFade()
@@ -385,6 +410,9 @@ namespace Visha.Combat.Flow
             viewState.venomStacks = venomStrike != null ? venomStrike.StacksApplied : 0;
             viewState.biteDamagePerStack = serpentsBite != null ? serpentsBite.DamagePerStack : 0;
             viewState.fadeReductionPercent = fade != null ? fade.ReductionPercent : 0;
+            viewState.routineOpportunity = routine != null && routine.IsOpportunity(enemyPatternRunner != null ? enemyPatternRunner.IntentLabel : "");
+            viewState.routineBoon = routine != null && routine.isActiveAndEnabled && routine.HasBoon;
+            if (viewState.routineBoon) viewState.venomStacks++;
             viewState.phase = currentPhase;
         }
 
@@ -413,6 +441,7 @@ namespace Visha.Combat.Flow
 
         private void HandleRetry()
         {
+            if (routine != null) routine.ResetEncounter();
             StopAllCoroutines();
             if (presentation != null) presentation.ResetPose();
             turnInProgress = false;

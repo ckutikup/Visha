@@ -11,7 +11,20 @@ namespace Visha.UI
         private Canvas canvas;
         [SerializeField] private bool fixedPosition;
         private Vector3 homePosition;
-        private void Awake() { if (target != null) homePosition = target.position; rect=(RectTransform)transform; canvas=GetComponentInParent<Canvas>(); }
+        [SerializeField] private bool aboveTarget;
+        [SerializeField] private Vector2 screenOffset;
+        private float headOffset;
+        private void Awake()
+        {
+            if (target != null)
+            {
+                homePosition = target.position;
+                var sprite = target.GetComponent<SpriteRenderer>();
+                if (sprite != null) headOffset = sprite.bounds.max.y - target.position.y;
+            }
+            rect = (RectTransform)transform;
+            canvas = GetComponentInParent<Canvas>();
+        }
         private void LateUpdate()
         {
             if(!target || !worldCamera) return;
@@ -19,7 +32,16 @@ namespace Visha.UI
                 ? canvas.worldCamera : null;
             Vector2 point;
             if(RectTransformUtility.ScreenPointToLocalPointInRectangle((RectTransform)rect.parent,
-                worldCamera.WorldToScreenPoint((fixedPosition ? homePosition : target.position)+worldOffset),uiCamera,out point)) rect.anchoredPosition=point;
+                worldCamera.WorldToScreenPoint((fixedPosition ? homePosition : target.position)+worldOffset + (aboveTarget ? Vector3.up * headOffset : Vector3.zero)),uiCamera,out point))
+            {
+                point += screenOffset;
+                var parent = (RectTransform)rect.parent;
+                Vector2 half = rect.rect.size * .5f;
+                Rect bounds = parent.rect;
+                point.x = Mathf.Clamp(point.x, bounds.xMin + half.x + 24, bounds.xMax - half.x - 24);
+                point.y = Mathf.Clamp(point.y, bounds.yMin + half.y + 24, bounds.yMax - half.y - 24);
+                rect.anchoredPosition = point;
+            }
         }
     }
 }

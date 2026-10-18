@@ -47,6 +47,15 @@ namespace Visha.Campaign
         private CampaignProgress progress;
         private int playerStartHealth;
         private int enemyStartHealth;
+        public int HighestCompletedEncounter { get; private set; } = -1;
+        public bool CanEnterEncounter(int index) => State != CampaignState.InBattle && index >= 0
+            && index < EncounterCount && index <= HighestCompletedEncounter + 1;
+        public bool EnterEncounter(int index)
+        {
+            if (!CanEnterEncounter(index) || !Progress.Select(index)) return false;
+            BeginEncounter(fullPlayerHealth: true);
+            return true;
+        }
 
         /// <summary>Fires after every campaign state change, for screens to update.</summary>
         public event Action<CampaignState> StateChanged;
@@ -97,6 +106,7 @@ namespace Visha.Campaign
             encounters = new List<EncounterConfig>(encounterList);
             if (progress != null) progress.StateChanged -= HandleProgressChanged;
             progress = null;
+            HighestCompletedEncounter = -1;
 
             if (isActiveAndEnabled) Subscribe();
         }
@@ -142,6 +152,7 @@ namespace Visha.Campaign
         public void RestartCampaign()
         {
             if (!HasEncounters()) return;
+            HighestCompletedEncounter = -1;
             Progress.Restart();
             BeginEncounter(fullPlayerHealth: true);
         }
@@ -150,6 +161,7 @@ namespace Visha.Campaign
         public void ReturnToTitle()
         {
             if (!HasEncounters()) return;
+            HighestCompletedEncounter = -1;
             Progress.ReturnToTitle();
         }
 
@@ -191,6 +203,8 @@ namespace Visha.Campaign
         private void HandleBattleEnded(BattleOutcome outcome)
         {
             if (Progress == null || !isActiveAndEnabled) return;
+            if (State == CampaignState.InBattle && outcome == BattleOutcome.Victory)
+                HighestCompletedEncounter = Mathf.Max(HighestCompletedEncounter, Progress.EncounterIndex);
             Progress.ReportOutcome(outcome);
         }
 

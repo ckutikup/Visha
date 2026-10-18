@@ -97,6 +97,8 @@ namespace Visha.Combat.Flow
             else if (outcome == BattleOutcome.Defeat) Play(defeatClip, true);
         }
 
+        public void PlayRoutineBreak() => Play(fadeClip);
+
         private void HandleRetry()
         {
             if (audioSource != null)
