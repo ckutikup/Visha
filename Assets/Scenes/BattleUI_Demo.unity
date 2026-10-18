@@ -730,42 +730,19 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 8432498212558123322, guid: c3ad170e0b9d84313b696873e8ad0e80, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 535435518}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: c3ad170e0b9d84313b696873e8ad0e80, type: 3}
---- !u!1 &535435516 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 8432498212558123322, guid: c3ad170e0b9d84313b696873e8ad0e80, type: 3}
-  m_PrefabInstance: {fileID: 535435515}
-  m_PrefabAsset: {fileID: 0}
 --- !u!114 &535435517 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 6099150335580581588, guid: c3ad170e0b9d84313b696873e8ad0e80, type: 3}
   m_PrefabInstance: {fileID: 535435515}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 535435516}
+  m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f543f64676d545b59468e9266f585fcf, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Visha.UI::Visha.UI.BattleScreenView
---- !u!114 &535435518
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 535435516}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: aec7e963ceaa4d4fa4d804caa9ab3178, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: Visha.UI.BattleIntegration::Visha.UI.BattleScreenPresenter
-  view: {fileID: 535435517}
-  hud: {fileID: 4906326237023900643}
-  outcome: {fileID: 808548954}
 --- !u!1 &619394800
 GameObject:
   m_ObjectHideFlags: 0
@@ -988,6 +965,8 @@ GameObject:
   - component: {fileID: 798040395}
   - component: {fileID: 798040396}
   - component: {fileID: 798040394}
+  - component: {fileID: 798040399}
+  - component: {fileID: 798040398}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -1021,7 +1000,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1a009785a0c6b41c8b52b6f2ec3096bd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Visha.Combat::Health
-  maxHealth: 30
+  maxHealth: 50
 --- !u!114 &798040396
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1051,6 +1030,33 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &798040398
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 798040393}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 224bb25158e2345018a2c203c16f5935, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Visha.Combat::Fade
+  reductionPercent: 50
+--- !u!114 &798040399
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 798040393}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 37e4aac6d6e56463f86b1d0d7e493316, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Visha.Combat::SerpentsBite
+  damagePerStack: 4
+  testTarget: {fileID: 0}
 --- !u!1 &808548952
 GameObject:
   m_ObjectHideFlags: 0
@@ -1087,9 +1093,9 @@ MonoBehaviour:
   outcomeController: {fileID: 808548954}
   enemyPatternRunner: {fileID: 277063400}
   venomStrike: {fileID: 798040394}
-  serpentsBiteDamage: 12
-  fadeReduction: 0
-  fadeBlocksNextAttack: 1
+  serpentsBite: {fileID: 798040399}
+  fade: {fileID: 798040398}
+  campaign: {fileID: 0}
 --- !u!114 &808548954
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1639,6 +1645,76 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1209343339}
   m_CullTransparentMesh: 1
+--- !u!1 &1309110004
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1309110007}
+  - component: {fileID: 1309110006}
+  - component: {fileID: 1309110005}
+  m_Layer: 0
+  m_Name: Campaign
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1309110005
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1309110004}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 54d77f5becb8b4f7bb4e40ce38e6cc45, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Visha.Campaign::Visha.Campaign.CampaignScreens
+  campaign: {fileID: 1309110006}
+  view: {fileID: 535435517}
+  hud: {fileID: 4906326237023900643}
+--- !u!114 &1309110006
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1309110004}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2758f5fe773204763a5c1348c49d757f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Visha.Campaign::Visha.Campaign.CampaignController
+  outcomeController: {fileID: 808548954}
+  playerHealth: {fileID: 798040395}
+  enemyHealth: {fileID: 277063401}
+  enemyPattern: {fileID: 277063400}
+  enemySpriteRenderer: {fileID: 0}
+  encounters:
+  - {fileID: 11400000, guid: de13ffb9f3f6544038e8611d51d03abc, type: 2}
+  - {fileID: 11400000, guid: 23e95127b7dac4d6583e8d7520bf35d8, type: 2}
+  - {fileID: 11400000, guid: 83fb1186c11c748ca99b9a8e798a2cc3, type: 2}
+  playerHealthRule: 0
+--- !u!4 &1309110007
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1309110004}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1345365309
 GameObject:
   m_ObjectHideFlags: 0
@@ -3222,3 +3298,4 @@ SceneRoots:
   - {fileID: 277063403}
   - {fileID: 808548955}
   - {fileID: 535435515}
+  - {fileID: 1309110007}

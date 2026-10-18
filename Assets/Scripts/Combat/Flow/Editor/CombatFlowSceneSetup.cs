@@ -3,6 +3,7 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Visha.Battle;
+using Visha.Campaign;
 using Visha.Enemies;
 using Visha.Preview;
 using Visha.UI;
@@ -21,7 +22,8 @@ namespace Visha.Combat.Flow.EditorTools
         private const string EnemyName = "Enemy";
         private const string ControllerName = "CombatFlowController";
 
-        private const int PlayerMaxHealth = 30;
+        // Combat contract v2: the player has 50 HP
+        private const int PlayerMaxHealth = 50;
         private const int EnemyMaxHealth = 24;
 
         [MenuItem("Visha/Setup Combat Flow In Open Scene")]
@@ -52,6 +54,8 @@ namespace Visha.Combat.Flow.EditorTools
             Health playerHealth = GetOrAdd<Health>(player);
             GetOrAdd<Poison>(player);
             VenomStrike venomStrike = GetOrAdd<VenomStrike>(player);
+            SerpentsBite serpentsBite = GetOrAdd<SerpentsBite>(player);
+            Fade fade = GetOrAdd<Fade>(player);
             SetInt(playerHealth, "maxHealth", PlayerMaxHealth);
 
             GameObject enemy = FindOrCreateRoot(scene, EnemyName);
@@ -73,6 +77,12 @@ namespace Visha.Combat.Flow.EditorTools
             SetReference(controller, "outcomeController", outcome);
             SetReference(controller, "enemyPatternRunner", patternRunner);
             SetReference(controller, "venomStrike", venomStrike);
+            SetReference(controller, "serpentsBite", serpentsBite);
+            SetReference(controller, "fade", fade);
+
+            // Combat accepts actions only while an encounter is InBattle.
+            CampaignController campaign = Object.FindAnyObjectByType<CampaignController>(FindObjectsInactive.Include);
+            SetReference(controller, "campaign", campaign);
 
             int previewsDisabled = 0;
             foreach (BattleHUDPreview preview in Object.FindObjectsByType<BattleHUDPreview>(FindObjectsInactive.Include))
@@ -88,7 +98,7 @@ namespace Visha.Combat.Flow.EditorTools
             Selection.activeGameObject = controllerObject;
 
             Debug.Log($"Combat Flow Setup: wired '{scene.name}' (Player {PlayerMaxHealth} HP, " +
-                      $"Enemy {EnemyMaxHealth} HP, {previewsDisabled} BattleHUDPreview disabled). Save the scene to keep it.");
+                      $"Enemy {EnemyMaxHealth} HP, {previewsDisabled} BattleHUDPreview disabled, campaign {(campaign != null ? "linked" : "none")}). Save the scene to keep it.");
         }
 
         private static GameObject FindOrCreateRoot(Scene scene, string name)

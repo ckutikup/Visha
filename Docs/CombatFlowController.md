@@ -1,79 +1,81 @@
-# Lab 1: September 28, 2026
+# Combat flow controller
 
-## Combat flow controller milestone
+`CombatFlowController` (`Assets/Scripts/Combat/Flow`) is the battle's rules
+engine. It owns turn order and action locking and connects the team's systems.
+It holds no damage numbers of its own:
 
-This contribution implements: the basic player/enemy turn sequence and
-action locking. `CombatFlowController` is the orchestrator that
-connects the systems the rest of the team built. It listens to Charith's
-`BattleHUD`, applies the three player abilities through `Health`, `Poison` and
-`VenomStrike`, runs the enemy's telegraphed move from Anshul's
-`EnemyPatternRunner`, and hands victory/defeat to Shivani's
-`BattleOutcomeController`. Everything lives in a new `Visha.Combat.Flow`
-assembly. No existing script, assembly definition or test was modified.
+| System | Owner | What the controller calls |
+| --- | --- | --- |
+| `VenomStrike`, `SerpentsBite`, `Fade`, `Poison`, `Health` | Balaji | `TryUseOn`, `CanUseOn`, `TryUse`, `ReduceDamage`, `EndEnemyPhase`, `OnOtherAbilityUsed`, `ResetFade`, `Tick` |
+| `EnemyPatternRunner` | Anshul | `TakeTurn`, `EnemyName`, `IntentLabel`, `IncomingDamage` |
+| `BattleOutcomeController` | Shivani | `OnBattleEnded`, `OnRetry`, `IsOver` |
+| `CampaignController` | Shivani | `State`, `StateChanged` (optional) |
+| `BattleHUD` | Charith | `AbilityRequested`, `Render(BattleViewState)`, `RejectAction` |
 
-## What it does
+## Turn order (combat contract v2)
 
-### Turn sequence
+1. **Player turn.** One ability. A refused ability does not use the turn: the
+   controller calls `BattleHUD.RejectAction(reason)` and the player picks again.
+2. **Enemy turn.** One frame later the telegraphed move from `TakeTurn()` hits
+   the player. An Attack goes through `Fade.ReduceDamage` (halved while Fade is
+   active). Defend deals 0.
+3. **Poison tick.** `Poison.Tick()` on the enemy, 2 damage per stack, after the
+   enemy has acted.
+4. **Fade window ends** (`Fade.EndEnemyPhase()`), then back to step 1.
 
-1. **Start.** `Start()` subscribes to every battle system and enters the
-   player's turn.
-2. **Player turn.** The phase is `PlayerTurn`. The HUD shows the enemy's next
-   move (intent and incoming damage) and waits for an ability.
-3. **Player acts.** `BattleHUD.AbilityRequested` reaches the controller, which
-   validates and applies the ability.
-4. **Enemy turn.** The phase switches to `EnemyTurn` and the HUD re-renders.
-   One frame later the controller calls `EnemyPatternRunner.TakeTurn()`,
-   applies the move's damage to the player (reduced by Fade if active), then
-   ticks the enemy's poison.
-5. **Back to the player.** If the battle is not over, control returns to step 2.
-6. **End.** When either combatant dies, `BattleOutcomeController.OnBattleEnded`
-   sets the phase to `Victory` or `Defeat` and the loop stops.
-7. **Retry.** `BattleOutcomeController.OnRetry` resets the controller's turn
-   state and starts a new player turn.
+The turn stops the moment either side dies: no enemy turn after a killing
+Bite, no poison tick after the player dies, and no new player turn after
+either. Anshul's balance table in `Docs/EnemyPattern.md` (player 50 HP)
+comes out the same with this timing.
 
-### Abilities
+## Abilities
 
-Ability Rules
+- **Venom Strike**: `VenomStrike.TryUseOn(enemy)`, +2 stacks (cap 5).
+- **Serpent's Bite**: refused unless `SerpentsBite.CanUseOn(enemy)` (the enemy
+  has poison and is alive). Consumes all stacks, 4 damage per stack.
+- **Fade**: `Fade.TryUse()`. Halves the next enemy Attack. Can't be used two
+  turns in a row: Venom Strike or Serpent's Bite calls
+  `Fade.OnOtherAbilityUsed()`, which makes it available again.
 
-- **Venom Strike**: Calls `VenomStrike.UseOn(enemy)`, adding `stacksApplied` (default 2) poison stacks to the enemy.
-- **Serpent's Bite**: Requires at least one poison stack on the enemy. Deals `serpentsBiteDamage` (default 12) plus 1 per stack, then consumes all stacks.
-- **Fade**: Guards the next enemy attack. With `fadeBlocksNextAttack` on (default), the attack deals 0. With it off, the attack is reduced by `fadeReduction`. Defend moves are unaffected.
+Balance values live on the components (Player object) and the enemy patterns,
+not on the controller. If the ability fields are empty, the controller finds
+the components on the Player.
 
-All three balance values are inspector fields on `CombatFlowController`.
+## Locking and gating
 
-## How to run
+- A submission locks the turn at once; repeats are ignored until the next
+  player turn. After Victory/Defeat nothing is accepted until Retry.
+- With a `CampaignController` in the scene (assigned, or found automatically),
+  actions are accepted only while the campaign is `InBattle`. Title, Victory,
+  Defeat and end screens show phase Waiting or the result. `SetCombatActive(bool)`
+  is public for any other owner. Without a campaign (BattleUI_Demo), combat is
+  always active.
 
-`BattleUI_Demo` is already wired and committed, so the menu step is only
-needed if the scene objects are missing or you want to wire another scene.
+## Retry and new encounters
 
-1. Open `Assets/Scenes/BattleUI_Demo.unity` as a scene (not in Prefab Mode).
-2. Optional: click **Visha > Setup Combat Flow In Open Scene** in the menu bar
-   (on macOS, the menu bar at the top of the screen). It adds Player, Enemy
-   and CombatFlowController, fills in every reference and disables
-   BattleHUDPreview. It is safe to run more than once.
-3. If you ran the menu item, save the scene (Cmd+S / Ctrl+S).
-4. Press **Play**.
-5. Click the enemy to target it, then use **Venom Strike**. The venom counter
-   fills, the phase switches to the enemy turn and back, and both health
-   bars drop.
-6. Once the enemy has poison, use **Serpent's Bite** to spend the stacks, or
-   use **Fade** before the telegraphed Heavy Blow.
-7. Keep playing until either side reaches 0 HP to see Victory or Defeat. To
-   play again, stop and re-enter Play mode (there is no Retry button yet).
+`BattleOutcomeController.OnRetry` runs for a retry, a new encounter and a
+restart. The controller stops any pending enemy turn, clears the turn lock,
+calls `Fade.ResetFade()`, passes through Waiting (so the HUD drops any pending
+submission) and starts a player turn. Health, poison and the pattern are reset
+by `BattleOutcomeController.Retry()` and `CampaignController`.
 
-## Scene integration
+## HUD state
 
-`BattleUI_Demo` now runs the real turn loop instead of the preview:
+Every change re-renders `BattleViewState` with real values: both health bars,
+enemy poison stacks and cap (enables Bite), enemy name, intention and incoming
+damage, `fadeAvailable = Fade.CanUse`, and the phase.
 
-- **Player**: `Health` (30 HP), `Poison`, `VenomStrike`.
-- **Enemy**: `Health` (24 HP), `Poison`, `EnemyPatternRunner` (Temple Guardian).
-- **CombatFlowController**: `BattleOutcomeController` (watching both `Health`
-  components) and `CombatFlowController` with every reference assigned.
-- **BattleHUDPreview** is disabled (not deleted). It listens to the same
-  `AbilityRequested` event and renders sample data, which would conflict with
-  the real controller. Re-enabling it is one checkbox.
+## Scene setup
 
-The wiring was done by an editor-only menu item, **Visha > Setup Combat Flow In
-Open Scene** (`CombatFlowSceneSetup`). It can be re-run safely: it reuses
-existing objects, records every change with Undo, and only marks the scene
-dirty. It lives in its own Editor assembly and is excluded from builds.
+**Visha > Setup Combat Flow In Open Scene** adds or reuses Player (Health 50,
+Poison, VenomStrike, SerpentsBite, Fade), Enemy (Health, Poison,
+EnemyPatternRunner) and the controller object, assigns every reference
+(including the CampaignController if the scene has one) and disables
+BattleHUDPreview. Safe to run again. Save the scene afterwards.
+
+## Tests
+
+EditMode > `Visha.Combat.Flow.Tests` covers each rule above: ability
+resolution through the components, refused Bite/Fade keeping the turn, Fade
+halving and its cooldown, poison timing, death stopping the turn, duplicate
+submissions, retry reset, campaign gating and the HUD values.

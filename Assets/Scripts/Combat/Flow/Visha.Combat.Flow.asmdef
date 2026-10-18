@@ -5,7 +5,8 @@
         "Visha.Battle",
         "Visha.Combat",
         "Visha.Enemies",
-        "Visha.UI"
+        "Visha.UI",
+        "Visha.Campaign"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

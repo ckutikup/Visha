@@ -1,6 +1,8 @@
 using System;
+using System.Collections;
 using UnityEngine;
 using Visha.Battle;
+using Visha.Campaign;
 using Visha.Enemies;
 using Visha.UI;
 
@@ -15,13 +17,15 @@ namespace Visha.Combat.Flow
         [SerializeField] private BattleOutcomeController outcomeController;
         [SerializeField] private EnemyPatternRunner enemyPatternRunner;
 
-        [Header("Ability Components")]
+        [Header("Ability Components (on the Player; found automatically if left empty)")]
         [SerializeField] private VenomStrike venomStrike;
+        [SerializeField] private SerpentsBite serpentsBite;
+        [SerializeField] private Fade fade;
 
-        [Header("Balance Values")]
-        [SerializeField] private int serpentsBiteDamage = 12;
-        [SerializeField] private int fadeReduction = 0;
-        [SerializeField] private bool fadeBlocksNextAttack = true;
+        [Header("Campaign (optional)")]
+        [Tooltip("When set, combat only accepts actions while an encounter is InBattle. " +
+                 "Found automatically if the scene has one. Leave empty for a single battle.")]
+        [SerializeField] private CampaignController campaign;
 
         private Health playerHealth;
         private Health enemyHealth;
@@ -30,11 +34,15 @@ namespace Visha.Combat.Flow
 
         private BattleViewState viewState;
         private BattlePhase currentPhase = BattlePhase.Waiting;
-        private bool isFadeActive = false;
-        private bool isProcessingAction = false;
+        private bool turnInProgress;
+        private bool combatActive = true;
+        private bool subscribed;
 
         /// <summary>Fired when the view state is updated, for UI to render.</summary>
         public event Action<BattleViewState> OnStateUpdated;
+
+        public BattlePhase CurrentPhase => currentPhase;
+        public bool IsCombatActive => combatActive;
 
         private void Awake()
         {
@@ -45,6 +53,7 @@ namespace Visha.Combat.Flow
         private void Start()
         {
             SubscribeToBattleSystem();
+            BindCampaign();
             EnterPlayerTurn();
         }
 
@@ -53,7 +62,7 @@ namespace Visha.Combat.Flow
             UnsubscribeFromBattleSystem();
         }
 
-        /// <summary>Initializes and caches all health and poison components.</summary>
+        /// <summary>Caches Health and Poison, and finds the ability components on the player if unassigned.</summary>
         private void InitializeCombatants()
         {
             if (playerGameObject == null || enemyGameObject == null)
@@ -67,39 +76,30 @@ namespace Visha.Combat.Flow
             playerPoison = playerGameObject.GetComponent<Poison>();
             enemyPoison = enemyGameObject.GetComponent<Poison>();
 
+            if (venomStrike == null) venomStrike = playerGameObject.GetComponent<VenomStrike>();
+            if (serpentsBite == null) serpentsBite = playerGameObject.GetComponent<SerpentsBite>();
+            if (fade == null) fade = playerGameObject.GetComponent<Fade>();
+
             if (playerHealth == null) Debug.LogError("Player missing Health component");
             if (enemyHealth == null) Debug.LogError("Enemy missing Health component");
-
-            // Poison is optional but log if missing
-            if (playerPoison == null) Debug.LogWarning("Player missing Poison component");
             if (enemyPoison == null) Debug.LogWarning("Enemy missing Poison component");
+            if (venomStrike == null) Debug.LogWarning("Player missing VenomStrike component");
+            if (serpentsBite == null) Debug.LogWarning("Player missing SerpentsBite component");
+            if (fade == null) Debug.LogWarning("Player missing Fade component");
         }
 
         private void InitializeViewState()
         {
-            viewState = new BattleViewState
-            {
-                playerHealth = playerHealth?.CurrentHealth ?? 0,
-                playerMaxHealth = playerHealth?.MaxHealth ?? 30,
-                enemyHealth = enemyHealth?.CurrentHealth ?? 0,
-                enemyMaxHealth = enemyHealth?.MaxHealth ?? 24,
-                poison = enemyPoison?.PoisonStacks ?? 0,
-                poisonCap = enemyPoison?.MaxStacks ?? 5,
-                enemyName = enemyPatternRunner?.EnemyName ?? "Enemy",
-                intention = enemyPatternRunner?.IntentLabel ?? "...",
-                incomingDamage = enemyPatternRunner?.IncomingDamage ?? 0,
-                fadeAvailable = true,
-                phase = BattlePhase.Waiting
-            };
+            viewState = new BattleViewState();
+            UpdateViewState();
         }
 
-        /// <summary>Subscribes to events from all battle systems.</summary>
         private void SubscribeToBattleSystem()
         {
-            if (battleHUD != null)
-            {
-                battleHUD.AbilityRequested += HandleAbilityRequested;
-            }
+            if (subscribed) return;
+            subscribed = true;
+
+            if (battleHUD != null) battleHUD.AbilityRequested += HandleAbilityRequested;
 
             if (outcomeController != null)
             {
@@ -107,36 +107,19 @@ namespace Visha.Combat.Flow
                 outcomeController.OnRetry += HandleRetry;
             }
 
-            if (playerHealth != null)
-            {
-                playerHealth.OnHealthChanged += HandlePlayerHealthChanged;
-                playerHealth.OnDied += HandlePlayerDied;
-            }
-
-            if (enemyHealth != null)
-            {
-                enemyHealth.OnHealthChanged += HandleEnemyHealthChanged;
-                enemyHealth.OnDied += HandleEnemyDied;
-            }
-
-            if (playerPoison != null)
-            {
-                playerPoison.OnPoisonChanged += HandlePlayerPoisonChanged;
-            }
-
-            if (enemyPoison != null)
-            {
-                enemyPoison.OnPoisonChanged += HandleEnemyPoisonChanged;
-            }
+            if (playerHealth != null) playerHealth.OnHealthChanged += HandleHealthChanged;
+            if (enemyHealth != null) enemyHealth.OnHealthChanged += HandleHealthChanged;
+            if (playerPoison != null) playerPoison.OnPoisonChanged += HandlePoisonChanged;
+            if (enemyPoison != null) enemyPoison.OnPoisonChanged += HandlePoisonChanged;
+            if (fade != null) fade.OnFadeChanged += Refresh;
         }
 
-        /// <summary>All Unsubscribes</summary>
         private void UnsubscribeFromBattleSystem()
         {
-            if (battleHUD != null)
-            {
-                battleHUD.AbilityRequested -= HandleAbilityRequested;
-            }
+            if (!subscribed) return;
+            subscribed = false;
+
+            if (battleHUD != null) battleHUD.AbilityRequested -= HandleAbilityRequested;
 
             if (outcomeController != null)
             {
@@ -144,294 +127,239 @@ namespace Visha.Combat.Flow
                 outcomeController.OnRetry -= HandleRetry;
             }
 
-            if (playerHealth != null)
+            if (playerHealth != null) playerHealth.OnHealthChanged -= HandleHealthChanged;
+            if (enemyHealth != null) enemyHealth.OnHealthChanged -= HandleHealthChanged;
+            if (playerPoison != null) playerPoison.OnPoisonChanged -= HandlePoisonChanged;
+            if (enemyPoison != null) enemyPoison.OnPoisonChanged -= HandlePoisonChanged;
+            if (fade != null) fade.OnFadeChanged -= Refresh;
+            if (campaign != null) campaign.StateChanged -= HandleCampaignStateChanged;
+        }
+        private void BindCampaign()
+        {
+            if (campaign == null) campaign = FindAnyObjectByType<CampaignController>();
+            if (campaign == null) return;
+
+            campaign.StateChanged += HandleCampaignStateChanged;
+            combatActive = campaign.State == CampaignState.InBattle;
+        }
+
+        private void HandleCampaignStateChanged(CampaignState state)
+        {
+            SetCombatActive(state == CampaignState.InBattle);
+        }
+
+        public void SetCombatActive(bool active)
+        {
+            combatActive = active;
+
+            if (!active)
             {
-                playerHealth.OnHealthChanged -= HandlePlayerHealthChanged;
-                playerHealth.OnDied -= HandlePlayerDied;
+                StopAllCoroutines();
+                if (!IsBattleOver())
+                {
+                    turnInProgress = false;
+                    SetPhase(BattlePhase.Waiting);
+                }
+                return;
             }
 
-            if (enemyHealth != null)
+            if (!IsBattleOver() && currentPhase == BattlePhase.Waiting)
             {
-                enemyHealth.OnHealthChanged -= HandleEnemyHealthChanged;
-                enemyHealth.OnDied -= HandleEnemyDied;
-            }
-
-            if (playerPoison != null)
-            {
-                playerPoison.OnPoisonChanged -= HandlePlayerPoisonChanged;
-            }
-
-            if (enemyPoison != null)
-            {
-                enemyPoison.OnPoisonChanged -= HandleEnemyPoisonChanged;
+                EnterPlayerTurn();
             }
         }
 
+        private bool CanAcceptAction()
+        {
+            return combatActive && !turnInProgress && currentPhase == BattlePhase.PlayerTurn && !IsBattleOver();
+        }
+
+        /// <summary>True as soon as either side is dead, even before the outcome event arrives.</summary>
+        private bool IsBattleOver()
+        {
+            if (outcomeController != null && outcomeController.IsOver) return true;
+            return (playerHealth != null && playerHealth.IsDead) || (enemyHealth != null && enemyHealth.IsDead);
+        }
+
+
         private void EnterPlayerTurn()
         {
-            if (isProcessingAction) return;
+            if (turnInProgress || IsBattleOver()) return;
 
-            currentPhase = BattlePhase.PlayerTurn;
-            isFadeActive = false;
-            UpdateViewState();
-            RenderUI();
+            if (!combatActive)
+            {
+                SetPhase(BattlePhase.Waiting);
+                return;
+            }
 
+            SetPhase(BattlePhase.PlayerTurn);
             Debug.Log("Combat: Entered Player Turn");
         }
 
         private void EnterEnemyTurn()
         {
-            if (isProcessingAction || enemyPatternRunner == null || enemyHealth == null)
+            if (enemyPatternRunner == null || enemyHealth == null || IsBattleOver())
+            {
+                turnInProgress = false;
                 return;
+            }
 
-            isProcessingAction = true;
-            currentPhase = BattlePhase.EnemyTurn;
-            UpdateViewState();
-            RenderUI();
-
+            turnInProgress = true;
+            SetPhase(BattlePhase.EnemyTurn);
             Debug.Log("Combat: Enemy turn starting");
-
             StartCoroutine(ExecuteEnemyActionNextFrame());
         }
 
-        private System.Collections.IEnumerator ExecuteEnemyActionNextFrame()
+        private IEnumerator ExecuteEnemyActionNextFrame()
         {
-            yield return null; // Wait one frame
+            yield return null; // one frame so the HUD shows EnemyTurn
+            ResolveEnemyTurn();
+        }
 
-            if (enemyPatternRunner == null || enemyHealth == null || enemyHealth.IsDead)
+        private void ResolveEnemyTurn()
+        {
+            if (IsBattleOver() || !combatActive)
             {
-                isProcessingAction = false;
-                EnterPlayerTurn();
-                yield break;
+                return;
             }
 
             EnemyAction action = enemyPatternRunner.TakeTurn();
-            Debug.Log($"Combat: Enemy action - {action.Label} ({action.Damage} damage)");
-
-            int damageToPlayer = action.Damage;
-            if (isFadeActive && action.Kind == EnemyActionKind.Attack)
+            int damage = action.Damage;
+            if (action.Kind == EnemyActionKind.Attack && fade != null)
             {
-                damageToPlayer = fadeBlocksNextAttack
-                    ? 0
-                    : Mathf.Max(0, damageToPlayer - fadeReduction);
-                Debug.Log($"Combat: Fade reduced damage from {action.Damage} to {damageToPlayer}");
+                damage = fade.ReduceDamage(damage);
             }
 
-            if (damageToPlayer > 0 && playerHealth != null)
+            Debug.Log($"Combat: Enemy used {action.Label} for {damage} (telegraphed {action.Damage})");
+            if (damage > 0 && playerHealth != null) playerHealth.TakeDamage(damage);
+
+            if (IsBattleOver())
             {
-                playerHealth.TakeDamage(damageToPlayer);
+                if (fade != null) fade.EndEnemyPhase();
+                return;
             }
 
-            if (enemyPoison != null && enemyPoison.PoisonStacks > 0)
-            {
-                int poisonDamage = enemyPoison.PoisonStacks * 2;
-                Debug.Log($"Combat: Enemy takes {poisonDamage} poison damage from {enemyPoison.PoisonStacks} stacks");
-                enemyHealth.TakeDamage(poisonDamage);
-            }
+            if (enemyPoison != null) enemyPoison.Tick();
+            if (fade != null) fade.EndEnemyPhase();
 
-            isProcessingAction = false;
+            if (IsBattleOver()) return;
 
-            if (!IsBattleOver())
-            {
-                EnterPlayerTurn();
-            }
+            turnInProgress = false;
+            EnterPlayerTurn();
         }
 
-        /// <summary>Handles ability requests from the BattleHUD UI.</summary>
+        /// <summary>Handles ability requests from the BattleHUD.</summary>
         private void HandleAbilityRequested(BattleAbility ability, int targetIndex)
         {
-            if (currentPhase != BattlePhase.PlayerTurn || isProcessingAction || IsBattleOver())
+            if (!CanAcceptAction())
             {
-                Debug.LogWarning("Combat: Ability requested in invalid state");
+                Debug.LogWarning($"Combat: {ability} ignored (phase {currentPhase}, active {combatActive}, busy {turnInProgress})");
                 return;
             }
 
-            bool success = ExecuteAbility(ability, targetIndex);
+            turnInProgress = true;
 
-            if (!success)
+            string reason = ExecuteAbility(ability);
+            if (reason != null)
             {
-                Debug.LogWarning($"Combat: Ability {ability} validation failed");
-                if (battleHUD != null) battleHUD.RejectAction($"{ability} cannot be used");
+                turnInProgress = false;
+                Debug.LogWarning($"Combat: {ability} refused - {reason}");
+                if (battleHUD != null) battleHUD.RejectAction(reason);
                 return;
             }
 
-            if (ability != BattleAbility.Fade)
-            {
-                isFadeActive = false;
-            }
+            if (ability != BattleAbility.Fade && fade != null) fade.OnOtherAbilityUsed();
 
             Debug.Log($"Combat: Player used {ability}");
+
+            if (IsBattleOver()) return;
+
             EnterEnemyTurn();
         }
 
-        private bool ExecuteAbility(BattleAbility ability, int targetIndex)
+        private string ExecuteAbility(BattleAbility ability)
         {
-            if (playerHealth == null || enemyHealth == null)
-            {
-                return false;
-            }
+            if (playerHealth == null || enemyHealth == null) return "Combatants are missing";
 
             switch (ability)
             {
-                case BattleAbility.VenomStrike:
-                    return UseVenomStrike(targetIndex);
-
-                case BattleAbility.SerpentsBite:
-                    return UseSerpentsBite(targetIndex);
-
-                case BattleAbility.Fade:
-                    return UseFade();
-
-                default:
-                    Debug.LogError($"Unknown ability: {ability}");
-                    return false;
+                case BattleAbility.VenomStrike: return UseVenomStrike();
+                case BattleAbility.SerpentsBite: return UseSerpentsBite();
+                case BattleAbility.Fade: return UseFade();
+                default: return "Unknown ability";
             }
         }
 
-        private bool UseVenomStrike(int targetIndex)
+        private string UseVenomStrike()
         {
-            if (venomStrike == null || enemyGameObject == null)
-            {
-                Debug.LogError("Venom Strike: Missing component references");
-                return false;
-            }
-
-            venomStrike.UseOn(enemyGameObject);
-            Debug.Log($"Combat: Venom Strike applied {venomStrike.StacksApplied} poison stacks");
-            return true;
+            if (venomStrike == null) return "Venom Strike is not set up";
+            return venomStrike.TryUseOn(enemyGameObject) ? null : "Venom Strike cannot be used";
         }
 
-        private bool UseSerpentsBite(int targetIndex)
+        private string UseSerpentsBite()
         {
-            if (enemyPoison == null || enemyHealth == null)
-            {
-                Debug.LogError("Serpent's Bite: Missing component references");
-                return false;
-            }
-
-            if (enemyPoison.PoisonStacks <= 0)
-            {
-                Debug.LogWarning("Combat: Serpent's Bite requires poison stacks");
-                ShowFeedback("Serpent's Bite requires poison");
-                return false;
-            }
-
-            int baseDamage = serpentsBiteDamage;
-            int poisonBonus = enemyPoison.PoisonStacks;
-            int totalDamage = baseDamage + poisonBonus;
-
-            enemyHealth.TakeDamage(totalDamage);
-            enemyPoison.ConsumeAllStacks();
-
-            Debug.Log($"Combat: Serpent's Bite dealt {totalDamage} damage ({baseDamage} base + {poisonBonus} poison bonus)");
-            return true;
+            if (serpentsBite == null) return "Serpent's Bite is not set up";
+            if (!serpentsBite.CanUseOn(enemyGameObject)) return "Serpent's Bite needs poison on the enemy";
+            return serpentsBite.TryUseOn(enemyGameObject) ? null : "Serpent's Bite cannot be used";
         }
 
-        private bool UseFade()
+        private string UseFade()
         {
-            isFadeActive = true;
-            Debug.Log("Combat: Fade activated - next attack will be reduced");
-            return true;
+            if (fade == null) return "Fade is not set up";
+            return fade.TryUse() ? null : "Fade can't be used two turns in a row";
         }
 
         private void UpdateViewState()
         {
             if (viewState == null) return;
 
-            viewState.playerHealth = playerHealth?.CurrentHealth ?? 0;
-            viewState.playerMaxHealth = playerHealth?.MaxHealth ?? 30;
-            viewState.enemyHealth = enemyHealth?.CurrentHealth ?? 0;
-            viewState.enemyMaxHealth = enemyHealth?.MaxHealth ?? 24;
-            // The HUD's venom counter shows stacks on the enemy (where Venom Strike applies them)
-            viewState.poison = enemyPoison?.PoisonStacks ?? 0;
-            viewState.poisonCap = enemyPoison?.MaxStacks ?? 5;
-            viewState.enemyName = enemyPatternRunner?.EnemyName ?? "Enemy";
-            viewState.intention = enemyPatternRunner?.IntentLabel ?? "...";
-            viewState.incomingDamage = enemyPatternRunner?.IncomingDamage ?? 0;
-            viewState.fadeAvailable = !isFadeActive; // Fade becomes unavailable after use
+            viewState.playerHealth = playerHealth != null ? playerHealth.CurrentHealth : 0;
+            viewState.playerMaxHealth = playerHealth != null ? playerHealth.MaxHealth : 0;
+            viewState.enemyHealth = enemyHealth != null ? enemyHealth.CurrentHealth : 0;
+            viewState.enemyMaxHealth = enemyHealth != null ? enemyHealth.MaxHealth : 0;
+            viewState.poison = enemyPoison != null ? enemyPoison.PoisonStacks : 0;
+            viewState.poisonCap = enemyPoison != null ? enemyPoison.MaxStacks : 5;
+            viewState.enemyName = enemyPatternRunner != null ? enemyPatternRunner.EnemyName : "Enemy";
+            viewState.intention = enemyPatternRunner != null ? enemyPatternRunner.IntentLabel : "...";
+            viewState.incomingDamage = enemyPatternRunner != null ? enemyPatternRunner.IncomingDamage : 0;
+            viewState.fadeAvailable = fade != null && fade.CanUse;
             viewState.phase = currentPhase;
         }
 
-        private void RenderUI()
+        private void SetPhase(BattlePhase phase)
         {
-            if (battleHUD != null && viewState != null)
-            {
-                battleHUD.Render(viewState);
-            }
+            currentPhase = phase;
+            Refresh();
+        }
 
+        private void Refresh()
+        {
+            UpdateViewState();
+            if (battleHUD != null && viewState != null) battleHUD.Render(viewState);
             OnStateUpdated?.Invoke(viewState);
         }
 
-        private void ShowFeedback(string message)
-        {
-            if (battleHUD != null)
-            {
-                battleHUD.SetFeedback(message);
-            }
-        }
-
-        private bool IsBattleOver()
-        {
-            return outcomeController != null && outcomeController.IsOver;
-        }
 
         private void HandleBattleEnded(BattleOutcome outcome)
         {
-            isProcessingAction = true;
-            currentPhase = outcome == BattleOutcome.Victory ? BattlePhase.Victory : BattlePhase.Defeat;
-            UpdateViewState();
-            RenderUI();
-
+            StopAllCoroutines();
+            turnInProgress = true;
+            SetPhase(outcome == BattleOutcome.Victory ? BattlePhase.Victory : BattlePhase.Defeat);
             Debug.Log($"Combat: Battle ended - {outcome}");
         }
 
         private void HandleRetry()
         {
-            isProcessingAction = false;
-            isFadeActive = false;
-            currentPhase = BattlePhase.Waiting;
-            InitializeViewState();
+            StopAllCoroutines();
+            turnInProgress = false;
+            if (fade != null) fade.ResetFade();
+
+            SetPhase(BattlePhase.Waiting);
             EnterPlayerTurn();
-
-            Debug.Log("Combat: Battle retry initiated");
+            Debug.Log("Combat: Battle reset");
         }
 
-        private void HandlePlayerHealthChanged(int current, int max)
-        {
-            UpdateViewState();
-            RenderUI();
-        }
-
-        private void HandleEnemyHealthChanged(int current, int max)
-        {
-            UpdateViewState();
-            RenderUI();
-        }
-
-        private void HandlePlayerDied()
-        {
-            Debug.Log("Combat: Player died");
-            UpdateViewState();
-            RenderUI();
-        }
-
-        private void HandleEnemyDied()
-        {
-            Debug.Log("Combat: Enemy died");
-            UpdateViewState();
-            RenderUI();
-        }
-
-        private void HandlePlayerPoisonChanged(int stacks)
-        {
-            UpdateViewState();
-            RenderUI();
-        }
-
-        private void HandleEnemyPoisonChanged(int stacks)
-        {
-            UpdateViewState();
-            RenderUI();
-        }
+        private void HandleHealthChanged(int current, int max) => Refresh();
+        private void HandlePoisonChanged(int stacks) => Refresh();
     }
 }
