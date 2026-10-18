@@ -80,6 +80,10 @@ namespace Visha.UI
             Show(BattleScreen.Defeat);
         }
         public void ShowComplete() => Show(BattleScreen.Complete);
+        public void SetVictoryDetail(string message)
+        {
+            if (screen == BattleScreen.Victory) victoryMessage.text += "\n" + message;
+        }
         private string EncounterMessage() => encounter > 0 ? $"\nEncounter {encounter} of {count} cleared." : string.Empty;
         private static string DisplayName(string name) => string.IsNullOrWhiteSpace(name) ? "the enemy" : name;
 

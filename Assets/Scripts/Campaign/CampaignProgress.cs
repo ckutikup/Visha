@@ -67,6 +67,14 @@ namespace Visha.Campaign
             return true;
         }
 
+        public bool Select(int index)
+        {
+            if (State == CampaignState.InBattle || index < 0 || index >= EncounterCount) return false;
+            EncounterIndex = index;
+            SetState(CampaignState.InBattle);
+            return true;
+        }
+
         public bool Retry()
         {
             if (State != CampaignState.Defeat) return false;

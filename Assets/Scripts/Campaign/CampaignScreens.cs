@@ -41,8 +41,10 @@ namespace Visha.Campaign
         {
             if (campaign == null || view == null) return;
             if (hud != null) view.SetHUD(hud);
-            view.BindNavigation(Guard(campaign.StartCampaign), Guard(campaign.NextEncounter),
-                                Guard(campaign.RetryEncounter), Guard(campaign.RestartCampaign),
+            var map = campaign.GetComponent<TempleMapView>();
+            view.BindNavigation(map != null ? (System.Action)map.Open : Guard(campaign.StartCampaign),
+                                map != null ? (System.Action)map.Open : Guard(campaign.NextEncounter),
+                                Guard(campaign.RetryEncounter), map != null ? (System.Action)map.Open : Guard(campaign.RestartCampaign),
                                 Guard(campaign.ReturnToTitle));
             campaign.StateChanged += Show;
         }

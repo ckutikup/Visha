@@ -54,6 +54,12 @@ public class CampaignDemoPlayModeTests
         Assert.IsTrue(button.gameObject.activeInHierarchy, $"{path} should be visible");
         Assert.IsTrue(button.interactable, $"{path} should be enabled");
         button.onClick.Invoke();
+        var map = campaign.GetComponent<TempleMapView>();
+        if (map != null && map.IsOpen)
+        {
+            if (path.Contains("RestartButton")) map.SelectNode(0);
+            map.EnterSelected();
+        }
     }
 
     /// <summary>Uses Venom Strike through the HUD and checks the turn loop accepted it.</summary>
@@ -344,6 +350,165 @@ public class CampaignDemoPlayModeTests
         Assert.AreEqual("−2  GUARDED", GameObject.Find("PlayerDamage").GetComponent<Text>().text);
         yield return new WaitForSeconds(1f);
         Assert.IsNull(GameObject.Find("PlayerDamage"));
+    }
+
+    [UnityTest]
+    public IEnumerator EnemyMovesHaveDistinctEffectsAndRestartClearsThem()
+    {
+        Click("TitlePanel/StartButton"); yield return null;
+        string[] names = { "StrikeImpact", "HeavyImpact", "BashImpact" };
+        for (int i = 0; i < names.Length; i++)
+        {
+            campaign.RestartCampaign(); yield return null;
+            enemyPattern.Configure(i == 2 ? EnemyPatternRunner.PatternKind.VaultSentinel : EnemyPatternRunner.PatternKind.TempleGuardian,
+                null, i == 2 ? 2 : i);
+            hud.ChooseAbility(BattleAbility.VenomStrike); hud.SelectTarget();
+            float deadline = Time.time + 3f;
+            while (playerHealth.CurrentHealth == 50 && Time.time < deadline) yield return null;
+            Assert.IsNotNull(GameObject.Find(names[i]), names[i]);
+            campaign.RestartCampaign(); yield return null;
+            foreach (string name in names) Assert.IsNull(GameObject.Find(name));
+        }
+    }
+
+    [UnityTest]
+    public IEnumerator FadeAfterimageDoesNotSurviveReturningToTitle()
+    {
+        Click("TitlePanel/StartButton"); yield return null;
+        hud.ChooseAbility(BattleAbility.Fade);
+        yield return null;
+        Assert.IsNotNull(GameObject.Find("FadeAfterimage"));
+        campaign.ReturnToTitle(); yield return null;
+        Assert.IsNull(GameObject.Find("FadeAfterimage"));
+    }
+
+    [UnityTest]
+    public IEnumerator MapLocksFutureNodesAndRetainsCompletedNodesOnReplay()
+    {
+        var map = campaign.GetComponent<TempleMapView>();
+        screens.RequestStart(); yield return null;
+        Assert.IsTrue(map.IsOpen);
+        Assert.AreEqual(CampaignState.Title, campaign.State);
+        map.SelectNode(1); map.EnterSelected();
+        Assert.AreEqual(CampaignState.Title, campaign.State);
+        map.SelectNode(4); map.EnterSelected();
+        Assert.AreEqual(CampaignState.Title, campaign.State);
+        map.SelectNode(0); map.EnterSelected(); yield return null;
+        Assert.IsFalse(map.IsOpen);
+        enemyHealth.TakeDamage(999); yield return null;
+        Assert.AreEqual(0, campaign.HighestCompletedEncounter);
+        Assert.IsTrue(campaign.CanEnterEncounter(1));
+        map.Open(); map.SelectNode(0); map.EnterSelected(); yield return null;
+        playerHealth.TakeDamage(999); yield return null;
+        Assert.AreEqual(0, campaign.HighestCompletedEncounter);
+        Assert.IsTrue(campaign.CanEnterEncounter(1));
+        Assert.IsFalse(campaign.CanEnterEncounter(2));
+        campaign.ReturnToTitle(); yield return null;
+        Assert.AreEqual(-1, campaign.HighestCompletedEncounter);
+    }
+
+    [UnityTest]
+    public IEnumerator GuardedHeavyGrantsOneCappedBoonAndRetryClearsIt()
+    {
+        Click("TitlePanel/StartButton"); yield return null;
+        var routine = Object.FindAnyObjectByType<Visha.Combat.Flow.RoutineBreak>();
+        enemyPattern.Configure(campaign.CurrentEncounter.Pattern, "Guardian", 1);
+        hud.ChooseAbility(BattleAbility.Fade);
+        yield return new WaitForSeconds(2f);
+        Assert.IsTrue(routine.HasBoon);
+        Assert.AreEqual(46, playerHealth.CurrentHealth);
+        enemyPoison.AddStacks(4);
+        hud.ChooseAbility(BattleAbility.VenomStrike); hud.SelectTarget();
+        yield return new WaitForSeconds(.45f);
+        Assert.AreEqual(5, enemyPoison.PoisonStacks);
+        Assert.IsFalse(routine.HasBoon);
+        yield return new WaitForSeconds(1.5f);
+        enemyPattern.Configure(campaign.CurrentEncounter.Pattern, "Guardian", 1);
+        hud.ChooseAbility(BattleAbility.Fade);
+        yield return new WaitForSeconds(2f);
+        Assert.IsFalse(routine.HasBoon, "the same encounter cannot award another fragment");
+        campaign.RestartCampaign(); yield return null;
+        Assert.IsTrue(routine.IsOpportunity("Heavy Blow"));
+        Assert.IsFalse(routine.HasBoon);
+        enemyPattern.Configure(campaign.CurrentEncounter.Pattern, "Guardian", 1);
+        hud.ChooseAbility(BattleAbility.Fade);
+        yield return new WaitForSeconds(2f);
+        Assert.IsTrue(routine.HasBoon);
+        campaign.ReturnToTitle(); yield return null;
+        Assert.IsFalse(routine.HasBoon);
+        Assert.IsNull(GameObject.Find("CurseFragment"));
+    }
+
+    [UnityTest]
+    public IEnumerator RoutineCanBeDisabledWithoutChangingBaseCombat()
+    {
+        Click("TitlePanel/StartButton"); yield return null;
+        var routine = Object.FindAnyObjectByType<Visha.Combat.Flow.RoutineBreak>();
+        routine.enabled = false;
+        enemyPattern.Configure(campaign.CurrentEncounter.Pattern, "Guardian", 1);
+        hud.ChooseAbility(BattleAbility.Fade);
+        yield return new WaitForSeconds(2f);
+        Assert.IsFalse(routine.HasBoon);
+        hud.ChooseAbility(BattleAbility.VenomStrike); hud.SelectTarget();
+        yield return new WaitForSeconds(.45f);
+        Assert.AreEqual(2, enemyPoison.PoisonStacks);
+    }
+
+    [UnityTest]
+    public IEnumerator BoonAddsThreeStacksAndDoesNotSurviveNextEncounter()
+    {
+        Click("TitlePanel/StartButton"); yield return null;
+        var routine = Object.FindAnyObjectByType<Visha.Combat.Flow.RoutineBreak>();
+        enemyPattern.Configure(campaign.CurrentEncounter.Pattern, "Guardian", 1);
+        hud.ChooseAbility(BattleAbility.Fade);
+        yield return new WaitForSeconds(2f);
+        hud.ChooseAbility(BattleAbility.VenomStrike); hud.SelectTarget();
+        yield return new WaitForSeconds(.45f);
+        Assert.AreEqual(3, enemyPoison.PoisonStacks);
+        Assert.IsFalse(routine.HasBoon);
+        campaign.RestartCampaign(); yield return null;
+        enemyPattern.Configure(campaign.CurrentEncounter.Pattern, "Guardian", 1);
+        hud.ChooseAbility(BattleAbility.Fade);
+        yield return new WaitForSeconds(2f);
+        Assert.IsTrue(routine.HasBoon);
+        enemyHealth.TakeDamage(999); yield return null;
+        Click("VictoryPanel/Card/NextButton"); yield return null;
+        Assert.AreEqual(0, enemyPoison.PoisonStacks);
+        Assert.IsFalse(routine.HasBoon);
+        Assert.IsTrue(routine.IsOpportunity("Heavy Blow"));
+    }
+
+    [UnityTest]
+    public IEnumerator InvalidTargetDoesNotSpendAnAction()
+    {
+        Click("TitlePanel/StartButton"); yield return null;
+        var flow = Object.FindAnyObjectByType<Visha.Combat.Flow.CombatFlowController>();
+        var request = typeof(Visha.Combat.Flow.CombatFlowController).GetMethod("HandleAbilityRequested",
+            System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+        request.Invoke(flow, new object[] { BattleAbility.VenomStrike, 1 });
+        yield return new WaitForSeconds(.5f);
+        Assert.AreEqual(0, enemyPoison.PoisonStacks);
+        Assert.AreEqual(BattlePhase.PlayerTurn, flow.CurrentPhase);
+        hud.ChooseAbility(BattleAbility.VenomStrike); hud.SelectTarget();
+        yield return new WaitForSeconds(.5f);
+        Assert.AreEqual(2, enemyPoison.PoisonStacks);
+    }
+
+    [UnityTest]
+    public IEnumerator SkillArtworkDoesNotBlockPointerClicks()
+    {
+        Click("TitlePanel/StartButton"); yield return null;
+        Canvas.ForceUpdateCanvases();
+        foreach (var button in hud.GetComponentsInChildren<Button>())
+        {
+            if (button.name != "VenomStrike" && button.name != "Fade") continue;
+            var point = RectTransformUtility.WorldToScreenPoint(null, button.transform.position);
+            var input = new UnityEngine.EventSystems.PointerEventData(UnityEngine.EventSystems.EventSystem.current) { position = point };
+            var hits = new System.Collections.Generic.List<UnityEngine.EventSystems.RaycastResult>();
+            UnityEngine.EventSystems.EventSystem.current.RaycastAll(input, hits);
+            Assert.IsNotEmpty(hits);
+            Assert.IsTrue(hits[0].gameObject.transform.IsChildOf(button.transform), button.name + " is obscured");
+        }
     }
 
 }

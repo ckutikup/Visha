@@ -8,11 +8,14 @@ namespace Visha.UI
         [SerializeField] private Image fill;
         [SerializeField] private Image trail;
         private float goal = 1f;
+        private Color baseColor;
+        private void Awake() { if (fill != null) baseColor = fill.color; }
         public void SetValue(int current, int maximum, bool immediate = false)
         {
             float next = maximum > 0 ? Mathf.Clamp01((float)current / maximum) : 0;
             if (next > goal) immediate = true;
             goal = next;
+            if (fill != null) fill.color = next <= .25f ? new Color(.94f, .39f, .32f) : baseColor;
             if (immediate || !Application.isPlaying) { SetWidth(fill, goal); SetWidth(trail, goal); }
         }
         private void Update()

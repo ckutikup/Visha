@@ -2,7 +2,7 @@
 
 ## What works
 
-Three single-enemy encounters: Temple Guardian (30 HP), Guardian Warden (44 HP), and Vault Sentinel (46 HP). Each encounter starts the player at 50 HP. Start, Next, defeat/retry, demo completion, restart and return to title are connected.
+Three single-enemy encounters: Temple Guardian (30 HP), Guardian Warden (44 HP), and Vault Sentinel (46 HP). Each encounter starts the player at 50 HP. Start, Next, defeat/retry, a sealed-path ending, replay and return to title are connected through the temple map.
 
 The first two fights take place in the Courtyard. The third introduces the Vault, with a sealed serpent door, abandoned offerings and a broken chain. This is a partial campaign: the remaining Vault encounter and Sanctum boss are not implemented.
 
@@ -42,7 +42,7 @@ The HUD uses Barlow, fixed health panels, clear action labels, current enemy int
 5. Build poison, then use Bite to show the approach animation and consumption of stacks.
 6. Show Next and the Warden's different opening. Demonstrate retry if time permits.
 7. Enter the Vault to show the environment change and Sentinel pattern.
-8. Show the demo ending and explain the remaining work.
+8. Show the sealed-path ending and unavailable map nodes, then explain the remaining work.
 
 ## Remaining semester work
 
@@ -72,3 +72,13 @@ Suggested remaining sequence: first integrate two-enemy combat and target UI; ne
 The battle layout uses corner area/progress text, a small turn indicator and three separate action buttons over the environment. The full-width title band and large action-tray background have been removed. Health labels render above their bar decorations with a dark shadow.
 
 Enemy hits now pause briefly at contact, push and tilt the player back, and show the actual health lost for 0.9 seconds. Fade hits are labelled GUARDED. Restarting clears the label and recoil. No damage values were changed by this feedback revision.
+
+## Temple map and routine extension
+
+The map shows the original five planned encounter nodes. Three are playable in this build; the third is explicitly a single-enemy Vault preview. Nodes unlock in order. Replaying a cleared fight preserves later unlocks during the current run; returning to title begins a fresh run. Each node has a short description of its challenge. The inner Vault and Sanctum remain sealed. The final available fight leads to an in-world sealed-path screen rather than a completed-campaign claim.
+
+Breaking the Routine is a deliberate addition to the pitch. Fade through a marked Heavy Blow or Crush and survive to earn one fragment per encounter attempt. The next valid Venom gains one extra poison stack, still capped at five. The boon cannot stack or be farmed within an encounter, is consumed even if Venom is already at the cap, and clears on retry, transition or return to title. Killing the enemy before its attack does not trigger this guard reward. Disable the RoutineBreak component to use the original combat unchanged.
+
+Strike uses a diagonal slash; heavy attacks use a longer anticipation and downward impact; Shield Bash uses an expanding ring. Fade leaves a brief afterimage. The fragment visibly travels toward the player. A Bite kill before a heavy attack adds “Threat Silenced” to the victory message. These are procedural sprite movements and effects, not full character animation sets.
+
+See MidsemesterAndFinalPlan.md for the scoped demo, future milestones, proposed member responsibilities and submission checklist.
