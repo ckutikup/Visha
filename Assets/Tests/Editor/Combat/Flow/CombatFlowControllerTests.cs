@@ -1,4 +1,5 @@
 using System.Reflection;
+using System.Collections.Generic;
 using NUnit.Framework;
 using UnityEngine;
 using Visha.Battle;
@@ -106,6 +107,27 @@ namespace Visha.Combat.Flow.Tests
 
             Assert.AreEqual(2, enemyPoison.PoisonStacks);
             Assert.AreEqual(BattlePhase.EnemyTurn, controller.CurrentPhase, "a successful ability hands over to the enemy");
+        }
+
+        [Test]
+        public void AbilityUsed_IsRaisedOnlyAfterAnAbilitySucceeds()
+        {
+            var used = new List<BattleAbility>();
+            controller.OnAbilityUsed += used.Add;
+
+            Request(BattleAbility.SerpentsBite);
+            Assert.IsEmpty(used);
+
+            Request(BattleAbility.VenomStrike);
+            CollectionAssert.AreEqual(new[] { BattleAbility.VenomStrike }, used);
+
+            FinishEnemyTurn();
+            Request(BattleAbility.Fade);
+            CollectionAssert.AreEqual(new[] { BattleAbility.VenomStrike, BattleAbility.Fade }, used);
+
+            FinishEnemyTurn();
+            Request(BattleAbility.Fade);
+            CollectionAssert.AreEqual(new[] { BattleAbility.VenomStrike, BattleAbility.Fade }, used);
         }
 
         [Test]

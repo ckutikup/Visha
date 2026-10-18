@@ -40,6 +40,7 @@ namespace Visha.Combat.Flow
 
         /// <summary>Fired when the view state is updated, for UI to render.</summary>
         public event Action<BattleViewState> OnStateUpdated;
+        public event Action<BattleAbility> OnAbilityUsed;
 
         public BattlePhase CurrentPhase => currentPhase;
         public bool IsCombatActive => combatActive;
@@ -270,6 +271,7 @@ namespace Visha.Combat.Flow
 
             if (ability != BattleAbility.Fade && fade != null) fade.OnOtherAbilityUsed();
 
+            OnAbilityUsed?.Invoke(ability);
             Debug.Log($"Combat: Player used {ability}");
 
             if (IsBattleOver()) return;

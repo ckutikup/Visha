@@ -26,6 +26,7 @@ public class CampaignDemoPlayModeTests
     private Poison enemyPoison;
     private EnemyPatternRunner enemyPattern;
     private BattleScreenView screens;
+    private SpriteRenderer enemySpriteRenderer;
 
     [UnitySetUp]
     public IEnumerator LoadScene()
@@ -38,6 +39,7 @@ public class CampaignDemoPlayModeTests
         enemyPattern = Object.FindAnyObjectByType<EnemyPatternRunner>();
         enemyHealth = enemyPattern.GetComponent<Health>();
         enemyPoison = enemyPattern.GetComponent<Poison>();
+        enemySpriteRenderer = GameObject.Find("EnemyPlaceholder").GetComponent<SpriteRenderer>();
         playerHealth = GameObject.Find("Player").GetComponent<Health>();
         screens = Object.FindAnyObjectByType<BattleScreenView>();
         Assert.IsNull(Object.FindAnyObjectByType<BattleScreenPresenter>(),
@@ -76,6 +78,7 @@ public class CampaignDemoPlayModeTests
         Assert.IsFalse(ScreenVisible(BattleScreen.Title));
         Assert.AreEqual(1, campaign.EncounterNumber);
         Assert.AreEqual("Temple Guardian", enemyPattern.EnemyName);
+        Assert.AreEqual(campaign.CurrentEncounter.EnemySprite, enemySpriteRenderer.sprite);
         yield return AssertBattleAcceptsActions();
 
         // Encounter 1: win, then wait for Next
@@ -90,6 +93,7 @@ public class CampaignDemoPlayModeTests
         Assert.IsFalse(ScreenVisible(BattleScreen.Victory));
         Assert.AreEqual(2, campaign.EncounterNumber);
         Assert.AreEqual("Guardian Warden", enemyPattern.EnemyName);
+        Assert.AreEqual(campaign.CurrentEncounter.EnemySprite, enemySpriteRenderer.sprite);
         Assert.AreEqual("ENCOUNTER 2 / 3", screens.transform.Find("Encounter").GetComponent<Text>().text);
         Assert.AreEqual(44, enemyHealth.CurrentHealth);
         Assert.AreEqual(0, enemyPoison.PoisonStacks);
@@ -118,6 +122,7 @@ public class CampaignDemoPlayModeTests
         yield return null;
         Assert.AreEqual(3, campaign.EncounterNumber);
         Assert.AreEqual("Vault Sentinel", enemyPattern.EnemyName);
+        Assert.AreEqual(campaign.CurrentEncounter.EnemySprite, enemySpriteRenderer.sprite);
         Assert.AreEqual(46, enemyHealth.CurrentHealth);
         yield return AssertBattleAcceptsActions();
 
