@@ -20,12 +20,17 @@ namespace Visha.Enemies
     /// </summary>
     public sealed class EnemyPatternRunner : MonoBehaviour
     {
-        [Tooltip("Which built-in pattern this enemy uses. Only the Temple Guardian exists this milestone.")]
+        [Tooltip("Which built-in pattern this enemy uses: the Temple Guardian or the Vault Sentinel.")]
         [SerializeField] private PatternKind pattern = PatternKind.TempleGuardian;
 
+        /// <summary>
+        /// The enemy types. Values are explicit because encounter assets store the
+        /// number, so existing entries must never be renumbered.
+        /// </summary>
         public enum PatternKind
         {
-            TempleGuardian
+            TempleGuardian = 0,
+            VaultSentinel = 1
         }
 
         private EnemyAttackPattern _pattern;
@@ -55,6 +60,8 @@ namespace Visha.Enemies
         {
             switch (kind)
             {
+                case PatternKind.VaultSentinel:
+                    return VaultSentinelPattern.Create();
                 case PatternKind.TempleGuardian:
                 default:
                     return TempleGuardianPattern.Create();
@@ -75,6 +82,12 @@ namespace Visha.Enemies
 
         /// <summary>True when the next move is a defend rather than an attack.</summary>
         public bool NextIsDefend => Pattern.Current.Kind == EnemyActionKind.Defend;
+
+        /// <summary>Attack or Defend for the telegraphed move, for the HUD's action type.</summary>
+        public EnemyActionKind IntentKind => Pattern.Current.Kind;
+
+        /// <summary>Which enemy type this runner is currently using.</summary>
+        public PatternKind Kind => pattern;
 
         /// <summary>Look further down the cycle without changing it (0 = the next move).</summary>
         public EnemyAction PeekAhead(int turnsAhead) => Pattern.Peek(turnsAhead);

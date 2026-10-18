@@ -123,4 +123,75 @@ public class BattleHUDTests
         }
         finally{if(opened)UnityEditor.SceneManagement.EditorSceneManager.CloseScene(scene,true);}
     }
+    [Test] public void RejectedActionAllowsAnotherChoiceWithoutChangingTurns()
+    {
+        int calls = 0;
+        hud.AbilityRequested += (a, t) => { calls++; hud.RejectAction("Target needs poison"); };
+        hud.Render(new BattleViewState { phase = BattlePhase.PlayerTurn });
+        hud.ChooseAbility(BattleAbility.VenomStrike); hud.SelectTarget();
+        Assert.AreEqual("Target needs poison", Field<Text>("feedbackLabel").text);
+        Assert.IsTrue(Field<Button>("venomButton").interactable);
+        hud.ChooseAbility(BattleAbility.VenomStrike); hud.SelectTarget();
+        Assert.AreEqual(2, calls);
+    }
+
+    [Test] public void OverlayBlocksAllRequestsAndClearsTargeting()
+    {
+        int calls = 0; hud.AbilityRequested += (a, t) => calls++;
+        var state = new BattleViewState { phase = BattlePhase.PlayerTurn, poison = 2 };
+        hud.Render(state); hud.ChooseAbility(BattleAbility.VenomStrike);
+        hud.SetInputEnabled(false); hud.Render(state);
+        hud.SelectTarget(); hud.RequestVenomStrike(); hud.RequestFade();
+        Assert.AreEqual(0, calls);
+        Assert.IsFalse(Field<Button>("venomButton").interactable);
+        Assert.IsFalse(Field<Button>("targetButton").interactable);
+        hud.SetInputEnabled(true);
+        Assert.IsFalse(Field<Button>("targetButton").interactable);
+        hud.ChooseAbility(BattleAbility.VenomStrike); hud.SelectTarget();
+        Assert.AreEqual(1, calls);
+    }
+
+    [Test] public void TargetPromptUsesTheCurrentEnemyName()
+    {
+        hud.AbilityRequested += (a, t) => { };
+        hud.Render(new BattleViewState { phase = BattlePhase.PlayerTurn, enemyName = "Vault Sentinel" });
+        hud.ChooseAbility(BattleAbility.VenomStrike);
+        StringAssert.Contains("Vault Sentinel", Field<Text>("feedbackLabel").text);
+        Assert.AreEqual("SELECT TARGET", Field<Text>("targetLabel").text);
+    }
+
+    [Test] public void LosingPoisonCancelsPendingBite()
+    {
+        int calls = 0; hud.AbilityRequested += (a, t) => calls++;
+        hud.Render(new BattleViewState { phase = BattlePhase.PlayerTurn, poison = 2 });
+        hud.ChooseAbility(BattleAbility.SerpentsBite);
+        hud.Render(new BattleViewState { phase = BattlePhase.PlayerTurn, poison = 0 });
+        hud.SelectTarget();
+        Assert.AreEqual(0, calls);
+        Assert.IsFalse(Field<Button>("targetButton").interactable);
+        Assert.IsFalse(Field<Button>("biteButton").interactable);
+    }
+
+    [Test] public void RejectionCannotUnlockEnemyTurnOrEndedBattle()
+    {
+        hud.AbilityRequested += (a, t) => Assert.Fail("Must remain locked");
+        foreach (var phase in new[] { BattlePhase.EnemyTurn, BattlePhase.Victory, BattlePhase.Defeat })
+        {
+            hud.Render(new BattleViewState { phase = phase });
+            hud.RejectAction("late response"); hud.RequestFade();
+            Assert.IsFalse(Field<Button>("fadeButton").interactable);
+        }
+    }
+
+    [Test] public void NewTurnClearsThePreviousTargetPrompt()
+    {
+        hud.AbilityRequested += (a, t) => { };
+        hud.Render(new BattleViewState { phase = BattlePhase.PlayerTurn });
+        hud.ChooseAbility(BattleAbility.VenomStrike);
+        hud.Render(new BattleViewState { phase = BattlePhase.EnemyTurn });
+        Assert.AreEqual("", Field<Text>("feedbackLabel").text);
+        hud.Render(new BattleViewState { phase = BattlePhase.PlayerTurn });
+        Assert.AreEqual("Choose an ability", Field<Text>("feedbackLabel").text);
+    }
+
 }
