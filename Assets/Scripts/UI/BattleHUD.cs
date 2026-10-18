@@ -21,6 +21,9 @@ namespace Visha.UI
         public string enemyName = "Temple Guardian";
         public string intention = "Attack";
         public int incomingDamage = 4;
+        public int venomStacks = 2;
+        public int biteDamagePerStack = 4;
+        public int fadeReductionPercent = 50;
         public bool fadeAvailable = true;
         public BattlePhase phase = BattlePhase.Waiting;
     }
@@ -59,6 +62,7 @@ namespace Visha.UI
         private bool actorsAlive;
         private bool fadeAvailable;
         private int poison;
+        private int venomStacks = 2, biteDamagePerStack = 4, fadeReductionPercent = 50;
         private bool inputEnabled = true;
         private string enemyName = "enemy";
         public string EnemyName => enemyName;
@@ -95,6 +99,9 @@ namespace Visha.UI
             poison = Mathf.Clamp(state.poison, 0, cap);
             actorsAlive = playerHP > 0 && enemyHP > 0;
             fadeAvailable = state.fadeAvailable;
+            venomStacks = Mathf.Max(0, state.venomStacks);
+            biteDamagePerStack = Mathf.Max(0, state.biteDamagePerStack);
+            fadeReductionPercent = Mathf.Clamp(state.fadeReductionPercent, 0, 100);
             enemyName = string.IsNullOrWhiteSpace(state.enemyName) ? "enemy" : state.enemyName;
             if (!actorsAlive || (pendingAbility.HasValue && !CanChoose(pendingAbility.Value)))
             {
@@ -214,9 +221,9 @@ namespace Visha.UI
             venomButton.interactable=CanChoose(BattleAbility.VenomStrike);
             biteButton.interactable=CanChoose(BattleAbility.SerpentsBite);
             fadeButton.interactable=CanChoose(BattleAbility.Fade);
-            if(venomView)venomView.SetState(pendingAbility==BattleAbility.VenomStrike, "");
-            if(biteView)biteView.SetState(pendingAbility==BattleAbility.SerpentsBite,poison==0?"Requires poison":"");
-            if(fadeView)fadeView.SetState(false,fadeAvailable?"":"Unavailable this turn");
+            if(venomView)venomView.SetState(pendingAbility==BattleAbility.VenomStrike, $"+{venomStacks} poison · persists each turn");
+            if(biteView)biteView.SetState(pendingAbility==BattleAbility.SerpentsBite,poison==0?"Requires poison":$"{poison * biteDamagePerStack} damage · consumes poison");
+            if(fadeView)fadeView.SetState(false,fadeAvailable?$"Reduce next hit by {fadeReductionPercent}%":"Recovering · use another ability");
         }
     }
 }

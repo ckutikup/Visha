@@ -213,7 +213,7 @@ namespace Visha.Combat.Flow
 
         private IEnumerator ExecuteEnemyActionNextFrame()
         {
-            yield return null; // one frame so the HUD shows EnemyTurn
+            yield return new WaitForSeconds(0.45f); // keep the accepted action visible before the enemy responds
             ResolveEnemyTurn();
         }
 
@@ -325,6 +325,9 @@ namespace Visha.Combat.Flow
             viewState.intention = enemyPatternRunner != null ? enemyPatternRunner.IntentLabel : "...";
             viewState.incomingDamage = enemyPatternRunner != null ? enemyPatternRunner.IncomingDamage : 0;
             viewState.fadeAvailable = fade != null && fade.CanUse;
+            viewState.venomStacks = venomStrike != null ? venomStrike.StacksApplied : 0;
+            viewState.biteDamagePerStack = serpentsBite != null ? serpentsBite.DamagePerStack : 0;
+            viewState.fadeReductionPercent = fade != null ? fade.ReductionPercent : 0;
             viewState.phase = currentPhase;
         }
 

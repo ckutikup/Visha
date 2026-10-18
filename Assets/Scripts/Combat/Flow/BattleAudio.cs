@@ -28,7 +28,11 @@ namespace Visha.Combat.Flow
             if (playerHealth != null) playerHealth.OnHealthChanged += HandlePlayerHealthChanged;
             if (enemyHealth != null) enemyHealth.OnHealthChanged += HandleEnemyHealthChanged;
             if (combatFlow != null) combatFlow.OnAbilityUsed += HandleAbilityUsed;
-            if (outcomeController != null) outcomeController.OnBattleEnded += HandleBattleEnded;
+            if (outcomeController != null)
+            {
+                outcomeController.OnBattleEnded += HandleBattleEnded;
+                outcomeController.OnRetry += HandleRetry;
+            }
         }
 
         private void Start()
@@ -49,7 +53,11 @@ namespace Visha.Combat.Flow
             if (playerHealth != null) playerHealth.OnHealthChanged -= HandlePlayerHealthChanged;
             if (enemyHealth != null) enemyHealth.OnHealthChanged -= HandleEnemyHealthChanged;
             if (combatFlow != null) combatFlow.OnAbilityUsed -= HandleAbilityUsed;
-            if (outcomeController != null) outcomeController.OnBattleEnded -= HandleBattleEnded;
+            if (outcomeController != null)
+            {
+                outcomeController.OnBattleEnded -= HandleBattleEnded;
+                outcomeController.OnRetry -= HandleRetry;
+            }
             if (audioSource != null) audioSource.Stop();
         }
 
@@ -84,17 +92,37 @@ namespace Visha.Combat.Flow
 
         private void HandleBattleEnded(BattleOutcome outcome)
         {
-            if (outcome == BattleOutcome.Victory) Play(victoryClip);
-            else if (outcome == BattleOutcome.Defeat) Play(defeatClip);
+            if (outcome == BattleOutcome.Victory) Play(victoryClip, true);
+            else if (outcome == BattleOutcome.Defeat) Play(defeatClip, true);
         }
 
-        private void Play(AudioClip clip)
+        private void HandleRetry()
+        {
+            if (audioSource != null)
+            {
+                audioSource.Stop();
+                audioSource.clip = null;
+            }
+            previousPlayerHealth = playerHealth != null ? playerHealth.CurrentHealth : -1;
+            previousEnemyHealth = enemyHealth != null ? enemyHealth.CurrentHealth : -1;
+        }
+
+        private void Play(AudioClip clip, bool isOutcome = false)
         {
             if (audioSource == null || clip == null) return;
-            audioSource.Stop();
-            audioSource.clip = clip;
+            // A killing ability finishes after the outcome event; keep the result audible.
+            if (!isOutcome && outcomeController != null && outcomeController.IsOver) return;
             audioSource.volume = volume;
-            audioSource.Play();
+            if (isOutcome)
+            {
+                audioSource.Stop();
+                audioSource.clip = clip;
+                audioSource.Play();
+            }
+            else
+            {
+                audioSource.PlayOneShot(clip);
+            }
         }
     }
 }

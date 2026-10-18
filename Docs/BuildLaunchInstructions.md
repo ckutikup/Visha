@@ -1,6 +1,6 @@
 # Presentation build
 
-The verified standalone build is `VishaPresentation.app` in `/private/tmp`. It targets Apple Silicon macOS and is kept outside the Git repository.
+Rebuild the standalone app after pulling the presentation revision. An earlier `VishaPresentation.app` in the contributor's `/private/tmp` does not include these updates and is not a shared download. Keep build outputs outside the Git repository and share the actual app archive with the team.
 
 ## Launch
 
@@ -14,7 +14,7 @@ For a windowed launch at a chosen size, run the player inside the app bundle:
 
 Replace the width and height with `1280` and `720` for the smaller display. The game supports mouse input: choose an ability, then click the enemy; Fade applies directly. The victory and defeat panels provide the campaign navigation controls.
 
-## Verified displays
+## Display checks
 
 - 1920×1080 window: title, battle HUD, sprites, health bars, intention, targeting controls, and ability buttons visible.
 - 1280×720 window: campaign HUD and abilities remain visible and readable.

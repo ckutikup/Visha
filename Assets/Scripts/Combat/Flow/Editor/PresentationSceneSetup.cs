@@ -19,6 +19,7 @@ namespace Visha.Combat.Flow.EditorTools
         [MenuItem("Visha/Apply Presentation to Campaign Demo")]
         private static void ApplyFromMenu()
         {
+            if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
             string error = Apply();
             if (error != null) EditorUtility.DisplayDialog("Campaign Presentation", error, "OK");
         }

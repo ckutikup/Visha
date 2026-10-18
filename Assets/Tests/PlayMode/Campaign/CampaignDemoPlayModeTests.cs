@@ -63,8 +63,7 @@ public class CampaignDemoPlayModeTests
         hud.ChooseAbility(BattleAbility.VenomStrike);
         hud.SelectTarget();
         Assert.Greater(enemyPoison.PoisonStacks, stacksBefore, "Venom Strike should apply during the player turn");
-        yield return null; // enemy turn
-        yield return null;
+        yield return new WaitForSeconds(1f); // allow the visible poison and enemy phases to finish
     }
 
     [UnityTest]
@@ -168,5 +167,26 @@ public class CampaignDemoPlayModeTests
         Assert.AreEqual(30, enemyHealth.CurrentHealth);
         yield return AssertBattleAcceptsActions();
     }
+    [UnityTest]
+    public IEnumerator KillingBiteKeepsVictoryAudio_AndNextEncounterClearsIt()
+    {
+        Click("TitlePanel/StartButton");
+        yield return null;
+        enemyHealth.SetMaxHealth(4);
+        enemyPoison.AddStacks(1);
+        hud.ChooseAbility(BattleAbility.SerpentsBite);
+        hud.SelectTarget();
+        Assert.AreEqual(CampaignState.Victory, campaign.State);
+        var source = GameObject.Find("BattlePresentationAudio").GetComponent<AudioSource>();
+        Assert.AreEqual("Victory", source.clip.name);
+
+        Click("VictoryPanel/Card/NextButton");
+        yield return null;
+        Assert.IsNull(source.clip, "An encounter reset clears the previous result audio.");
+        Assert.AreEqual(Color.white, enemySpriteRenderer.color, "The new enemy must not inherit the previous hit flash.");
+        Assert.IsFalse(enemySpriteRenderer.transform.Find("BiteFlash").GetComponent<SpriteRenderer>().enabled);
+        Assert.AreEqual(CampaignState.InBattle, campaign.State);
+    }
+
 }
 #endif

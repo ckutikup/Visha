@@ -80,6 +80,14 @@ namespace Visha.Combat.Flow
         private void HandleHealthChanged(int current, int maximum)
         {
             if (current < previousHealth) PlayHitFlash();
+            else if (current > previousHealth)
+            {
+                if (hitRoutine != null) StopCoroutine(hitRoutine);
+                if (biteRoutine != null) StopCoroutine(biteRoutine);
+                hitRoutine = biteRoutine = null;
+                if (characterRenderer != null) characterRenderer.color = originalColor;
+                if (biteFlash != null) biteFlash.enabled = false;
+            }
             previousHealth = current;
         }
 
