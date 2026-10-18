@@ -41,9 +41,24 @@ namespace Visha.Campaign
         {
             if (campaign == null || view == null) return;
             if (hud != null) view.SetHUD(hud);
-            view.BindNavigation(campaign.StartCampaign, campaign.NextEncounter, campaign.RetryEncounter,
-                                campaign.RestartCampaign, campaign.ReturnToTitle);
+            view.BindNavigation(Guard(campaign.StartCampaign), Guard(campaign.NextEncounter),
+                                Guard(campaign.RetryEncounter), Guard(campaign.RestartCampaign),
+                                Guard(campaign.ReturnToTitle));
             campaign.StateChanged += Show;
+        }
+
+        /// <summary>
+        /// The view locks its buttons after a click until the screen changes. If the
+        /// campaign refuses the request, unlock them so the player is not stuck.
+        /// </summary>
+        private System.Action Guard(System.Action navigate)
+        {
+            return () =>
+            {
+                CampaignState before = campaign.State;
+                navigate();
+                if (campaign.State == before) view.RejectNavigation("That option is not available right now.");
+            };
         }
 
         private void Unbind()

@@ -1,1 +1,1 @@
-{"name":"Visha.Campaign.Tests","references":["Visha.Campaign","Visha.Battle","Visha.Combat","Visha.Enemies"],"includePlatforms":["Editor"],"optionalUnityReferences":["TestAssemblies"]}
+{"name":"Visha.Campaign.Tests","references":["Visha.Campaign","Visha.Battle","Visha.Combat","Visha.Enemies","Visha.UI","Unity.ugui"],"includePlatforms":["Editor"],"optionalUnityReferences":["TestAssemblies"]}

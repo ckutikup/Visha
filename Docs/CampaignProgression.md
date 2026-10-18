@@ -143,7 +143,9 @@ changed behaviour.
 
 In **Window > General > Test Runner**:
 
-- **EditMode > Visha.Campaign.Tests** (28 tests):
+- **EditMode > Visha.Campaign.Tests** (32 tests):
+  - the campaign driving Charith's BattleScreens prefab: the right screen for
+    each state, the encounter counter, and unlocking buttons after a refused click
   - the shipped encounter assets: names, enemy types, health, and their
     order in Campaign_Demo
   - encounter order
