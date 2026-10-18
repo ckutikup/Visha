@@ -1,5 +1,6 @@
 using NUnit.Framework;
 using UnityEngine;
+
 public class VenomStrikeTests
 {
     private GameObject playerObject;
@@ -7,12 +8,14 @@ public class VenomStrikeTests
     private VenomStrike venomStrike;
     private Health enemyHealth;
     private Poison enemyPoison;
+
     [SetUp]
     public void SetUp()
     {
         playerObject = new GameObject("TestPlayer");
         venomStrike = playerObject.AddComponent<VenomStrike>();
         venomStrike.SetStacksApplied(2);
+
         enemyObject = new GameObject("TestEnemy");
         enemyHealth = enemyObject.AddComponent<Health>();
         enemyHealth.SetMaxHealth(50);
@@ -28,59 +31,77 @@ public class VenomStrikeTests
     }
 
     [Test]
-    public void UseOn_AddsStacks()
+    public void TryUseOn_AddsStacks()
     {
-        venomStrike.UseOn(enemyObject);
+        bool used = venomStrike.TryUseOn(enemyObject);
+
+        Assert.IsTrue(used);
         Assert.AreEqual(2, enemyPoison.PoisonStacks);
     }
 
     [Test]
-    public void UseOn_DealsNoDirectDamage()
+    public void TryUseOn_DealsNoDirectDamage()
     {
-        venomStrike.UseOn(enemyObject);
+        venomStrike.TryUseOn(enemyObject);
+
         Assert.AreEqual(50, enemyHealth.CurrentHealth);
     }
+
     [Test]
-    public void UseOn_StacksStopAtPoisonCap()
+    public void TryUseOn_StacksStopAtPoisonCap()
     {
-        venomStrike.UseOn(enemyObject);
-        venomStrike.UseOn(enemyObject);
-        venomStrike.UseOn(enemyObject);
+        venomStrike.TryUseOn(enemyObject);
+        venomStrike.TryUseOn(enemyObject);
+        venomStrike.TryUseOn(enemyObject);
+
         Assert.AreEqual(5, enemyPoison.PoisonStacks);
     }
 
     [Test]
-    public void UseOn_DeadTarget_GetsNoStacks()
+    public void TryUseOn_AtCap_IsStillValid()
+    {
+        venomStrike.TryUseOn(enemyObject);
+        venomStrike.TryUseOn(enemyObject);
+        venomStrike.TryUseOn(enemyObject);
+
+        bool used = venomStrike.TryUseOn(enemyObject);
+
+        Assert.IsTrue(used);
+        Assert.AreEqual(5, enemyPoison.PoisonStacks);
+    }
+
+    [Test]
+    public void TryUseOn_DeadTarget_IsRejected()
     {
         enemyHealth.TakeDamage(50);
-        venomStrike.UseOn(enemyObject);
+
+        bool used = venomStrike.TryUseOn(enemyObject);
+
+        Assert.IsFalse(used);
         Assert.AreEqual(0, enemyPoison.PoisonStacks);
     }
-
     [Test]
-    public void UseOn_TargetWithoutPoison_DoesNotCrash()
+    public void TryUseOn_TargetWithoutPoison_IsRejected()
     {
         GameObject plainTarget = new GameObject("PlainTarget");
-        Assert.DoesNotThrow(() =>
-        {
-            venomStrike.UseOn(plainTarget);
-        });
+
+        bool used = venomStrike.TryUseOn(plainTarget);
+
+        Assert.IsFalse(used);
         Object.DestroyImmediate(plainTarget);
     }
-
     [Test]
-    public void UseOn_NullTarget_DoesNotCrash()
+    public void TryUseOn_NullTarget_IsRejected()
     {
-        Assert.DoesNotThrow(() =>
-        {
-            venomStrike.UseOn(null);
-        });
-    }
+        bool used = venomStrike.TryUseOn(null);
 
+        Assert.IsFalse(used);
+    }
     [Test]
     public void InvalidStacks_AreSetToOne()
     {
         venomStrike.SetStacksApplied(0);
+
         Assert.AreEqual(1, venomStrike.StacksApplied);
     }
 }
