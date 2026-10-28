@@ -1,1 +1,14 @@
-{"name": "Visha.UI.Editor", "references": ["Visha.UI", "Visha.UI.BattleIntegration", "Visha.Battle", "Unity.ugui"], "includePlatforms": ["Editor"]}
+{
+  "name": "Visha.UI.Editor",
+  "references": [
+    "Visha.UI",
+    "Visha.UI.BattleIntegration",
+    "Visha.Battle",
+    "Unity.ugui",
+    "Visha.Preview",
+    "Unity.InputSystem"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ]
+}

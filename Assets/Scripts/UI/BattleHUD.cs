@@ -13,6 +13,10 @@ namespace Visha.UI
     [Serializable]
     public class BattleViewState
     {
+        public bool awakeningUnlocked, awakeningUsed, twinFangReady;
+        public int awakeningCharges, awakeningActions;
+        public EnemyViewState[] enemies;
+        public int actingEnemyId = -1;
         public int playerHealth = 30;
         public int playerMaxHealth = 30;
         public int enemyHealth = 24;
@@ -32,7 +36,7 @@ namespace Visha.UI
         public BattlePhase phase = BattlePhase.Waiting;
     }
 
-    public class BattleHUD : MonoBehaviour, ICancelHandler
+    public partial class BattleHUD : MonoBehaviour, ICancelHandler
     {
         [SerializeField] private Text playerHealthLabel;
         [SerializeField] private Text enemyHealthLabel;
@@ -98,6 +102,8 @@ namespace Visha.UI
         public void Render(BattleViewState state)
         {
             if (state == null) throw new ArgumentNullException(nameof(state));
+            UpdateEnemyRoster(state);
+            awakeningState = state;
             bool phaseChanged = phase != state.phase;
             if (phaseChanged) { submitted = false; pendingAbility=null; selected=false; }
             phase = state.phase;
@@ -108,12 +114,13 @@ namespace Visha.UI
             int cap = Mathf.Max(0, state.poisonCap);
             poison = Mathf.Clamp(state.poison, 0, cap);
             poisonDamagePerStack = state.poisonDamagePerStack;
-            actorsAlive = playerHP > 0 && enemyHP > 0;
+            actorsAlive = playerHP > 0 && (HasEnemyRoster ? HasLivingTarget() : enemyHP > 0);
             fadeAvailable = state.fadeAvailable;
             venomStacks = Mathf.Max(0, state.venomStacks);
             biteDamagePerStack = Mathf.Max(0, state.biteDamagePerStack);
             fadeReductionPercent = Mathf.Clamp(state.fadeReductionPercent, 0, 100);
             enemyName = string.IsNullOrWhiteSpace(state.enemyName) ? "enemy" : state.enemyName;
+            if (HasEnemyRoster) RefreshSelectedEnemy();
             if (!actorsAlive || (pendingAbility.HasValue && !CanChoose(pendingAbility.Value)))
             {
                 pendingAbility = null;
@@ -246,6 +253,7 @@ namespace Visha.UI
         public void SetFeedback(string message) => feedbackLabel.text = message ?? string.Empty;
         public void SelectTarget()
         {
+            if (HasEnemyRoster) { SelectEnemy(selectedEnemyId); return; }
             if (!inputEnabled || phase != BattlePhase.PlayerTurn || submitted || !actorsAlive) return;
             selected = true;
             if(pendingAbility.HasValue) Submit(pendingAbility.Value);
@@ -269,6 +277,13 @@ namespace Visha.UI
                 : $"Adds up to {venomStacks} poison; each stack deals {poisonDamagePerStack}/turn and stays";
             if (compactAbilities)
                 preview = ability == BattleAbility.SerpentsBite ? $"{poison * biteDamagePerStack} damage · consumes poison" : $"+{venomStacks} poison · {poisonDamagePerStack}/stack each turn";
+            if (HasEnemyRoster)
+            {
+                PrepareEnemyTarget(ability);
+                SetFeedback($"{enemyName} · click enemy or Enter to confirm · Esc cancels");
+                RefreshControls();
+                return;
+            }
             SetFeedback(compactAbilities ? $"{preview} · click enemy or Enter · Esc cancels" : $"{preview} · click {enemyName} to confirm / Esc to cancel");
             RefreshControls();
         }
@@ -280,6 +295,8 @@ namespace Visha.UI
                 : ability == BattleAbility.SerpentsBite
                     ? poison > 0 ? $"Serpent's Bite · {poison * biteDamagePerStack} damage; consumes all poison" : "Serpent's Bite · use Venom Strike to add poison first"
                     : fadeAvailable ? $"Fade · reduce the next enemy phase by {fadeReductionPercent}%" : "Fade is recovering · use Venom Strike or Bite first";
+            if (HasEnemyRoster && ability == BattleAbility.SerpentsBite && poison == 0 && HasPoisonedTarget())
+                message = "Serpent’s Bite · choose an enemy with poison";
             SetFeedback(message);
         }
         public void EndAbilityPreview()
@@ -297,7 +314,7 @@ namespace Visha.UI
         {
             if(!inputEnabled || phase!=BattlePhase.PlayerTurn || submitted || !actorsAlive || AbilityRequested==null) return false;
             if(ability==BattleAbility.Fade) return fadeAvailable;
-            return ability!=BattleAbility.SerpentsBite || poison>0;
+            return ability!=BattleAbility.SerpentsBite || (HasEnemyRoster ? HasPoisonedTarget() : poison>0);
         }
         public void RequestVenomStrike() => Submit(BattleAbility.VenomStrike);
         public void RequestSerpentsBite() => Submit(BattleAbility.SerpentsBite);
@@ -308,7 +325,7 @@ namespace Visha.UI
             if (!inputEnabled || phase != BattlePhase.PlayerTurn || submitted || !actorsAlive || AbilityRequested == null)
                 return false;
             if (ability == BattleAbility.Fade) return fadeAvailable;
-            return selected && (ability != BattleAbility.SerpentsBite || poison > 0);
+            return selected && (!HasEnemyRoster || IsEligibleTarget(selectedEnemyId, ability)) && (ability != BattleAbility.SerpentsBite || poison > 0);
         }
 
         private void Submit(BattleAbility ability)
@@ -319,20 +336,24 @@ namespace Visha.UI
             SetFeedback(ability==BattleAbility.Fade?"Fade":"");
             RefreshControls();
             // Lock before notifying the controller, including against repeated clicks in the same frame.
-            AbilityRequested?.Invoke(ability, ability == BattleAbility.Fade ? -1 : 0);
+            AbilityRequested?.Invoke(ability, ability == BattleAbility.Fade ? -1 : HasEnemyRoster ? selectedEnemyId : 0);
         }
 
         private void RefreshControls()
         {
+            RefreshAwakening();
             bool targeting=inputEnabled && phase==BattlePhase.PlayerTurn && actorsAlive && !submitted && pendingAbility.HasValue;
-            targetButton.interactable=targeting;
-            targetLabel.text=targeting ? "SELECT TARGET" : string.Empty;
-            if(targetIndicator)targetIndicator.SetEligible(targeting);
+            targetButton.interactable=targeting && !HasEnemyRoster;
+            RefreshEnemyPanels(targeting);
+            targetLabel.text=targeting && !HasEnemyRoster ? "SELECT TARGET" : string.Empty;
+            if(targetIndicator)targetIndicator.SetEligible(targeting && !HasEnemyRoster);
             venomButton.interactable=CanChoose(BattleAbility.VenomStrike);
             biteButton.interactable=CanChoose(BattleAbility.SerpentsBite);
             fadeButton.interactable=CanChoose(BattleAbility.Fade);
             if(venomView)venomView.SetState(pendingAbility==BattleAbility.VenomStrike, compactAbilities ? $"+{venomStacks} poison" : $"+{venomStacks} poison · persists each turn");
-            if(biteView)biteView.SetState(pendingAbility==BattleAbility.SerpentsBite,poison==0?"Needs poison":compactAbilities ? $"{poison * biteDamagePerStack} DMG" : $"{poison * biteDamagePerStack} damage · consumes poison");
+            if(biteView)biteView.SetState(pendingAbility==BattleAbility.SerpentsBite,poison==0?(HasEnemyRoster && HasPoisonedTarget() ? "Choose poisoned target" : "Needs poison"):compactAbilities ? $"{poison * biteDamagePerStack} DMG" : $"{poison * biteDamagePerStack} damage · consumes poison");
+            if (awakeningState != null && awakeningState.twinFangReady && biteView && poison > 0)
+                biteView.SetState(pendingAbility==BattleAbility.SerpentsBite,$"{poison*biteDamagePerStack} DMG · leaves 2 poison");
             if(fadeView)fadeView.SetState(false,fadeAvailable ? (compactAbilities ? $"{fadeReductionPercent}% guard" : $"Reduce enemy phase by {fadeReductionPercent}%") : (compactAbilities ? "Recover" : "Recovering · use another ability"));
         }
     }

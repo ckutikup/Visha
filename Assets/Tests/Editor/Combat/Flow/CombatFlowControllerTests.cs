@@ -321,5 +321,49 @@ namespace Visha.Combat.Flow.Tests
             Assert.AreSame(serpentsBite, Get<SerpentsBite>("serpentsBite"));
             Assert.AreSame(fade, Get<Fade>("fade"));
         }
+        [Test]
+        public void AwakeningActivationKeepsTurnAndTwinFangLeavesResidue()
+        {
+            controller.Awakening.Reset(true,true);
+            Call("ActivateAwakening");
+            Assert.AreEqual(BattlePhase.PlayerTurn,controller.CurrentPhase);
+            Assert.AreEqual(2,controller.Awakening.ActionsRemaining);
+            enemyPoison.AddStacks(2);
+            Request(BattleAbility.SerpentsBite);
+            Assert.AreEqual(22,enemyHealth.CurrentHealth);
+            Assert.AreEqual(2,enemyPoison.PoisonStacks);
+            Assert.AreEqual(1,controller.Awakening.ActionsRemaining);
+            Assert.IsFalse(controller.Awakening.TwinFangReady);
+        }
+        [Test]
+        public void InvalidBiteDoesNotConsumeAwakeningAction()
+        {
+            controller.Awakening.Reset(true,true); Call("ActivateAwakening");
+            Request(BattleAbility.SerpentsBite);
+            Assert.AreEqual(2,controller.Awakening.ActionsRemaining);
+        }
+        [Test]
+        public void AwakeningCannotActivateDuringEnemyTurn()
+        {
+            controller.Awakening.Reset(true,true);
+            Request(BattleAbility.VenomStrike);
+            Call("ActivateAwakening");
+            Assert.IsFalse(controller.Awakening.Active);
+        }
+        [Test]
+        public void TwinFangTransfersToOtherLivingEnemyOnly()
+        {
+            var other=new GameObject("OtherEnemy");
+            try
+            {
+                var hp=other.AddComponent<Health>(); hp.SetMaxHealth(30);
+                var poison=other.AddComponent<Poison>(); poison.SetValues(5,2);
+                TwinFang.ApplyResidue(enemyPoison,poison);
+                Assert.AreEqual(2,poison.PoisonStacks); Assert.AreEqual(0,enemyPoison.PoisonStacks);
+                hp.TakeDamage(hp.MaxHealth); TwinFang.ApplyResidue(enemyPoison,poison);
+                Assert.AreEqual(2,enemyPoison.PoisonStacks);
+            }
+            finally { Object.DestroyImmediate(other); }
+        }
     }
 }
