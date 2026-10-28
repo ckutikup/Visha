@@ -13,6 +13,8 @@ namespace Visha.Campaign
         private Button enter, replay;
         private readonly Button[] nodes = new Button[5];
         private int selected;
+        private bool vaultArrivalSeen;
+        private VaultArrivalView arrival;
         private Font font;
         public bool IsOpen => panel != null && panel.activeSelf;
         private static readonly string[] Names = { "Temple Guardian", "Guardian Warden", "Vault Sentinel", "Inner Vault", "Sanctum" };
@@ -28,6 +30,8 @@ namespace Visha.Campaign
         private void OnDisable() { if (campaign != null) campaign.StateChanged -= OnState; }
         private void OnState(CampaignState state)
         {
+            if (arrival != null && arrival.IsOpen) arrival.Cancel();
+            if (state == CampaignState.Title) vaultArrivalSeen = false;
             if (panel != null) panel.SetActive(false);
             SetUnderlyingInput(true);
         }
@@ -67,6 +71,21 @@ namespace Visha.Campaign
         public void EnterSelected()
         {
             if (!IsOpen || !campaign.CanEnterEncounter(selected)) return;
+            if (arrival != null && arrival.IsOpen) return;
+            if (selected >= 2 && !vaultArrivalSeen)
+            {
+                int destination = selected;
+                if (arrival == null) arrival = gameObject.AddComponent<VaultArrivalView>();
+                arrival.Show(panel.transform.parent, font, () =>
+                {
+                    vaultArrivalSeen = campaign.EnterEncounter(destination);
+                }, () =>
+                {
+                    if (IsOpen && UnityEngine.EventSystems.EventSystem.current != null)
+                        UnityEngine.EventSystems.EventSystem.current.SetSelectedGameObject(enter.gameObject);
+                });
+                return;
+            }
             campaign.EnterEncounter(selected);
         }
         private void Refresh()

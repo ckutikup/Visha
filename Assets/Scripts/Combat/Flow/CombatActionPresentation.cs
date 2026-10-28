@@ -187,6 +187,33 @@ namespace Visha.Combat.Flow
             Destroy(go);
         }
 
+        public void ShowTwinFang()
+        {
+            if (enemy != null) StartCoroutine(TwinFangFlash());
+        }
+        private IEnumerator TwinFangFlash()
+        {
+            for (int side=-1;side<=1;side+=2)
+            {
+                var go=new GameObject("TwinFangSlash",typeof(LineRenderer));
+                effects.Add(go);
+                var line=go.GetComponent<LineRenderer>();
+                if (impactMaterial == null)
+                {
+                    impactMaterial=new Material(player.GetComponent<SpriteRenderer>().sharedMaterial);
+                    impactMaterial.mainTexture=Texture2D.whiteTexture;
+                }
+                line.sharedMaterial=impactMaterial; line.useWorldSpace=false;
+                line.positionCount=3; line.SetPositions(new[] {new Vector3(side*.45f,.65f,0),new Vector3(side*.15f,0,0),new Vector3(side*.25f,-.5f,0)});
+                line.startWidth=.10f; line.endWidth=.025f;
+                line.startColor=line.endColor=new Color(.48f,1f,.72f);
+                line.sortingOrder=20; go.transform.position=enemy.transform.position+Vector3.up*1.5f;
+            }
+            yield return new WaitForSeconds(.32f);
+            for (int i=effects.Count-1;i>=0;i--)
+                if (effects[i] != null && effects[i].name=="TwinFangSlash") { Destroy(effects[i]); effects.RemoveAt(i); }
+        }
+
         private IEnumerator Move(CharacterIdleMotion actor, Vector3 target, float duration)
         {
             if (actor == null) yield break;

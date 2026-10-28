@@ -30,6 +30,9 @@ namespace Visha.Combat.Flow
         [SerializeField] private CampaignController campaign;
 
         private RoutineBreak routine;
+        private readonly GuardianAwakening awakening = new GuardianAwakening();
+        public GuardianAwakening Awakening => awakening;
+        private GuardianAppearance guardianAppearance;
         private BattleAudio sound;
         private Health playerHealth;
         private Health enemyHealth;
@@ -61,6 +64,7 @@ namespace Visha.Combat.Flow
         {
             SubscribeToBattleSystem();
             BindCampaign();
+            ResetAwakening();
             EnterPlayerTurn();
         }
 
@@ -106,7 +110,11 @@ namespace Visha.Combat.Flow
             if (subscribed) return;
             subscribed = true;
 
-            if (battleHUD != null) battleHUD.AbilityRequested += HandleAbilityRequested;
+            if (battleHUD != null)
+            {
+                battleHUD.AbilityRequested += HandleAbilityRequested;
+                battleHUD.AwakeningRequested += ActivateAwakening;
+            }
 
             if (outcomeController != null)
             {
@@ -126,7 +134,11 @@ namespace Visha.Combat.Flow
             if (!subscribed) return;
             subscribed = false;
 
-            if (battleHUD != null) battleHUD.AbilityRequested -= HandleAbilityRequested;
+            if (battleHUD != null)
+            {
+                battleHUD.AbilityRequested -= HandleAbilityRequested;
+                battleHUD.AwakeningRequested -= ActivateAwakening;
+            }
 
             if (outcomeController != null)
             {
@@ -152,6 +164,7 @@ namespace Visha.Combat.Flow
 
         private void HandleCampaignStateChanged(CampaignState state)
         {
+            if (state == CampaignState.Title) { awakening.Reset(false); UpdateAppearance(); }
             SetCombatActive(state == CampaignState.InBattle);
         }
 
@@ -261,6 +274,8 @@ namespace Visha.Combat.Flow
             if (action.Kind == EnemyActionKind.Attack && fade != null)
                 damage = fade.ReduceDamage(damage);
             bool guarded = fade != null && fade.IsActive;
+            if (guarded && action.Kind == EnemyActionKind.Attack && action.Damage >= 8 && damage < action.Damage)
+                awakening.EarnCharge();
             if (damage > 0 && playerHealth != null) playerHealth.TakeDamage(damage);
             if (routine != null && routine.TryGuard(enemyPatternRunner.IntentLabel, guarded,
                     playerHealth != null && !playerHealth.IsDead))
@@ -343,6 +358,9 @@ namespace Visha.Combat.Flow
                 return false;
             }
             if (ability != BattleAbility.Fade && fade != null) fade.OnOtherAbilityUsed();
+            awakening.CompletePlayerAction();
+            UpdateAppearance();
+            Refresh();
             OnAbilityUsed?.Invoke(ability);
             return true;
         }
@@ -375,7 +393,16 @@ namespace Visha.Combat.Flow
             if (!serpentsBite.CanUseOn(enemyGameObject)) return "Serpent's Bite needs poison on the enemy";
             bool heavyThreat = enemyPatternRunner != null &&
                 (enemyPatternRunner.IntentLabel == "Heavy Blow" || enemyPatternRunner.IntentLabel == "Crush");
+            bool fullPoison = enemyPoison.PoisonStacks == enemyPoison.MaxStacks;
+            bool empowered = awakening.TwinFangReady;
             if (!serpentsBite.TryUseOn(enemyGameObject)) return "Serpent's Bite cannot be used";
+            if (empowered)
+            {
+                awakening.TryUseTwinFang();
+                TwinFang.ApplyResidue(enemyPoison, null);
+                if (presentation != null) presentation.ShowTwinFang();
+            }
+            else if (fullPoison) awakening.EarnCharge();
             if (heavyThreat && enemyHealth.IsDead)
             {
                 var screens = FindAnyObjectByType<BattleScreenView>();
@@ -394,6 +421,11 @@ namespace Visha.Combat.Flow
         {
             if (viewState == null) return;
 
+            viewState.awakeningUnlocked = awakening.Unlocked;
+            viewState.awakeningCharges = awakening.Charges;
+            viewState.awakeningActions = awakening.ActionsRemaining;
+            viewState.awakeningUsed = awakening.Used;
+            viewState.twinFangReady = awakening.TwinFangReady;
             viewState.playerHealth = playerHealth != null ? playerHealth.CurrentHealth : 0;
             viewState.playerMaxHealth = playerHealth != null ? playerHealth.MaxHealth : 0;
             viewState.enemyHealth = enemyHealth != null ? enemyHealth.CurrentHealth : 0;
@@ -432,6 +464,8 @@ namespace Visha.Combat.Flow
 
         private void HandleBattleEnded(BattleOutcome outcome)
         {
+            awakening.EndBattle();
+            UpdateAppearance();
             StopAllCoroutines();
             if (presentation != null) presentation.ResetPose();
             turnInProgress = true;
@@ -441,6 +475,7 @@ namespace Visha.Combat.Flow
 
         private void HandleRetry()
         {
+            ResetAwakening();
             if (routine != null) routine.ResetEncounter();
             StopAllCoroutines();
             if (presentation != null) presentation.ResetPose();
@@ -450,6 +485,33 @@ namespace Visha.Combat.Flow
             SetPhase(BattlePhase.Waiting);
             EnterPlayerTurn();
             Debug.Log("Combat: Battle reset");
+        }
+
+        private void ResetAwakening()
+        {
+            bool unlocked = campaign != null && campaign.EncounterNumber >= 3;
+            awakening.Reset(unlocked, campaign != null && campaign.EncounterNumber == 3);
+            UpdateAppearance();
+        }
+
+        private void ActivateAwakening()
+        {
+            if (!CanAcceptAction() || !awakening.TryActivate()) return;
+            UpdateAppearance();
+            if (sound != null) sound.PlayRoutineBreak();
+            Refresh();
+            if (battleHUD != null) battleHUD.SetFeedback("Guardian Awakening · two actions · Twin Fang leaves 2 poison");
+        }
+
+        private void UpdateAppearance()
+        {
+            if (!Application.isPlaying) return;
+            if (guardianAppearance == null)
+            {
+                var actor = GameObject.Find("PlayerPlaceholder");
+                if (actor != null) guardianAppearance = actor.GetComponent<GuardianAppearance>() ?? actor.AddComponent<GuardianAppearance>();
+            }
+            if (guardianAppearance != null) guardianAppearance.SetState(awakening.Unlocked, awakening.Active);
         }
 
         private void HandleHealthChanged(int current, int max) => Refresh();

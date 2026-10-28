@@ -59,6 +59,8 @@ public class CampaignDemoPlayModeTests
         {
             if (path.Contains("RestartButton")) map.SelectNode(0);
             map.EnterSelected();
+            var arrival = campaign.GetComponent<VaultArrivalView>();
+            if (arrival != null && arrival.IsOpen) arrival.Continue();
         }
     }
 

@@ -1,0 +1,808 @@
+fileFormatVersion: 2
+guid: 7d5089335b09c42809236988e200b209
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -3728710574101721110
+    second: VishakanyaVault_0
+  - first:
+      213: -1053119112067725005
+    second: VishakanyaVault_1
+  - first:
+      213: 748367522476740135
+    second: VishakanyaVault_2
+  - first:
+      213: -8654539008160594318
+    second: VishakanyaVault_3
+  - first:
+      213: -3628802386356274072
+    second: VishakanyaVault_4
+  - first:
+      213: -7444120974758632560
+    second: VishakanyaVault_5
+  - first:
+      213: -5205840867186121507
+    second: VishakanyaVault_6
+  - first:
+      213: -792862362069349035
+    second: VishakanyaVault_7
+  - first:
+      213: -9060327615248416380
+    second: VishakanyaVault_8
+  - first:
+      213: -5267485044023561752
+    second: VishakanyaVault_9
+  - first:
+      213: 2372418710715477914
+    second: VishakanyaVault_10
+  - first:
+      213: 3483805262494001772
+    second: VishakanyaVault_11
+  - first:
+      213: 5286055079336016608
+    second: VishakanyaVault_12
+  - first:
+      213: -5852012676492642078
+    second: VishakanyaVault_13
+  - first:
+      213: -8825294504975891024
+    second: VishakanyaVault_14
+  - first:
+      213: -6999254961797449569
+    second: VishakanyaVault_15
+  - first:
+      213: -63360388906899643
+    second: VishakanyaVault_16
+  - first:
+      213: -5130909272544812909
+    second: VishakanyaVault_17
+  - first:
+      213: 8426417336632315132
+    second: VishakanyaVault_18
+  - first:
+      213: 479056432539845032
+    second: VishakanyaVault_19
+  - first:
+      213: 1071238699257646976
+    second: VishakanyaVault_20
+  - first:
+      213: -5719575013633038193
+    second: VishakanyaVault_21
+  - first:
+      213: 4625206329415549597
+    second: VishakanyaVault_22
+  - first:
+      213: 513887835804170320
+    second: VishakanyaVault_23
+  - first:
+      213: 8729832699259428351
+    second: VishakanyaVault_24
+  - first:
+      213: 5224031001768803063
+    second: VishakanyaVault_25
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationMethod: 0
+  spriteTessellationDetail: -1
+  spriteGeometrySubdivision: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: VishakanyaVault_0
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 1225
+        height: 1237
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: aef8c680d75f04cc0800000000000000
+      internalID: -3728710574101721110
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: VishakanyaVault_1
+      rect:
+        serializedVersion: 2
+        x: 778
+        y: 1148
+        width: 6
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 339470b4fb19261f0800000000000000
+      internalID: -1053119112067725005
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: VishakanyaVault_2
+      rect:
+        serializedVersion: 2
+        x: 522
+        y: 1140
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 72e4aa2fb4cb26a00800000000000000
+      internalID: 748367522476740135
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: VishakanyaVault_3
+      rect:
+        serializedVersion: 2
+        x: 1133
+        y: 589
+        width: 7
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 27683d330a6e4e780800000000000000
+      internalID: -8654539008160594318
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: VishakanyaVault_4
+      rect:
+        serializedVersion: 2
+        x: 1139
+        y: 586
+        width: 15
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 86cf421b477e3adc0800000000000000
+      internalID: -3628802386356274072
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: VishakanyaVault_5
+      rect:
+        serializedVersion: 2
+        x: 70
+        y: 571
+        width: 9
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0932a720a6b21b890800000000000000
+      internalID: -7444120974758632560
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: VishakanyaVault_6
+      rect:
+        serializedVersion: 2
+        x: 112
+        y: 531
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: dd4e822205321c7b0800000000000000
+      internalID: -5205840867186121507
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: VishakanyaVault_7
+      rect:
+        serializedVersion: 2
+        x: 106
+        y: 401
+        width: 8
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 55d4419e1ef2ff4f0800000000000000
+      internalID: -792862362069349035
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: VishakanyaVault_8
+      rect:
+        serializedVersion: 2
+        x: 112
+        y: 395
+        width: 10
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 481c470a900434280800000000000000
+      internalID: -9060327615248416380
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: VishakanyaVault_9
+      rect:
+        serializedVersion: 2
+        x: 1222
+        y: 280
+        width: 12
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8e1fa43c24226e6b0800000000000000
+      internalID: -5267485044023561752
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: VishakanyaVault_10
+      rect:
+        serializedVersion: 2
+        x: 118
+        y: 194
+        width: 18
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a9fafae6f368ce020800000000000000
+      internalID: 2372418710715477914
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: VishakanyaVault_11
+      rect:
+        serializedVersion: 2
+        x: 151
+        y: 198
+        width: 13
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c6a6791ad66f85030800000000000000
+      internalID: 3483805262494001772
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: VishakanyaVault_12
+      rect:
+        serializedVersion: 2
+        x: 1147
+        y: 208
+        width: 8
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0eaf8f28617db5940800000000000000
+      internalID: 5286055079336016608
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: VishakanyaVault_13
+      rect:
+        serializedVersion: 2
+        x: 138
+        y: 196
+        width: 6
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2e8b29cd97979cea0800000000000000
+      internalID: -5852012676492642078
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: VishakanyaVault_14
+      rect:
+        serializedVersion: 2
+        x: 1133
+        y: 136
+        width: 8
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0b584b8f761468580800000000000000
+      internalID: -8825294504975891024
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: VishakanyaVault_15
+      rect:
+        serializedVersion: 2
+        x: 102
+        y: 95
+        width: 8
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f983ca522b6adde90800000000000000
+      internalID: -6999254961797449569
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: VishakanyaVault_16
+      rect:
+        serializedVersion: 2
+        x: 110
+        y: 102
+        width: 10
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 547af5edf06ee1ff0800000000000000
+      internalID: -63360388906899643
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: VishakanyaVault_17
+      rect:
+        serializedVersion: 2
+        x: 641
+        y: 87
+        width: 13
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 390653b83395bc8b0800000000000000
+      internalID: -5130909272544812909
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: VishakanyaVault_18
+      rect:
+        serializedVersion: 2
+        x: 106
+        y: 84
+        width: 6
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cfc892f2ce5a0f470800000000000000
+      internalID: 8426417336632315132
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: VishakanyaVault_19
+      rect:
+        serializedVersion: 2
+        x: 131
+        y: 65
+        width: 13
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8a147e88943f5a600800000000000000
+      internalID: 479056432539845032
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: VishakanyaVault_20
+      rect:
+        serializedVersion: 2
+        x: 522
+        y: 82
+        width: 10
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 08f47eadbedcdde00800000000000000
+      internalID: 1071238699257646976
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: VishakanyaVault_21
+      rect:
+        serializedVersion: 2
+        x: 87
+        y: 55
+        width: 11
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f88e33624dcff90b0800000000000000
+      internalID: -5719575013633038193
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: VishakanyaVault_22
+      rect:
+        serializedVersion: 2
+        x: 112
+        y: 39
+        width: 16
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d92c3b5b6a8003040800000000000000
+      internalID: 4625206329415549597
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: VishakanyaVault_23
+      rect:
+        serializedVersion: 2
+        x: 673
+        y: 55
+        width: 9
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 05870839342b12700800000000000000
+      internalID: 513887835804170320
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: VishakanyaVault_24
+      rect:
+        serializedVersion: 2
+        x: 112
+        y: 48
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ffd92fb5698962970800000000000000
+      internalID: 8729832699259428351
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: VishakanyaVault_25
+      rect:
+        serializedVersion: 2
+        x: 924
+        y: 15
+        width: 8
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7fabe0c948c7f7840800000000000000
+      internalID: 5224031001768803063
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    outline: []
+    customData:
+    physicsShape: []
+    bones: []
+    spriteID:
+    internalID: 0
+    vertices: []
+    indices:
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      VishakanyaVault_0: -3728710574101721110
+      VishakanyaVault_1: -1053119112067725005
+      VishakanyaVault_10: 2372418710715477914
+      VishakanyaVault_11: 3483805262494001772
+      VishakanyaVault_12: 5286055079336016608
+      VishakanyaVault_13: -5852012676492642078
+      VishakanyaVault_14: -8825294504975891024
+      VishakanyaVault_15: -6999254961797449569
+      VishakanyaVault_16: -63360388906899643
+      VishakanyaVault_17: -5130909272544812909
+      VishakanyaVault_18: 8426417336632315132
+      VishakanyaVault_19: 479056432539845032
+      VishakanyaVault_2: 748367522476740135
+      VishakanyaVault_20: 1071238699257646976
+      VishakanyaVault_21: -5719575013633038193
+      VishakanyaVault_22: 4625206329415549597
+      VishakanyaVault_23: 513887835804170320
+      VishakanyaVault_24: 8729832699259428351
+      VishakanyaVault_25: 5224031001768803063
+      VishakanyaVault_3: -8654539008160594318
+      VishakanyaVault_4: -3628802386356274072
+      VishakanyaVault_5: -7444120974758632560
+      VishakanyaVault_6: -5205840867186121507
+      VishakanyaVault_7: -792862362069349035
+      VishakanyaVault_8: -9060327615248416380
+      VishakanyaVault_9: -5267485044023561752
+  mipmapLimitGroupName:
+  pSDRemoveMatte: 0
+  userData:
+  assetBundleName:
+  assetBundleVariant:
