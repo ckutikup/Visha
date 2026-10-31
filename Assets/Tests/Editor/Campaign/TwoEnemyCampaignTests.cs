@@ -232,6 +232,21 @@ public class TwoEnemyCampaignTests
     }
 
     [Test]
+    public void SecondEnemyChanged_ReportsEachEntryAndExit_ForTheCombatFlow()
+    {
+        var seen = new System.Collections.Generic.List<GameObject>();
+        link.SecondEnemyChanged += seen.Add;
+
+        ReachVault();
+        Lose();
+        campaign.RetryEncounter();
+        campaign.RestartCampaign();
+
+        CollectionAssert.AreEqual(new GameObject[] { secondObject, null }, seen,
+            "once in for the Vault (not again on retry), once out on restart");
+    }
+
+    [Test]
     public void ReplaySoloAfterVault_TakesSecondEnemyOutOfPlay()
     {
         ReachVault();

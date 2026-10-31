@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using Visha.Battle;
 using Visha.Enemies;
@@ -35,6 +36,13 @@ namespace Visha.Campaign
         [SerializeField] private EnemyPatternRunner secondEnemyPattern;
         [Tooltip("Optional. Receives the second enemy's sprite, and is shown and hidden with it.")]
         [SerializeField] private SpriteRenderer secondEnemySpriteRenderer;
+
+        /// <summary>
+        /// Fires when the second enemy comes into play (its GameObject) or leaves it
+        /// (null), before the encounter's first turn. The combat flow listens to fight
+        /// one or two enemies per encounter.
+        /// </summary>
+        public event Action<GameObject> SecondEnemyChanged;
 
         /// <summary>True while the second enemy is part of the fight.</summary>
         public bool SecondEnemyInPlay => secondEnemyHealth != null && secondEnemyHealth.gameObject.activeSelf;
@@ -105,11 +113,13 @@ namespace Visha.Campaign
         private void SetSecondEnemyInPlay(bool inPlay)
         {
             if (secondEnemyHealth == null) return;
+            bool changed = SecondEnemyInPlay != inPlay;
             // Activated before it is configured, so Health.Awake on a first activation
             // cannot undo the health set in ResetSecondEnemy.
             secondEnemyHealth.gameObject.SetActive(inPlay);
             if (secondEnemySpriteRenderer != null) secondEnemySpriteRenderer.gameObject.SetActive(inPlay);
             if (outcomeController != null) outcomeController.SetSecondEnemy(inPlay ? secondEnemyHealth : null);
+            if (changed) SecondEnemyChanged?.Invoke(inPlay ? secondEnemyHealth.gameObject : null);
         }
 
         private void ResetSecondEnemy()
