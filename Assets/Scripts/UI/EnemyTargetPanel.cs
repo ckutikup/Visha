@@ -30,13 +30,16 @@ namespace Visha.UI
         {
             targetId = enemy.targetId;
             bool alive = enemy.health > 0 && enemy.maxHealth > 0;
-            nameLabel.text = (selected ? "› " : "") + (string.IsNullOrWhiteSpace(enemy.name) ? "Enemy" : enemy.name);
+            bool acting = status == "Acting";
+            nameLabel.text = (acting ? "ACTING · " : selected ? "› " : "") + (string.IsNullOrWhiteSpace(enemy.name) ? "Enemy" : enemy.name);
             intentLabel.text = !alive ? "Defeated" : status == "Needs poison" ? status :
                 (status == "Acting" ? "Now: " : "Next: ") + (enemy.intention ?? "Waiting") +
                 (enemy.incomingDamage > 0 ? $"  {enemy.incomingDamage}" : "");
-            intentLabel.color = enemy.incomingDamage > 0 && alive ? new Color(.95f,.76f,.48f) : new Color(.7f,.8f,.76f);
-            background.color = selected ? new Color(.09f,.23f,.19f,.94f) : new Color(.025f,.06f,.065f,.86f);
-            nameLabel.color = alive ? new Color(.91f,.9f,.8f) : new Color(.5f,.54f,.52f);
+            intentLabel.color = acting ? new Color(1f,.65f,.42f)
+                : enemy.incomingDamage > 0 && alive ? new Color(.95f,.76f,.48f) : new Color(.7f,.8f,.76f);
+            background.color = acting ? new Color(.25f,.12f,.07f,.96f)
+                : selected ? new Color(.09f,.23f,.19f,.94f) : new Color(.025f,.06f,.065f,.86f);
+            nameLabel.color = !alive ? new Color(.5f,.54f,.52f) : acting ? new Color(1f,.78f,.55f) : new Color(.91f,.9f,.8f);
             button.interactable = available;
         }
     }

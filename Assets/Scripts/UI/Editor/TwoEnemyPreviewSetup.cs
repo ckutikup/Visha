@@ -3,6 +3,7 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using Visha.Combat.Flow;
 using Visha.Preview;
 
 namespace Visha.UI.Editor
@@ -30,15 +31,24 @@ namespace Visha.UI.Editor
             var hud = roots.SelectMany(root => root.GetComponentsInChildren<BattleHUD>(true)).Single();
             var guardian = roots.SelectMany(root => root.GetComponentsInChildren<SpriteRenderer>(true))
                 .First(renderer => renderer.sprite && renderer.sprite.name == "TempleGuardian");
-            guardian.transform.position = new Vector3(1.8f, guardian.transform.position.y, guardian.transform.position.z);
+            guardian.transform.position = new Vector3(1.45f, guardian.transform.position.y, guardian.transform.position.z);
             guardian.transform.localScale *= .82f;
             var sentinel = Object.Instantiate(guardian.gameObject);
             sentinel.name = "SentinelPreview";
-            sentinel.transform.position = new Vector3(5.1f, guardian.transform.position.y, guardian.transform.position.z);
+            sentinel.transform.position = new Vector3(5.85f, guardian.transform.position.y, guardian.transform.position.z);
             sentinel.GetComponent<SpriteRenderer>().sprite = AssetDatabase.LoadAllAssetsAtPath("Assets/Art/Characters/CourtyardCombatants.png").OfType<Sprite>().Single(sprite => sprite.name == "VaultSentinel");
             guardian.gameObject.AddComponent<EnemyTargetAnchor>().Configure(hud, 10, Camera.main);
             sentinel.AddComponent<EnemyTargetAnchor>().Configure(hud, 20, Camera.main);
-            hud.gameObject.AddComponent<TwoEnemyHUDPreview>();
+            var player = roots.SelectMany(root => root.GetComponentsInChildren<SpriteRenderer>(true))
+                .First(renderer => renderer.sprite && renderer.sprite.name == "Vishakanya");
+            var enemyFeedback = new[]
+            {
+                guardian.gameObject.AddComponent<BattleFeedback>(),
+                sentinel.AddComponent<BattleFeedback>()
+            };
+            var playerFeedback = player.gameObject.AddComponent<BattleFeedback>();
+            hud.gameObject.AddComponent<TwoEnemyHUDPreview>().Configure(
+                new[] { guardian.transform, sentinel.transform }, enemyFeedback, playerFeedback);
             Selection.activeGameObject = hud.gameObject;
         }
     }
