@@ -23,6 +23,8 @@ namespace Visha.Battle
     {
         [SerializeField] private Health playerHealth;
         [SerializeField] private Health enemyHealth;
+        [Tooltip("Optional. When set, Victory needs both enemies defeated.")]
+        [SerializeField] private Health secondEnemyHealth;
 
         /// <summary>Fires once, the moment the battle ends.</summary>
         public event Action<BattleOutcome> OnBattleEnded;
@@ -36,11 +38,20 @@ namespace Visha.Battle
         private void OnEnable()
         {
             Subscribe(playerHealth, enemyHealth);
+            if (secondEnemyHealth != null) secondEnemyHealth.OnDied += HandleEnemyDied;
         }
 
         private void OnDisable()
         {
             Unsubscribe(playerHealth, enemyHealth);
+            if (secondEnemyHealth != null) secondEnemyHealth.OnDied -= HandleEnemyDied;
+        }
+
+        public void SetSecondEnemy(Health enemy)
+        {
+            if (isActiveAndEnabled && secondEnemyHealth != null) secondEnemyHealth.OnDied -= HandleEnemyDied;
+            secondEnemyHealth = enemy;
+            if (isActiveAndEnabled && secondEnemyHealth != null) secondEnemyHealth.OnDied += HandleEnemyDied;
         }
 
         /// <summary>Assigns the two combatants to watch. Safe to call before or after OnEnable.</summary>
@@ -79,10 +90,18 @@ namespace Visha.Battle
         private void HandleEnemyDied()
         {
             if (IsOver || !isActiveAndEnabled) return;
+            // With two enemies, the battle continues until both are defeated.
+            if (secondEnemyHealth != null && AnyEnemyAlive()) return;
             // A simultaneous death favors Defeat: going down still counts as losing
             // even if the killing blow also finished the enemy off.
             bool playerAlsoDown = playerHealth != null && playerHealth.IsDead;
             SetOutcome(playerAlsoDown ? BattleOutcome.Defeat : BattleOutcome.Victory);
+        }
+
+        private bool AnyEnemyAlive()
+        {
+            return (enemyHealth != null && !enemyHealth.IsDead)
+                || (secondEnemyHealth != null && !secondEnemyHealth.IsDead);
         }
 
         private void SetOutcome(BattleOutcome outcome)
@@ -109,6 +128,12 @@ namespace Visha.Battle
             if (enemyHealth != null && enemyHealth.TryGetComponent(out EnemyPatternRunner pattern))
             {
                 pattern.ResetPattern();
+            }
+
+            ReviveAndClearPoison(secondEnemyHealth);
+            if (secondEnemyHealth != null && secondEnemyHealth.TryGetComponent(out EnemyPatternRunner secondPattern))
+            {
+                secondPattern.ResetPattern();
             }
 
             Debug.Log("Battle retry requested");

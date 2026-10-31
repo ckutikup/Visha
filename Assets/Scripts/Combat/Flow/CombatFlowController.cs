@@ -24,6 +24,10 @@ namespace Visha.Combat.Flow
 
         [SerializeField] private CombatActionPresentation presentation;
 
+        [Header("Second enemy (optional)")]
+        [Tooltip("Leave empty for a one-enemy encounter. When set, each living enemy acts once per enemy phase.")]
+        [SerializeField] private GameObject secondEnemyGameObject;
+
         [Header("Campaign (optional)")]
         [Tooltip("When set, combat only accepts actions while an encounter is InBattle. " +
                  "Found automatically if the scene has one. Leave empty for a single battle.")]
@@ -38,6 +42,10 @@ namespace Visha.Combat.Flow
         private Health enemyHealth;
         private Poison playerPoison;
         private Poison enemyPoison;
+        private Health secondEnemyHealth;
+        private Poison secondEnemyPoison;
+        private EnemyPatternRunner secondEnemyPattern;
+        private bool chargeEarnedThisPhase;
 
         private BattleViewState viewState;
         private BattlePhase currentPhase = BattlePhase.Waiting;
@@ -51,12 +59,14 @@ namespace Visha.Combat.Flow
 
         public BattlePhase CurrentPhase => currentPhase;
         public bool IsCombatActive => combatActive;
+        public bool HasSecondEnemy => secondEnemyHealth != null;
 
         private void Awake()
         {
             routine = GetComponent<RoutineBreak>();
             sound = FindAnyObjectByType<BattleAudio>();
             InitializeCombatants();
+            InitializeSecondEnemy();
             InitializeViewState();
         }
 
@@ -99,6 +109,19 @@ namespace Visha.Combat.Flow
             if (fade == null) Debug.LogWarning("Player missing Fade component");
         }
 
+        private void InitializeSecondEnemy()
+        {
+            if (secondEnemyGameObject == null) return;
+
+            secondEnemyHealth = secondEnemyGameObject.GetComponent<Health>();
+            secondEnemyPoison = secondEnemyGameObject.GetComponent<Poison>();
+            secondEnemyPattern = secondEnemyGameObject.GetComponent<EnemyPatternRunner>();
+
+            if (secondEnemyHealth == null) Debug.LogError("Second enemy missing Health component");
+            if (secondEnemyPattern == null) Debug.LogError("Second enemy missing EnemyPatternRunner component");
+            if (outcomeController != null && secondEnemyHealth != null) outcomeController.SetSecondEnemy(secondEnemyHealth);
+        }
+
         private void InitializeViewState()
         {
             viewState = new BattleViewState();
@@ -126,6 +149,8 @@ namespace Visha.Combat.Flow
             if (enemyHealth != null) enemyHealth.OnHealthChanged += HandleHealthChanged;
             if (playerPoison != null) playerPoison.OnPoisonChanged += HandlePoisonChanged;
             if (enemyPoison != null) enemyPoison.OnPoisonChanged += HandlePoisonChanged;
+            if (secondEnemyHealth != null) secondEnemyHealth.OnHealthChanged += HandleHealthChanged;
+            if (secondEnemyPoison != null) secondEnemyPoison.OnPoisonChanged += HandlePoisonChanged;
             if (fade != null) fade.OnFadeChanged += Refresh;
         }
 
@@ -150,6 +175,8 @@ namespace Visha.Combat.Flow
             if (enemyHealth != null) enemyHealth.OnHealthChanged -= HandleHealthChanged;
             if (playerPoison != null) playerPoison.OnPoisonChanged -= HandlePoisonChanged;
             if (enemyPoison != null) enemyPoison.OnPoisonChanged -= HandlePoisonChanged;
+            if (secondEnemyHealth != null) secondEnemyHealth.OnHealthChanged -= HandleHealthChanged;
+            if (secondEnemyPoison != null) secondEnemyPoison.OnPoisonChanged -= HandlePoisonChanged;
             if (fade != null) fade.OnFadeChanged -= Refresh;
             if (campaign != null) campaign.StateChanged -= HandleCampaignStateChanged;
         }
@@ -200,7 +227,14 @@ namespace Visha.Combat.Flow
         private bool IsBattleOver()
         {
             if (outcomeController != null && outcomeController.IsOver) return true;
-            return (playerHealth != null && playerHealth.IsDead) || (enemyHealth != null && enemyHealth.IsDead);
+            return (playerHealth != null && playerHealth.IsDead) || AllEnemiesDead();
+        }
+
+        private bool AllEnemiesDead()
+        {
+            bool firstDead = enemyHealth != null && enemyHealth.IsDead;
+            if (secondEnemyHealth == null) return firstDead;
+            return firstDead && secondEnemyHealth.IsDead;
         }
 
 
@@ -229,7 +263,7 @@ namespace Visha.Combat.Flow
             turnInProgress = true;
             SetPhase(BattlePhase.EnemyTurn);
             Debug.Log("Combat: Enemy turn starting");
-            StartCoroutine(ExecuteEnemyActionNextFrame());
+            StartCoroutine(HasSecondEnemy ? ExecuteTwoEnemyPhase() : ExecuteEnemyActionNextFrame());
         }
 
         private IEnumerator ExecuteEnemyActionNextFrame()
@@ -259,6 +293,7 @@ namespace Visha.Combat.Flow
 
         private void ResolveEnemyTurn()
         {
+            if (HasSecondEnemy) { ResolveTwoEnemyPhase(); return; }
             if (IsBattleOver() || !combatActive) return;
             if (enemyPoison != null) enemyPoison.Tick();
             if (IsBattleOver()) return;
@@ -286,6 +321,112 @@ namespace Visha.Combat.Flow
                 Refresh();
             }
         }
+
+        private IEnumerator ExecuteTwoEnemyPhase()
+        {
+            chargeEarnedThisPhase = false;
+            yield return new WaitForSeconds(.12f);
+
+            for (int id = 0; id < 2; id++)
+            {
+                if (IsBattleOver() || !combatActive) yield break;
+                Health health = EnemyHealthOf(id);
+                Poison poison = EnemyPoisonOf(id);
+                EnemyPatternRunner pattern = EnemyPatternOf(id);
+                if (health == null || health.IsDead || pattern == null) continue;
+
+                if (poison != null && poison.PoisonStacks > 0)
+                {
+                    SetPhase(BattlePhase.Poison);
+                    if (battleHUD != null) battleHUD.SetFeedback($"{pattern.EnemyName} poison · {poison.PoisonStacks * poison.DamagePerStack} damage");
+                    poison.Tick();
+                    if (IsBattleOver()) yield break;
+                    yield return new WaitForSeconds(.3f);
+                    if (health.IsDead) continue;
+                }
+
+                SetPhase(BattlePhase.EnemyTurn);
+                int incoming = pattern.IncomingDamage;
+                int predicted = fade != null ? fade.ReduceDamage(incoming) : incoming;
+                if (battleHUD != null) battleHUD.SetFeedback(incoming > 0
+                    ? $"{pattern.EnemyName} · {pattern.IntentLabel} · {predicted} damage"
+                    : $"{pattern.EnemyName} holds position · no attack");
+
+                if (id == 0 && presentation != null)
+                    yield return presentation.EnemyAction(incoming > 0, () => ApplyEnemyActionFrom(pattern), incoming >= 9, pattern.IntentLabel);
+                else
+                {
+                    ApplyEnemyActionFrom(pattern);
+                    yield return new WaitForSeconds(.3f);
+                }
+
+                if (IsBattleOver() || !combatActive) yield break;
+                pattern.TakeTurn();
+            }
+
+            FinishTwoEnemyPhase();
+        }
+
+        private void ResolveTwoEnemyPhase()
+        {
+            if (IsBattleOver() || !combatActive) return;
+            chargeEarnedThisPhase = false;
+
+            for (int id = 0; id < 2; id++)
+            {
+                Health health = EnemyHealthOf(id);
+                Poison poison = EnemyPoisonOf(id);
+                EnemyPatternRunner pattern = EnemyPatternOf(id);
+                if (health == null || health.IsDead || pattern == null) continue;
+
+                if (poison != null) poison.Tick();
+                if (IsBattleOver()) return;
+                if (health.IsDead) continue;
+
+                ApplyEnemyActionFrom(pattern);
+                if (IsBattleOver() || !combatActive) return;
+                pattern.TakeTurn();
+            }
+
+            FinishTwoEnemyPhase();
+        }
+
+        private void ApplyEnemyActionFrom(EnemyPatternRunner pattern)
+        {
+            if (IsBattleOver() || !combatActive || pattern == null) return;
+            EnemyAction action = pattern.NextAction;
+            int damage = action.Damage;
+            if (action.Kind == EnemyActionKind.Attack && fade != null)
+                damage = fade.ReduceDamage(damage);
+            bool guarded = fade != null && fade.IsActive;
+            if (!chargeEarnedThisPhase && guarded && action.Kind == EnemyActionKind.Attack
+                && action.Damage >= 8 && damage < action.Damage)
+            {
+                awakening.EarnCharge();
+                chargeEarnedThisPhase = true;
+            }
+            if (damage > 0 && playerHealth != null) playerHealth.TakeDamage(damage);
+            if (routine != null && routine.TryGuard(pattern.IntentLabel, guarded,
+                    playerHealth != null && !playerHealth.IsDead))
+            {
+                if (presentation != null) presentation.ShowCurseFragment();
+                if (sound != null) sound.PlayRoutineBreak();
+                if (battleHUD != null) battleHUD.SetFeedback("Routine Broken · next Venom +1 poison");
+                Refresh();
+            }
+        }
+
+        private void FinishTwoEnemyPhase()
+        {
+            if (IsBattleOver() || !combatActive) return;
+            if (fade != null) fade.EndEnemyPhase();
+            turnInProgress = false;
+            EnterPlayerTurn();
+        }
+
+        private Health EnemyHealthOf(int id) => id == 0 ? enemyHealth : secondEnemyHealth;
+        private Poison EnemyPoisonOf(int id) => id == 0 ? enemyPoison : secondEnemyPoison;
+        private EnemyPatternRunner EnemyPatternOf(int id) => id == 0 ? enemyPatternRunner : secondEnemyPattern;
 
         private void FinishRound()
         {
