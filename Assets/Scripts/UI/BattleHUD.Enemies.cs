@@ -24,6 +24,7 @@ namespace Visha.UI
         private EnemyFocusPanel focusPanel;
         private int actingEnemyId = -1;
         public int DisplayedEnemyId => phase == BattlePhase.EnemyTurn && Alive(FindEnemy(actingEnemyId)) ? actingEnemyId : selectedEnemyId;
+        public bool IsEnemyActing(int id) => phase == BattlePhase.EnemyTurn && actingEnemyId == id;
         public bool CanSelectEnemy => HasEnemyRoster && inputEnabled && phase == BattlePhase.PlayerTurn && !submitted && actorsAlive;
         public bool IsEnemyAlive(int id) => Alive(FindEnemy(id));
         private int selectedEnemyId = -1;

@@ -26,6 +26,7 @@ namespace Visha.Combat.Flow
             if (health == null) health = GetComponent<Health>();
             if (poison == null) poison = GetComponent<Poison>();
             if (fade == null) fade = GetComponent<Fade>();
+            if (characterRenderer == null) characterRenderer = GetComponentInChildren<SpriteRenderer>();
             if (characterRenderer != null) originalColor = characterRenderer.color;
             if (poisonMark != null) poisonScale = poisonMark.transform.localScale;
             if (fadeAura != null) fadeScale = fadeAura.transform.localScale;
@@ -83,6 +84,11 @@ namespace Visha.Combat.Flow
             if (biteFlash == null || !isActiveAndEnabled) return;
             if (biteRoutine != null) StopCoroutine(biteRoutine);
             biteRoutine = StartCoroutine(BiteRoutine());
+        }
+
+        public void PlayHitFeedback()
+        {
+            if (isActiveAndEnabled) PlayHitFlash();
         }
 
         private void HandleHealthChanged(int current, int maximum)

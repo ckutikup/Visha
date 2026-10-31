@@ -2,6 +2,7 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
+using Visha.Combat.Flow;
 using Visha.UI;
 
 namespace Visha.Preview
@@ -10,16 +11,27 @@ namespace Visha.Preview
     {
         private BattleHUD hud;
         private BattleViewState state;
-        private Transform[] actors;
+        [SerializeField] private Transform[] actors;
         private Vector3[] homes;
         private SpriteRenderer[] sprites;
+        [SerializeField] private BattleFeedback[] enemyHitFeedback;
+        [SerializeField] private BattleFeedback playerHitFeedback;
         private Coroutine sequence;
+
+        public void Configure(Transform[] enemyActors, BattleFeedback[] enemyFeedback, BattleFeedback targetFeedback)
+        {
+            actors = enemyActors;
+            enemyHitFeedback = enemyFeedback;
+            playerHitFeedback = targetFeedback;
+        }
+
         private void Start()
         {
             hud = GetComponent<BattleHUD>(); hud.AbilityRequested += RecordRequest;
             var screens = Object.FindAnyObjectByType<BattleScreenView>();
             if (screens) { screens.SetHUD(hud); screens.ShowBattle(); }
-            actors = new[] { GameObject.Find("EnemyPlaceholder").transform, GameObject.Find("SentinelPreview").transform };
+            if (actors == null || actors.Length != 2 || enemyHitFeedback == null || enemyHitFeedback.Length != 2 || playerHitFeedback == null)
+                throw new System.InvalidOperationException("Two-enemy preview actors and hit feedback must be configured by TwoEnemyPreviewSetup.");
             homes = new[] { actors[0].position, actors[1].position };
             sprites = new[] { actors[0].GetComponent<SpriteRenderer>(), actors[1].GetComponent<SpriteRenderer>() };
             var caption = new GameObject("PreviewCaption",typeof(RectTransform),typeof(Text));
@@ -55,7 +67,17 @@ namespace Visha.Preview
         private void RecordRequest(BattleAbility ability, int target)
         {
             state.phase = BattlePhase.Resolving; hud.Render(state);
-            hud.SetFeedback($"Preview: {ability} selected · no damage applied");
+            if (target >= 0)
+            {
+                int index = System.Array.FindIndex(state.enemies, enemy => enemy.targetId == target);
+                if (index >= 0)
+                {
+                    enemyHitFeedback[index].PlayHitFeedback();
+                    hud.SetFeedback($"Preview: {ability} targets {state.enemies[index].name} · visual hit only");
+                }
+                else hud.SetFeedback($"Preview: {ability} · no damage applied");
+            }
+            else hud.SetFeedback("Preview: Fade activates · no damage applied");
             sequence = StartCoroutine(ShowEnemyPhase());
         }
         private IEnumerator ShowEnemyPhase()
@@ -65,36 +87,41 @@ namespace Visha.Preview
             {
                 if (state.enemies[i].health <= 0) continue;
                 state.phase = BattlePhase.EnemyTurn; state.actingEnemyId = state.enemies[i].targetId; hud.Render(state);
-                hud.SetFeedback($"Preview: {state.enemies[i].name} steps forward");
                 int other = 1-i;
-                var front = homes[0]; var rear = homes[1] + Vector3.up*.18f;
                 sprites[i].sortingOrder = 12; sprites[other].sortingOrder = 10;
-                sprites[other].color = new Color(.75f,.8f,.82f,1);
-                yield return MovePair(i,front,other,rear,.38f);
-                yield return new WaitForSeconds(.25f);
-                if (state.enemies[i].incomingDamage > 0)
+                sprites[i].color = Color.white;
+                sprites[other].color = new Color(.58f,.65f,.68f,1f);
+                bool attacks = state.enemies[i].incomingDamage > 0;
+                Vector3 actionPose = attacks ? homes[i] + Vector3.left * .42f : homes[i] + new Vector3(.12f,-.04f,0);
+                yield return MoveActor(i, actionPose, attacks ? .22f : .18f);
+                if (attacks)
                 {
-                    yield return MovePair(i,front+Vector3.left*.65f,other,rear,.16f);
-                    yield return MovePair(i,front,other,rear,.23f);
+                    hud.SetFeedback($"Preview: {state.enemies[i].name} · {state.enemies[i].intention} hits Visha for {state.enemies[i].incomingDamage}");
+                    if (playerHitFeedback != null) playerHitFeedback.PlayHitFeedback();
+                    yield return new WaitForSeconds(.38f);
                 }
-                yield return new WaitForSeconds(.25f);
-                yield return MovePair(0,homes[0],1,homes[1],.36f);
+                else
+                {
+                    hud.SetFeedback($"Preview: {state.enemies[i].name} holds position · no attack");
+                    yield return new WaitForSeconds(.24f);
+                }
+                yield return MoveActor(i, homes[i], .28f);
                 RestoreFormation();
             }
             state.phase = BattlePhase.PlayerTurn; state.actingEnemyId = -1; hud.Render(state);
             hud.SetFeedback("Your target is preserved · choose an ability"); sequence = null;
         }
-        private IEnumerator MovePair(int first, Vector3 destination, int second, Vector3 otherDestination, float duration)
+        private IEnumerator MoveActor(int index, Vector3 destination, float duration)
         {
-            var from = actors[first].position; var otherFrom = actors[second].position;
+            var from = actors[index].position;
             float elapsed = 0;
             while (elapsed < duration)
             {
                 elapsed += Time.deltaTime; float t = Mathf.SmoothStep(0,1,elapsed/duration);
-                actors[first].position = Vector3.Lerp(from,destination,t);
-                actors[second].position = Vector3.Lerp(otherFrom,otherDestination,t);
+                actors[index].position = Vector3.Lerp(from,destination,t);
                 yield return null;
             }
+            actors[index].position = destination;
         }
         private void Update()
         {
