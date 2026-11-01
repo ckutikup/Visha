@@ -12,7 +12,8 @@ using Visha.UI;
 
 /// <summary>
 /// Plays Campaign_Demo through its real buttons and the real CombatFlowController:
-/// start, win, Next, lose, Retry, finish all three encounters, and Restart.
+/// start, win, Next, lose, Retry, finish the three solo encounters and the
+/// two-enemy Vault, and Restart.
 /// Lethal damage is applied directly so the test does not depend on balance values.
 /// </summary>
 public class CampaignDemoPlayModeTests
@@ -102,7 +103,7 @@ public class CampaignDemoPlayModeTests
         Assert.AreEqual(2, campaign.EncounterNumber);
         Assert.AreEqual("Guardian Warden", enemyPattern.EnemyName);
         Assert.AreEqual(campaign.CurrentEncounter.EnemySprite, enemySpriteRenderer.sprite);
-        Assert.AreEqual("COURTYARD  /  2 OF 3", screens.transform.Find("Encounter").GetComponent<Text>().text);
+        Assert.AreEqual("COURTYARD  /  2 OF 4", screens.transform.Find("Encounter").GetComponent<Text>().text);
         Assert.AreEqual(44, enemyHealth.CurrentHealth);
         Assert.AreEqual(1f, hud.transform.Find("EnemyStatus/HealthTrack/HealthFill").GetComponent<RectTransform>().anchorMax.x);
         Assert.AreEqual(0, enemyPoison.PoisonStacks);
@@ -125,7 +126,7 @@ public class CampaignDemoPlayModeTests
         Assert.AreEqual(TempleGuardianPattern.HeavyBlow.Label, enemyPattern.IntentLabel);
         yield return AssertBattleAcceptsActions();
 
-        // Encounters 2 and 3: win both, the last one ends the demo
+        // Encounters 2 and 3: win both, then the two-enemy Vault ends the demo
         enemyHealth.TakeDamage(999);
         yield return null;
         Click("VictoryPanel/Card/NextButton");
@@ -137,6 +138,25 @@ public class CampaignDemoPlayModeTests
         yield return AssertBattleAcceptsActions();
 
         enemyHealth.TakeDamage(999);
+        yield return null;
+        Assert.AreEqual(CampaignState.Victory, campaign.State);
+
+        // Encounter 4, the Vault: both enemies must fall before the demo ends
+        Click("VictoryPanel/Card/NextButton");
+        yield return null;
+        Assert.AreEqual(4, campaign.EncounterNumber);
+        Assert.AreEqual("Vault Guardian", enemyPattern.EnemyName);
+        Assert.AreEqual(18, enemyHealth.CurrentHealth);
+        GameObject secondEnemy = GameObject.Find("SecondEnemy");
+        Assert.IsNotNull(secondEnemy, "the Vault brings in its second enemy");
+        Assert.AreEqual("Vault Sentinel", secondEnemy.GetComponent<EnemyPatternRunner>().EnemyName);
+        Assert.AreEqual(26, secondEnemy.GetComponent<Health>().CurrentHealth);
+        yield return AssertBattleAcceptsActions();
+
+        enemyHealth.TakeDamage(999);
+        yield return null;
+        Assert.AreEqual(CampaignState.InBattle, campaign.State, "one Vault enemy still stands");
+        secondEnemy.GetComponent<Health>().TakeDamage(999);
         yield return null;
         Assert.AreEqual(CampaignState.DemoComplete, campaign.State);
         Assert.IsTrue(ScreenVisible(BattleScreen.Complete));
