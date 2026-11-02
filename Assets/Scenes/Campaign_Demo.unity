@@ -3067,6 +3067,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Visha.Combat.Flow::Visha.Combat.Flow.CombatActionPresentation
   player: {fileID: 690686219}
   enemy: {fileID: 905415712}
+  secondEnemySprite: {fileID: 5437605104120397899, guid: 98191c3ff30d34f54a93b4d5137b893b, type: 3}
 --- !u!114 &808548957
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -10,7 +10,7 @@ Charith's contribution extends the existing campaign with the Vault arrival scre
 - The first Vault encounter starts charged, including retries, so the unlock can be learned immediately. Subsequent encounters start empty: maximum-poison Bite earns one charge, and Fade reducing an attack of at least 8 base damage earns one. Three charges are required. Charge cannot accumulate after activation.
 - During Awakening, Bite becomes Twin Fang once. It deals normal Bite damage, consumes poison, then leaves 2 poison on a living target. The integration helper transfers these stacks to a supplied second living enemy instead when one is provided.
 - The temporary aura ends when the two actions finish or the battle ends. Invalid actions do not consume its duration.
-- The two-enemy focused HUD and front/back movement remain a separate presentation preview. The live campaign still resolves one enemy per encounter.
+- The Inner Vault is encounter 4, with a Guardian and Sentinel. Both enemies appear in the battle, take separate turns, and can be targeted independently. Victory requires defeating both. The standalone presentation preview remains available.
 
 ## Review locally
 
@@ -22,7 +22,7 @@ Use **Visha > UI > Open Two Enemy Preview** separately to review target selectio
 
 ## Report evidence
 
-Show the Vault arrival, base versus armored appearance, activation, Twin Fang and its poison residue, expiration, and defeat/retry. Label the two-enemy movement sequence as a presentation preview until the combat integration is finished. Do not report the boss, blessing or difficulty options as completed.
+Show the Vault arrival, base versus armored appearance, activation, Twin Fang and its poison residue, expiration, and defeat/retry. Show the Inner Vault battle, switching targets, both enemy attacks, and continuing after one enemy is defeated. Do not report the boss, blessing or difficulty options as completed.
 
 ## Teammates building on this work
 
@@ -34,7 +34,7 @@ Show the Vault arrival, base versus armored appearance, activation, Twin Fang an
 
 ## Next milestone — preserved design
 
-1. Complete the Inner Vault two-enemy battle and playtest Awakening charge pacing.
+1. Playtest the Inner Vault difficulty and Awakening charge pacing with the integrated two-enemy battle.
 2. Build the Sanctum boss with clearly announced phases.
 3. Introduce the final guardian appearance at the Sanctum entrance.
 4. Grant the Temple's Blessing before the boss: survive one lethal hit at 1 HP, with a visible consumed state. Reset it on a fresh boss attempt; skip repeated introductions on retries.

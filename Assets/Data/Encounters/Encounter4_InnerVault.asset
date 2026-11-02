@@ -17,4 +17,4 @@ MonoBehaviour:
   openingOffset: 0
   maxHealth: 18
   startingHealth: 0
-  enemySprite: {fileID: 0}
+  enemySprite: {fileID: 6567668504794634820, guid: 98191c3ff30d34f54a93b4d5137b893b, type: 3}

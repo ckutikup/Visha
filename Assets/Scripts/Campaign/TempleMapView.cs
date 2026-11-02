@@ -154,7 +154,7 @@ namespace Visha.Campaign
             enter = Button("EnterEncounter", "Enter Encounter", 0, -365, 410, 65, EnterSelected);
             Button("ReturnToTitle", "Return to Title", -500, -365, 370, 65, () => { panel.SetActive(false); campaign.ReturnToTitle(); });
             replay = Button("Replay", "Replay Available Encounters", 500, -365, 460, 65, () => { selected = 0; Refresh(); });
-            Label("Five encounters planned · three available here · Vault multi-enemy combat and Sanctum still in development", 0, -465, 1650, 45, 22);
+            Label("Five encounters planned · four available · Sanctum still in development", 0, -465, 1650, 45, 22);
         }
         private GameObject Element(string name, float x, float y, float w, float h)
         {
