@@ -151,10 +151,13 @@ namespace Visha.UI
                 routineLabel.alignment = TextAnchor.MiddleCenter;
                 routineLabel.raycastTarget = false;
                 var rect = (RectTransform)go.transform;
-                rect.anchorMin = rect.anchorMax = new Vector2(.5f, 1f);
+                rect.anchorMin = rect.anchorMax = new Vector2(HasEnemyRoster ? .25f : .5f, 1f);
                 rect.anchoredPosition = new Vector2(0, -110);
-                rect.sizeDelta = new Vector2(880, 40);
+                rect.sizeDelta = new Vector2(HasEnemyRoster ? 800 : 880, 40);
             }
+            var routineRect = routineLabel.rectTransform;
+            routineRect.anchorMin = routineRect.anchorMax = new Vector2(HasEnemyRoster ? .25f : .5f, 1f);
+            routineRect.sizeDelta = new Vector2(HasEnemyRoster ? 800 : 880, 40);
             routineLabel.text = state.routineBoon ? "CURSE FRAGMENT · next Venom +1 poison (cap 5)"
                 : state.routineOpportunity ? "BREAK THE ROUTINE · Fade through this heavy attack" : "";
             routineLabel.gameObject.SetActive(actorsAlive && phase != BattlePhase.Waiting);

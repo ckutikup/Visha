@@ -21,11 +21,23 @@ namespace Visha.Combat.Flow
         private Coroutine hitRoutine;
         private Coroutine biteRoutine;
 
+        public void SetCombatant(Health value, SpriteRenderer renderer)
+        {
+            if (isActiveAndEnabled) OnDisable();
+            health = value;
+            poison = value != null ? value.GetComponent<Poison>() : null;
+            characterRenderer = renderer;
+            originalColor = renderer != null ? renderer.color : Color.white;
+            previousHealth = value != null ? value.CurrentHealth : 0;
+            if (isActiveAndEnabled) OnEnable();
+        }
+
         private void Awake()
         {
             if (health == null) health = GetComponent<Health>();
             if (poison == null) poison = GetComponent<Poison>();
             if (fade == null) fade = GetComponent<Fade>();
+            if (characterRenderer == null) characterRenderer = GetComponentInChildren<SpriteRenderer>();
             if (characterRenderer != null) originalColor = characterRenderer.color;
             if (poisonMark != null) poisonScale = poisonMark.transform.localScale;
             if (fadeAura != null) fadeScale = fadeAura.transform.localScale;
@@ -83,6 +95,11 @@ namespace Visha.Combat.Flow
             if (biteFlash == null || !isActiveAndEnabled) return;
             if (biteRoutine != null) StopCoroutine(biteRoutine);
             biteRoutine = StartCoroutine(BiteRoutine());
+        }
+
+        public void PlayHitFeedback()
+        {
+            if (isActiveAndEnabled) PlayHitFlash();
         }
 
         private void HandleHealthChanged(int current, int maximum)

@@ -147,6 +147,28 @@ namespace Visha.Combat.Flow.Tests
         }
 
         [Test]
+        public void DefeatedFirstEnemy_DoesNotBlockTheSurvivor()
+        {
+            controller.SetSecondEnemy(enemyBGO);
+            enemyA.TakeDamage(1000);
+            Call("HandleAbilityRequested", BattleAbility.VenomStrike, 0);
+            Assert.AreEqual(BattlePhase.PlayerTurn, controller.CurrentPhase);
+            PlayTurn(BattleAbility.VenomStrike, 1);
+            Assert.AreEqual(2, poisonB.PoisonStacks);
+            Assert.AreEqual(46, player.CurrentHealth);
+        }
+
+        [Test]
+        public void BusyRequest_DoesNotChangeThePendingTarget()
+        {
+            controller.SetSecondEnemy(enemyBGO);
+            Set("turnInProgress", true);
+            Set("targetId", 0);
+            Call("HandleAbilityRequested", BattleAbility.VenomStrike, 1);
+            Assert.AreEqual(0, typeof(CombatFlowController).GetField("targetId", Private).GetValue(controller));
+        }
+
+        [Test]
         public void Victory_NeedsBothEnemies_AfterTheSwitch()
         {
             controller.SetSecondEnemy(enemyBGO);

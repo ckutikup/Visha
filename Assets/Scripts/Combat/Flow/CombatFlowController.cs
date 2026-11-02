@@ -32,8 +32,8 @@ namespace Visha.Combat.Flow
         [Tooltip("When set, combat only accepts actions while an encounter is InBattle. " +
                  "Found automatically if the scene has one. Leave empty for a single battle.")]
         [SerializeField] private CampaignController campaign;
-        private VaultCampaignLink vaultLink;
 
+        private VaultCampaignLink vaultLink;
         private RoutineBreak routine;
         private readonly GuardianAwakening awakening = new GuardianAwakening();
         public GuardianAwakening Awakening => awakening;
@@ -75,6 +75,7 @@ namespace Visha.Combat.Flow
         {
             SubscribeToBattleSystem();
             BindCampaign();
+            ConfigurePresentation();
             ResetAwakening();
             EnterPlayerTurn();
         }
@@ -189,10 +190,9 @@ namespace Visha.Combat.Flow
 
             campaign.StateChanged += HandleCampaignStateChanged;
             combatActive = campaign.State == CampaignState.InBattle;
-
-            // The Vault brings a second enemy in for its encounter only.
             vaultLink = FindAnyObjectByType<VaultCampaignLink>();
             if (vaultLink != null) vaultLink.SecondEnemyChanged += SetSecondEnemy;
+
         }
 
         private void HandleCampaignStateChanged(CampaignState state)
@@ -274,6 +274,7 @@ namespace Visha.Combat.Flow
 
         private IEnumerator ExecuteEnemyActionNextFrame()
         {
+            if (presentation != null) presentation.SelectEnemyActor(0);
             yield return new WaitForSeconds(.12f);
             if (IsBattleOver() || !combatActive) yield break;
             if (enemyPoison != null && enemyPoison.PoisonStacks > 0)
@@ -359,8 +360,11 @@ namespace Visha.Combat.Flow
                     ? $"{pattern.EnemyName} · {pattern.IntentLabel} · {predicted} damage"
                     : $"{pattern.EnemyName} holds position · no attack");
 
-                if (id == 0 && presentation != null)
+                if (presentation != null)
+                {
+                    presentation.SelectEnemyActor(id);
                     yield return presentation.EnemyAction(incoming > 0, () => ApplyEnemyActionFrom(pattern), incoming >= 9, pattern.IntentLabel);
+                }
                 else
                 {
                     ApplyEnemyActionFrom(pattern);
@@ -455,13 +459,20 @@ namespace Visha.Combat.Flow
             if (secondEnemyHealth != null) secondEnemyHealth.OnHealthChanged += HandleHealthChanged;
             if (secondEnemyPoison != null) secondEnemyPoison.OnPoisonChanged += HandlePoisonChanged;
             if (outcomeController != null) outcomeController.SetSecondEnemy(secondEnemyHealth);
+            ConfigurePresentation();
             if (viewState != null) Refresh();
+        }
+
+        private void ConfigurePresentation()
+        {
+            if (presentation != null) presentation.ConfigureEnemyActors(enemyHealth, secondEnemyHealth, battleHUD);
         }
 
         // The enemy the player's current ability is aimed at: 0 is the first enemy, 1 the second.
         private int targetId;
         private int actingEnemyId = -1;
-        private bool IsTargetable(int id) => id == 0 || (id == 1 && HasSecondEnemy && !secondEnemyHealth.IsDead);
+        private bool IsTargetable(int id) => id == 0 ? enemyHealth != null && !enemyHealth.IsDead
+            : id == 1 && HasSecondEnemy && !secondEnemyHealth.IsDead;
         private GameObject TargetObject => targetId == 1 && HasSecondEnemy ? secondEnemyGameObject : enemyGameObject;
         private Health TargetHealth => EnemyHealthOf(targetId == 1 && HasSecondEnemy ? 1 : 0);
         private Poison TargetPoison => EnemyPoisonOf(targetId == 1 && HasSecondEnemy ? 1 : 0);
@@ -506,15 +517,15 @@ namespace Visha.Combat.Flow
         /// <summary>Handles ability requests from the BattleHUD.</summary>
         private void HandleAbilityRequested(BattleAbility ability, int targetIndex)
         {
+            if (!CanAcceptAction()) return;
             if (ability != BattleAbility.Fade)
             {
-                if (!IsTargetable(targetIndex)) return;
+                if (!IsTargetable(targetIndex))
+                {
+                    if (battleHUD != null) battleHUD.RejectAction("Choose a living enemy.");
+                    return;
+                }
                 targetId = targetIndex;
-            }
-            if (!CanAcceptAction())
-            {
-                Debug.LogWarning($"Combat: {ability} ignored (phase {currentPhase}, active {combatActive}, busy {turnInProgress})");
-                return;
             }
 
             if (presentation != null)
@@ -553,6 +564,7 @@ namespace Visha.Combat.Flow
             bool applied = false;
             if (battleHUD != null) battleHUD.SetFeedback(ability == BattleAbility.VenomStrike ? "Venom Strike"
                 : ability == BattleAbility.SerpentsBite ? "Serpent's Bite" : "Fade · incoming damage reduced");
+            presentation.SelectEnemyActor(targetId);
             yield return presentation.PlayerAction(ability, () => applied = ApplyPlayerAbility(ability));
             if (applied && !IsBattleOver() && combatActive) EnterEnemyTurn();
         }
@@ -697,6 +709,8 @@ namespace Visha.Combat.Flow
             if (presentation != null) presentation.ResetPose();
             turnInProgress = false;
             actingEnemyId = -1;
+            targetId = 0;
+            ConfigurePresentation();
             if (fade != null) fade.ResetFade();
 
             SetPhase(BattlePhase.Waiting);
