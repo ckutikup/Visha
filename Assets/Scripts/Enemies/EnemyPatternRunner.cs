@@ -59,7 +59,14 @@ namespace Visha.Enemies
             _displayNameOverride = string.IsNullOrEmpty(displayName) ? null : displayName;
         }
 
-        private static EnemyAttackPattern Build(PatternKind kind)
+        private static EnemyAttackPattern Build(PatternKind kind) => CreatePattern(kind);
+
+        /// <summary>
+        /// Builds a fresh pattern for a given enemy type. Single source of truth for the
+        /// kind-to-pattern mapping, so encounter configuration (e.g. the two-enemy Vault)
+        /// builds the same patterns this runner uses.
+        /// </summary>
+        public static EnemyAttackPattern CreatePattern(PatternKind kind)
         {
             switch (kind)
             {
