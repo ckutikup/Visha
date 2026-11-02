@@ -2,6 +2,7 @@
   "name": "Visha.Preview",
   "references": [
     "Visha.UI",
+    "Visha.Combat.Flow",
     "Unity.ugui",
     "Unity.InputSystem"
   ]

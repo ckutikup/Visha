@@ -13,6 +13,69 @@ namespace Visha.Combat.Flow
 
         private readonly List<GameObject> effects = new List<GameObject>();
         private Material impactMaterial;
+        [SerializeField] private Sprite secondEnemySprite;
+        private CharacterIdleMotion firstActor, secondActor;
+        private Vector3 soloPosition, soloScale;
+        private int soloOrder;
+        public CharacterIdleMotion ActiveEnemy => enemy;
+        public CharacterIdleMotion SecondEnemyActor => secondActor;
+
+        public void ConfigureEnemyActors(Health first, Health second, BattleHUD hud)
+        {
+            if (firstActor == null)
+            {
+                firstActor = enemy;
+                if (firstActor == null) return;
+                soloPosition = firstActor.transform.localPosition;
+                soloScale = firstActor.transform.localScale;
+                soloOrder = firstActor.GetComponent<SpriteRenderer>().sortingOrder;
+            }
+            ResetPose();
+            firstActor.SetHealth(first);
+            enemy = firstActor;
+            if (second == null)
+            {
+                firstActor.SetRestPose(soloPosition, soloScale);
+                firstActor.GetComponent<SpriteRenderer>().sortingOrder = soloOrder;
+                if (secondActor != null) secondActor.gameObject.SetActive(false);
+                return;
+            }
+            firstActor.SetRestPose(new Vector3(1.65f, soloPosition.y, soloPosition.z), soloScale * .82f);
+            if (secondActor == null)
+            {
+                var go = new GameObject("SecondEnemyVisual");
+                go.SetActive(false);
+                go.transform.SetParent(firstActor.transform.parent, false);
+                go.transform.localPosition = new Vector3(5.6f, soloPosition.y, soloPosition.z);
+                go.transform.localScale = soloScale * .82f;
+                var original = firstActor.GetComponent<SpriteRenderer>();
+                var renderer = go.AddComponent<SpriteRenderer>();
+                renderer.sprite = secondEnemySprite != null ? secondEnemySprite : original.sprite;
+                renderer.sharedMaterial = original.sharedMaterial;
+                renderer.sortingLayerID = original.sortingLayerID;
+                renderer.sortingOrder = soloOrder;
+                renderer.flipX = original.flipX;
+                secondActor = go.AddComponent<CharacterIdleMotion>();
+                go.AddComponent<BattleFeedback>();
+                go.AddComponent<EnemyTargetAnchor>();
+            }
+            secondActor.gameObject.SetActive(true);
+            secondActor.SetHealth(second);
+            secondActor.SetRestPose(new Vector3(5.6f, soloPosition.y, soloPosition.z), soloScale * .82f);
+            secondActor.GetComponent<BattleFeedback>().SetCombatant(second, secondActor.GetComponent<SpriteRenderer>());
+            secondActor.GetComponent<EnemyTargetAnchor>().Configure(hud, 1, Camera.main);
+            var anchor = firstActor.GetComponent<EnemyTargetAnchor>();
+            if (anchor == null) anchor = firstActor.gameObject.AddComponent<EnemyTargetAnchor>();
+            anchor.Configure(hud, 0, Camera.main);
+        }
+
+        public void SelectEnemyActor(int id)
+        {
+            if (firstActor == null) firstActor = enemy;
+            enemy = id == 1 && secondActor != null && secondActor.gameObject.activeSelf ? secondActor : firstActor;
+            if (firstActor != null) firstActor.GetComponent<SpriteRenderer>().sortingOrder = soloOrder + (enemy == firstActor ? 2 : 0);
+            if (secondActor != null) secondActor.GetComponent<SpriteRenderer>().sortingOrder = soloOrder + (enemy == secondActor ? 2 : 0);
+        }
 
         public IEnumerator PlayerAction(BattleAbility ability, Action impact)
         {
@@ -235,8 +298,14 @@ namespace Visha.Combat.Flow
             effects.Clear();
             if (player != null) { player.ActionOffset = Vector3.zero; player.ActionTilt = 0; }
             if (enemy != null) { enemy.ActionOffset = Vector3.zero; enemy.ActionTilt = 0; }
+            if (firstActor != null) { firstActor.ActionOffset = Vector3.zero; firstActor.ActionTilt = 0; }
+            if (secondActor != null) { secondActor.ActionOffset = Vector3.zero; secondActor.ActionTilt = 0; }
         }
         private void OnDisable() => ResetPose();
-        private void OnDestroy() { if (impactMaterial != null) Destroy(impactMaterial); }
+        private void OnDestroy()
+        {
+            if (impactMaterial != null) Destroy(impactMaterial);
+            if (secondActor != null) Destroy(secondActor.gameObject);
+        }
     }
 }

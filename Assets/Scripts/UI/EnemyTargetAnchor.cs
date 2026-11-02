@@ -32,13 +32,16 @@ namespace Visha.UI
             ring.enabled = active;
             if (active)
             {
+                bool acting = hud.IsEnemyActing(targetId);
+                ring.startWidth = ring.endWidth = acting ? .065f : .035f;
                 var center = new Vector3(actor.bounds.center.x,actor.bounds.min.y + .03f,transform.position.z);
                 for (int i=0;i<48;i++)
                 {
                     float angle = i * Mathf.PI * 2 / 48;
                     ring.SetPosition(i,center + new Vector3(Mathf.Cos(angle)*actor.bounds.size.x*.45f,Mathf.Sin(angle)*.09f,0));
                 }
-                ring.startColor = ring.endColor = hud.CanSelectEnemy ? new Color(.5f,.93f,.72f) : new Color(1f,.75f,.4f);
+                ring.startColor = ring.endColor = acting ? new Color(1f,.54f,.3f)
+                    : hud.CanSelectEnemy ? new Color(.5f,.93f,.72f) : new Color(1f,.75f,.4f);
             }
             var mouse = Mouse.current;
             if (!alive || !hud.CanSelectEnemy || mouse == null || !mouse.leftButton.wasPressedThisFrame ||
