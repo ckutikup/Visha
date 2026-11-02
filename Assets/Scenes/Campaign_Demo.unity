@@ -3021,6 +3021,7 @@ MonoBehaviour:
   serpentsBite: {fileID: 798040399}
   fade: {fileID: 798040398}
   presentation: {fileID: 808548956}
+  secondEnemyGameObject: {fileID: 0}
   campaign: {fileID: 1513577504}
 --- !u!114 &808548954
 MonoBehaviour:
@@ -3036,6 +3037,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Visha.Battle::Visha.Battle.BattleOutcomeController
   playerHealth: {fileID: 798040395}
   enemyHealth: {fileID: 277063401}
+  secondEnemyHealth: {fileID: 0}
 --- !u!4 &808548955
 Transform:
   m_ObjectHideFlags: 0
@@ -3065,6 +3067,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Visha.Combat.Flow::Visha.Combat.Flow.CombatActionPresentation
   player: {fileID: 690686219}
   enemy: {fileID: 905415712}
+  secondEnemySprite: {fileID: 5437605104120397899, guid: 98191c3ff30d34f54a93b4d5137b893b, type: 3}
 --- !u!114 &808548957
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3955,6 +3958,80 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1209343339}
   m_CullTransparentMesh: 1
+--- !u!1 &1227278237
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1227278241}
+  - component: {fileID: 1227278240}
+  - component: {fileID: 1227278239}
+  - component: {fileID: 1227278238}
+  m_Layer: 0
+  m_Name: SecondEnemy
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!114 &1227278238
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1227278237}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56f1d5e13c1117849b077f45e0a71d86, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Visha.Enemies::Visha.Enemies.EnemyPatternRunner
+  pattern: 0
+--- !u!114 &1227278239
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1227278237}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f02a93177b36b425281c3d34b2d78c44, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Visha.Combat::Poison
+  maxStacks: 5
+  damagePerStack: 2
+--- !u!114 &1227278240
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1227278237}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1a009785a0c6b41c8b52b6f2ec3096bd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Visha.Combat::Health
+  maxHealth: 50
+--- !u!4 &1227278241
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1227278237}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1339965812
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4146,6 +4223,7 @@ GameObject:
   - component: {fileID: 1513577503}
   - component: {fileID: 1513577506}
   - component: {fileID: 1513577507}
+  - component: {fileID: 1513577508}
   m_Layer: 0
   m_Name: Campaign
   m_TagString: Untagged
@@ -4189,6 +4267,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: de13ffb9f3f6544038e8611d51d03abc, type: 2}
   - {fileID: 11400000, guid: 23e95127b7dac4d6583e8d7520bf35d8, type: 2}
   - {fileID: 11400000, guid: 83fb1186c11c748ca99b9a8e798a2cc3, type: 2}
+  - {fileID: 11400000, guid: 511e1fcea7884434da1cfe1f2f8ba856, type: 2}
   playerHealthRule: 0
 --- !u!4 &1513577505
 Transform:
@@ -4237,6 +4316,25 @@ MonoBehaviour:
   m_EditorClassIdentifier: Visha.Campaign::Visha.Campaign.TempleMapView
   courtyard: {fileID: 21300000, guid: fd63ea6970d504c1287b940de2daadac, type: 3}
   vault: {fileID: 21300000, guid: e2345ed15036443708b4908eae7e0da3, type: 3}
+--- !u!114 &1513577508
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1513577502}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 19d670830d8464360bfa345e7f9a3cdd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Visha.Campaign::Visha.Campaign.VaultCampaignLink
+  campaign: {fileID: 1513577504}
+  outcomeController: {fileID: 808548954}
+  vaultEncounter: {fileID: 11400000, guid: 511e1fcea7884434da1cfe1f2f8ba856, type: 2}
+  lineup: {fileID: 11400000, guid: f6b0e3eff94a841ea80321087fbb2f06, type: 2}
+  secondEnemyHealth: {fileID: 1227278240}
+  secondEnemyPattern: {fileID: 1227278238}
+  secondEnemySpriteRenderer: {fileID: 0}
 --- !u!224 &1516666917 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 5340334242834603143, guid: 44d3c1e5f482d4f21bfe2f190cdc933f, type: 3}
@@ -7921,3 +8019,4 @@ SceneRoots:
   - {fileID: 1513577505}
   - {fileID: 2092432325}
   - {fileID: 871346973}
+  - {fileID: 1227278241}

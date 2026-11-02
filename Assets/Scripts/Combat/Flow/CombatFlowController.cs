@@ -33,6 +33,7 @@ namespace Visha.Combat.Flow
                  "Found automatically if the scene has one. Leave empty for a single battle.")]
         [SerializeField] private CampaignController campaign;
 
+        private VaultCampaignLink vaultLink;
         private RoutineBreak routine;
         private readonly GuardianAwakening awakening = new GuardianAwakening();
         public GuardianAwakening Awakening => awakening;
@@ -180,6 +181,7 @@ namespace Visha.Combat.Flow
             if (secondEnemyPoison != null) secondEnemyPoison.OnPoisonChanged -= HandlePoisonChanged;
             if (fade != null) fade.OnFadeChanged -= Refresh;
             if (campaign != null) campaign.StateChanged -= HandleCampaignStateChanged;
+            if (vaultLink != null) vaultLink.SecondEnemyChanged -= SetSecondEnemy;
         }
         private void BindCampaign()
         {
@@ -188,6 +190,8 @@ namespace Visha.Combat.Flow
 
             campaign.StateChanged += HandleCampaignStateChanged;
             combatActive = campaign.State == CampaignState.InBattle;
+            vaultLink = FindAnyObjectByType<VaultCampaignLink>();
+            if (vaultLink != null) vaultLink.SecondEnemyChanged += SetSecondEnemy;
 
         }
 
