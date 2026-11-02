@@ -18,6 +18,25 @@ namespace Visha.Combat.Flow
         public float ActionTilt { get; set; }
         public Vector3 HomePosition => transform.parent == null ? restPosition : transform.parent.TransformPoint(restPosition);
 
+        public void SetHealth(Health value)
+        {
+            if (health != null) health.OnHealthChanged -= HandleHealthChanged;
+            health = value;
+            previousHealth = health != null ? health.CurrentHealth : 0;
+            if (isActiveAndEnabled && health != null) health.OnHealthChanged += HandleHealthChanged;
+        }
+
+        public void SetRestPose(Vector3 position, Vector3 scale)
+        {
+            restPosition = position;
+            restScale = scale;
+            ActionOffset = Vector3.zero;
+            ActionTilt = 0;
+            recoil = 0;
+            transform.localPosition = position;
+            transform.localScale = scale;
+        }
+
         private void Awake()
         {
             restScale = transform.localScale;
