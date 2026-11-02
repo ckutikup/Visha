@@ -74,6 +74,7 @@ namespace Visha.Combat.Flow
         {
             SubscribeToBattleSystem();
             BindCampaign();
+            ConfigurePresentation();
             ResetAwakening();
             EnterPlayerTurn();
         }
@@ -187,6 +188,7 @@ namespace Visha.Combat.Flow
 
             campaign.StateChanged += HandleCampaignStateChanged;
             combatActive = campaign.State == CampaignState.InBattle;
+
         }
 
         private void HandleCampaignStateChanged(CampaignState state)
@@ -268,6 +270,7 @@ namespace Visha.Combat.Flow
 
         private IEnumerator ExecuteEnemyActionNextFrame()
         {
+            if (presentation != null) presentation.SelectEnemyActor(0);
             yield return new WaitForSeconds(.12f);
             if (IsBattleOver() || !combatActive) yield break;
             if (enemyPoison != null && enemyPoison.PoisonStacks > 0)
@@ -335,6 +338,7 @@ namespace Visha.Combat.Flow
                 EnemyPatternRunner pattern = EnemyPatternOf(id);
                 if (health == null || health.IsDead || pattern == null) continue;
 
+                actingEnemyId = id;
                 if (poison != null && poison.PoisonStacks > 0)
                 {
                     SetPhase(BattlePhase.Poison);
@@ -352,8 +356,11 @@ namespace Visha.Combat.Flow
                     ? $"{pattern.EnemyName} · {pattern.IntentLabel} · {predicted} damage"
                     : $"{pattern.EnemyName} holds position · no attack");
 
-                if (id == 0 && presentation != null)
+                if (presentation != null)
+                {
+                    presentation.SelectEnemyActor(id);
                     yield return presentation.EnemyAction(incoming > 0, () => ApplyEnemyActionFrom(pattern), incoming >= 9, pattern.IntentLabel);
+                }
                 else
                 {
                     ApplyEnemyActionFrom(pattern);
@@ -418,6 +425,7 @@ namespace Visha.Combat.Flow
 
         private void FinishTwoEnemyPhase()
         {
+            actingEnemyId = -1;
             if (IsBattleOver() || !combatActive) return;
             if (fade != null) fade.EndEnemyPhase();
             turnInProgress = false;
@@ -427,6 +435,71 @@ namespace Visha.Combat.Flow
         private Health EnemyHealthOf(int id) => id == 0 ? enemyHealth : secondEnemyHealth;
         private Poison EnemyPoisonOf(int id) => id == 0 ? enemyPoison : secondEnemyPoison;
         private EnemyPatternRunner EnemyPatternOf(int id) => id == 0 ? enemyPatternRunner : secondEnemyPattern;
+
+        /// <summary>
+        /// Switches the second enemy per encounter. Null returns the flow to one enemy,
+        /// exactly as when secondEnemyGameObject is left empty. Called by VaultCampaignLink.
+        /// </summary>
+        public void SetSecondEnemy(GameObject enemy)
+        {
+            if (secondEnemyHealth != null) secondEnemyHealth.OnHealthChanged -= HandleHealthChanged;
+            if (secondEnemyPoison != null) secondEnemyPoison.OnPoisonChanged -= HandlePoisonChanged;
+
+            secondEnemyGameObject = enemy;
+            secondEnemyHealth = enemy != null ? enemy.GetComponent<Health>() : null;
+            secondEnemyPoison = enemy != null ? enemy.GetComponent<Poison>() : null;
+            secondEnemyPattern = enemy != null ? enemy.GetComponent<EnemyPatternRunner>() : null;
+            targetId = 0;
+            actingEnemyId = -1;
+
+            if (secondEnemyHealth != null) secondEnemyHealth.OnHealthChanged += HandleHealthChanged;
+            if (secondEnemyPoison != null) secondEnemyPoison.OnPoisonChanged += HandlePoisonChanged;
+            if (outcomeController != null) outcomeController.SetSecondEnemy(secondEnemyHealth);
+            ConfigurePresentation();
+            if (viewState != null) Refresh();
+        }
+
+        private void ConfigurePresentation()
+        {
+            if (presentation != null) presentation.ConfigureEnemyActors(enemyHealth, secondEnemyHealth, battleHUD);
+        }
+
+        // The enemy the player's current ability is aimed at: 0 is the first enemy, 1 the second.
+        private int targetId;
+        private int actingEnemyId = -1;
+        private bool IsTargetable(int id) => id == 0 ? enemyHealth != null && !enemyHealth.IsDead
+            : id == 1 && HasSecondEnemy && !secondEnemyHealth.IsDead;
+        private GameObject TargetObject => targetId == 1 && HasSecondEnemy ? secondEnemyGameObject : enemyGameObject;
+        private Health TargetHealth => EnemyHealthOf(targetId == 1 && HasSecondEnemy ? 1 : 0);
+        private Poison TargetPoison => EnemyPoisonOf(targetId == 1 && HasSecondEnemy ? 1 : 0);
+        private EnemyPatternRunner TargetPattern => EnemyPatternOf(targetId == 1 && HasSecondEnemy ? 1 : 0);
+        // The enemy not being targeted, for Twin Fang's leftover poison. Null with one enemy.
+        private Poison OtherPoison => HasSecondEnemy ? EnemyPoisonOf(targetId == 1 ? 0 : 1) : null;
+
+        private EnemyViewState[] BuildEnemyRoster()
+        {
+            if (!HasSecondEnemy) return null;
+            var roster = new EnemyViewState[2];
+            for (int id = 0; id < 2; id++)
+            {
+                Health health = EnemyHealthOf(id);
+                Poison poison = EnemyPoisonOf(id);
+                EnemyPatternRunner pattern = EnemyPatternOf(id);
+                int incoming = pattern != null ? pattern.IncomingDamage : 0;
+                roster[id] = new EnemyViewState
+                {
+                    targetId = id,
+                    name = pattern != null ? pattern.EnemyName : "Enemy",
+                    health = health != null ? health.CurrentHealth : 0,
+                    maxHealth = health != null ? health.MaxHealth : 0,
+                    poison = poison != null ? poison.PoisonStacks : 0,
+                    poisonCap = poison != null ? poison.MaxStacks : 5,
+                    intention = pattern != null ? pattern.IntentLabel : "...",
+                    incomingDamage = fade != null ? fade.ReduceDamage(incoming) : incoming
+                };
+            }
+            return roster;
+        }
 
         private void FinishRound()
         {
@@ -440,11 +513,15 @@ namespace Visha.Combat.Flow
         /// <summary>Handles ability requests from the BattleHUD.</summary>
         private void HandleAbilityRequested(BattleAbility ability, int targetIndex)
         {
-            if (ability != BattleAbility.Fade && targetIndex != 0) return;
-            if (!CanAcceptAction())
+            if (!CanAcceptAction()) return;
+            if (ability != BattleAbility.Fade)
             {
-                Debug.LogWarning($"Combat: {ability} ignored (phase {currentPhase}, active {combatActive}, busy {turnInProgress})");
-                return;
+                if (!IsTargetable(targetIndex))
+                {
+                    if (battleHUD != null) battleHUD.RejectAction("Choose a living enemy.");
+                    return;
+                }
+                targetId = targetIndex;
             }
 
             if (presentation != null)
@@ -470,9 +547,9 @@ namespace Visha.Combat.Flow
         {
             if (playerHealth == null || enemyHealth == null) return "Combatants are missing";
             if (ability == BattleAbility.VenomStrike)
-                return venomStrike != null && enemyPoison != null ? null : "Venom Strike is not set up";
+                return venomStrike != null && TargetPoison != null ? null : "Venom Strike is not set up";
             if (ability == BattleAbility.SerpentsBite)
-                return serpentsBite != null && serpentsBite.CanUseOn(enemyGameObject) ? null : "Bite needs poison";
+                return serpentsBite != null && serpentsBite.CanUseOn(TargetObject) ? null : "Bite needs poison";
             if (ability == BattleAbility.Fade)
                 return fade != null && fade.CanUse ? null : "Fade needs another ability first";
             return "Unknown ability";
@@ -483,6 +560,7 @@ namespace Visha.Combat.Flow
             bool applied = false;
             if (battleHUD != null) battleHUD.SetFeedback(ability == BattleAbility.VenomStrike ? "Venom Strike"
                 : ability == BattleAbility.SerpentsBite ? "Serpent's Bite" : "Fade · incoming damage reduced");
+            presentation.SelectEnemyActor(targetId);
             yield return presentation.PlayerAction(ability, () => applied = ApplyPlayerAbility(ability));
             if (applied && !IsBattleOver() && combatActive) EnterEnemyTurn();
         }
@@ -522,29 +600,31 @@ namespace Visha.Combat.Flow
         private string UseVenomStrike()
         {
             if (venomStrike == null) return "Venom Strike is not set up";
-            if (!venomStrike.TryUseOn(enemyGameObject)) return "Venom Strike cannot be used";
+            if (!venomStrike.TryUseOn(TargetObject)) return "Venom Strike cannot be used";
             int bonus = routine != null ? routine.ConsumeBonus() : 0;
-            if (bonus > 0) enemyPoison.AddStacks(bonus);
+            if (bonus > 0) TargetPoison.AddStacks(bonus);
             return null;
         }
 
         private string UseSerpentsBite()
         {
             if (serpentsBite == null) return "Serpent's Bite is not set up";
-            if (!serpentsBite.CanUseOn(enemyGameObject)) return "Serpent's Bite needs poison on the enemy";
-            bool heavyThreat = enemyPatternRunner != null &&
-                (enemyPatternRunner.IntentLabel == "Heavy Blow" || enemyPatternRunner.IntentLabel == "Crush");
-            bool fullPoison = enemyPoison.PoisonStacks == enemyPoison.MaxStacks;
+            if (!serpentsBite.CanUseOn(TargetObject)) return "Serpent's Bite needs poison on the enemy";
+            EnemyPatternRunner targetPattern = TargetPattern;
+            Poison targetPoison = TargetPoison;
+            bool heavyThreat = targetPattern != null &&
+                (targetPattern.IntentLabel == "Heavy Blow" || targetPattern.IntentLabel == "Crush");
+            bool fullPoison = targetPoison.PoisonStacks == targetPoison.MaxStacks;
             bool empowered = awakening.TwinFangReady;
-            if (!serpentsBite.TryUseOn(enemyGameObject)) return "Serpent's Bite cannot be used";
+            if (!serpentsBite.TryUseOn(TargetObject)) return "Serpent's Bite cannot be used";
             if (empowered)
             {
                 awakening.TryUseTwinFang();
-                TwinFang.ApplyResidue(enemyPoison, null);
+                TwinFang.ApplyResidue(targetPoison, OtherPoison);
                 if (presentation != null) presentation.ShowTwinFang();
             }
             else if (fullPoison) awakening.EarnCharge();
-            if (heavyThreat && enemyHealth.IsDead)
+            if (heavyThreat && TargetHealth.IsDead)
             {
                 var screens = FindAnyObjectByType<BattleScreenView>();
                 if (screens != null) screens.SetVictoryDetail("Threat Silenced · Bite stopped the heavy attack.");
@@ -587,6 +667,9 @@ namespace Visha.Combat.Flow
             viewState.routineBoon = routine != null && routine.isActiveAndEnabled && routine.HasBoon;
             if (viewState.routineBoon) viewState.venomStacks++;
             viewState.phase = currentPhase;
+            // Null with one enemy, so the HUD keeps its single-enemy layout.
+            viewState.enemies = BuildEnemyRoster();
+            viewState.actingEnemyId = HasSecondEnemy ? actingEnemyId : -1;
         }
 
         private void SetPhase(BattlePhase phase)
@@ -621,6 +704,9 @@ namespace Visha.Combat.Flow
             StopAllCoroutines();
             if (presentation != null) presentation.ResetPose();
             turnInProgress = false;
+            actingEnemyId = -1;
+            targetId = 0;
+            ConfigurePresentation();
             if (fade != null) fade.ResetFade();
 
             SetPhase(BattlePhase.Waiting);
