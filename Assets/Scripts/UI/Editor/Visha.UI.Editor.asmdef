@@ -3,6 +3,7 @@
   "references": [
     "Visha.UI",
     "Visha.UI.BattleIntegration",
+    "Visha.Combat.Flow",
     "Visha.Battle",
     "Unity.ugui",
     "Visha.Preview",

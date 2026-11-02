@@ -49,6 +49,7 @@ namespace Visha.UI
             int maximum = Mathf.Max(0,enemy.maxHealth), health = Mathf.Clamp(enemy.health,0,maximum);
             int cap = Mathf.Max(0,enemy.poisonCap), poison = Mathf.Clamp(enemy.poison,0,cap);
             nameLabel.text = (acting ? "ACTING · " : "") + (string.IsNullOrWhiteSpace(enemy.name) ? "Enemy" : enemy.name);
+            nameLabel.color = acting ? new Color(1f,.68f,.4f) : new Color(.91f,.9f,.8f);
             detailsLabel.text = $"{health} / {maximum} HP" + (poison > 0 ? $"   ·   Poison {poison}/{cap}" : "") +
                 (bite && poison > 0 ? $"   ·   Bite {poison * bitePerStack}" : "");
             fill.rectTransform.anchorMax = new Vector2(maximum > 0 ? (float)health / maximum : 0,1);
