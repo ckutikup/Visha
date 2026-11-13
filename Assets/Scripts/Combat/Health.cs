@@ -46,6 +46,18 @@ public class Health : MonoBehaviour
         {
             return;
         }
+
+        TempleBlessing blessing = GetComponent<TempleBlessing>();
+        bool isLethal = currentHealth - damageAmount <= 0;
+        if (isLethal && blessing != null && blessing.IsAvailable)
+        {
+            currentHealth = 1;
+            blessing.Spend();
+            Debug.Log(gameObject.name + " was saved by the blessing. HP: " + currentHealth + "/" + maxHealth);
+            OnHealthChanged?.Invoke(currentHealth, maxHealth);
+            return;
+        }
+
         bool diedThisHit = false;
 
         currentHealth -= damageAmount;
@@ -88,6 +100,13 @@ public class Health : MonoBehaviour
         }
         currentHealth = maxHealth;
         isDead = false;
+
+        TempleBlessing blessing = GetComponent<TempleBlessing>();
+        if (blessing != null)
+        {
+            blessing.RestoreForRetry();
+        }
+
         OnHealthChanged?.Invoke(currentHealth, maxHealth);
     }
     [ContextMenu("Test Take 10 Damage")]
