@@ -7,12 +7,15 @@ using UnityEngine.EventSystems;
 namespace Visha.UI
 {
     public enum BattleAbility { VenomStrike, SerpentsBite, Fade }
+    public enum BlessingStatus { Unavailable, Ready, Spent }
     public enum BattlePhase { Waiting, PlayerTurn, EnemyTurn, Victory, Defeat, Resolving, Poison }
 
     // A display snapshot supplied by the combat controller. No combat rules run here.
     [Serializable]
     public class BattleViewState
     {
+        public int bossPhase, bossPhaseCount;
+        public BlessingStatus blessing;
         public bool awakeningUnlocked, awakeningUsed, twinFangReady;
         public int awakeningCharges, awakeningActions;
         public EnemyViewState[] enemies;
@@ -176,6 +179,7 @@ namespace Visha.UI
             };
             if (phaseChanged)
                 SetFeedback(phase == BattlePhase.PlayerTurn ? "Choose an ability" : string.Empty);
+            RefreshSanctumStatus(state);
             RefreshControls();
         }
 
@@ -300,6 +304,10 @@ namespace Visha.UI
                     : fadeAvailable ? $"Fade · reduce the next enemy phase by {fadeReductionPercent}%" : "Fade is recovering · use Venom Strike or Bite first";
             if (HasEnemyRoster && ability == BattleAbility.SerpentsBite && poison == 0 && HasPoisonedTarget())
                 message = "Serpent’s Bite · choose an enemy with poison";
+            if (ability == BattleAbility.SerpentsBite && awakeningState != null && awakeningState.twinFangReady)
+                message = poison > 0
+                    ? $"Twin Fang · {poison * biteDamagePerStack} damage; consumes poison; leaves 2 on another living enemy, otherwise this target"
+                    : "Twin Fang · choose an enemy with poison";
             SetFeedback(message);
         }
         public void EndAbilityPreview()

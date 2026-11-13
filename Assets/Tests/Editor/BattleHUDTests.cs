@@ -194,4 +194,46 @@ public class BattleHUDTests
         Assert.AreEqual("Choose an ability", Field<Text>("feedbackLabel").text);
     }
 
+    [Test] public void SanctumStatusResetsOnRetryAndLeavingEncounter()
+    {
+        var state = new BattleViewState { phase = BattlePhase.PlayerTurn,
+            bossPhase = 2, bossPhaseCount = 2, blessing = BlessingStatus.Spent };
+        hud.Render(state);
+        var labels = root.GetComponentsInChildren<Text>(true);
+        var boss = System.Array.Find(labels, label => label.name == "BossPhase");
+        var blessing = System.Array.Find(labels, label => label.name == "TempleBlessing");
+        Assert.AreEqual("PHASE 2 / 2", boss.text);
+        Assert.AreEqual("BLESSING SPENT", blessing.text);
+        Assert.IsFalse(boss.raycastTarget);
+        Assert.IsFalse(blessing.raycastTarget);
+        state.bossPhase = 1;
+        state.blessing = BlessingStatus.Ready;
+        hud.Render(state);
+        Assert.AreEqual("PHASE 1 / 2", boss.text);
+        StringAssert.Contains("READY", blessing.text);
+        foreach (var phase in new[] { BattlePhase.Waiting, BattlePhase.Victory, BattlePhase.Defeat })
+        {
+            state.phase = phase;
+            hud.Render(state);
+            Assert.IsFalse(boss.gameObject.activeSelf);
+            Assert.IsFalse(blessing.gameObject.activeSelf);
+        }
+        hud.Render(new BattleViewState { phase = BattlePhase.PlayerTurn });
+        Assert.IsFalse(boss.gameObject.activeSelf);
+        Assert.IsFalse(blessing.gameObject.activeSelf);
+    }
+
+    [Test] public void TwinFangPreviewDescribesTheActiveAbility()
+    {
+        var data = new SerializedObject(hud);
+        data.FindProperty("compactAbilities").boolValue = true;
+        data.ApplyModifiedPropertiesWithoutUndo();
+        hud.Render(new BattleViewState { phase = BattlePhase.PlayerTurn, poison = 3,
+            awakeningUnlocked = true, twinFangReady = true, awakeningActions = 2 });
+        hud.PreviewAbility(BattleAbility.SerpentsBite);
+        StringAssert.StartsWith("Twin Fang", Field<Text>("feedbackLabel").text);
+        StringAssert.Contains("12 damage", Field<Text>("feedbackLabel").text);
+        StringAssert.Contains("another living enemy", Field<Text>("feedbackLabel").text);
+    }
+
 }
