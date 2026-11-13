@@ -57,12 +57,13 @@ See [Build and Run Instructions](Docs/BuildLaunchInstructions.md) for details.
 
 ## Team
 
-- Rahul Ganesh Marathervar
-- Balaji Radhakrishnan Padmanabhan
-- Anshul Reddy Goli
-- Charith Kutikuppala
-- Shivani Kalpak Kulkarni
-- Akshat Aggarwal
+- Akshat Aggarwal 
+- Anshul Reddy Goli 
+- Balaji Radhakrishnan Padmanabhan 
+- Charith Kutikuppala 
+- Rahul Ganesh Marathervar 
+- Shivani Kalpak Kulkarni 
+
 
 ## Asset Credits
 
