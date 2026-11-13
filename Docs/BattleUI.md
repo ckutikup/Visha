@@ -1,6 +1,6 @@
 # Battle UI
 
-Charith owns the battle HUD, targeting, health and poison displays, enemy intention display, and reusable navigation screens. Gameplay rules and campaign progression stay with their assigned controllers.
+The battle HUD displays health, poison and enemy intentions, handles targeting, and provides navigation screens. Gameplay rules and progression belong to their controllers.
 
 ## Try the integrated battle
 
@@ -8,7 +8,7 @@ Use Unity 6000.6.3f1. Open `Assets/Scenes/BattleUI_Demo.unity` and press Play. C
 
 This scene starts directly in battle. Campaign Start, Next, Restart and Return are connected by the campaign owner; the UI does not create encounters or advance progression.
 
-## HUD contract for Rahul
+## HUD interface
 
 - Supply current gameplay data through `BattleHUD.Render(BattleViewState)`.
 - Subscribe to `AbilityRequested(BattleAbility, int)`; target 0 is the current enemy and -1 is self. Validate and resolve actions in the controller.
@@ -17,7 +17,7 @@ This scene starts directly in battle. Campaign Start, Next, Restart and Return a
 - Supply the actual enemy name, intention, incoming damage, poison count and Fade availability. The HUD does not calculate combat rules.
 - `SetInputEnabled(false)` cancels targeting and blocks all ability requests while another screen owns input.
 
-## Screen contract for Shivani
+## Navigation interface
 
 Reuse `Assets/Prefabs/BattleScreens.prefab`. It contains a title/tutorial panel, victory, defeat and completion panels, and an encounter counter. No campaign assembly is required.
 
@@ -39,11 +39,3 @@ With no Next handler, victory offers Retry Battle when a Retry handler exists. N
 Both canvases use a 1920x1080 reference layout for 16:9. WorldHUDAnchor supports overlay and camera canvases. Keep one EventSystem with InputSystemUIInputModule in an integrated scene.
 
 Run EditMode tests for UI request guards and navigation callbacks. Run PlayMode `Visha.UI.PlayModeTests` for actual battle victory/defeat/retry and campaign-controller handoff. The tests force lethal damage to isolate navigation from balance.
-
-## Team integration still needed
-
-- Rahul: connect Balaji's ability components, enforce turn/Fade rules, and gate combat during campaign transitions.
-- Balaji: maintain ability/health/poison behavior and agreed balance values.
-- Anshul: supply encounter enemy patterns and intention data.
-- Shivani: connect the screen callbacks to encounter loading, progression, retry, restart and completion.
-- Akshat: replace placeholders, add audio/visual feedback, and produce a tested build.

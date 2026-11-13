@@ -1,10 +1,6 @@
 # Victory / defeat and retry milestone
 
-This contribution implements Shivani's assigned piece: detecting when the battle
-is over (victory or defeat) and resetting the encounter for a retry. It contains
-no combat resolution, damage math, turn ordering, or UI. It does not modify the
-shared BattlePrototype scene, BattleHUD, or any project settings — everything
-lives in a new `Visha.Battle` assembly.
+`BattleOutcomeController` detects victory and defeat and resets encounters for retry.
 
 ## What it does
 
@@ -24,9 +20,9 @@ lives in a new `Visha.Battle` assembly.
 - Clears any poison stacks on either side (`Poison.ConsumeAllStacks()`), if a
   `Poison` component is present.
 - Restarts the enemy's attack pattern (`EnemyPatternRunner.ResetPattern()`), if
-  one is present, per Anshul's documented retry contract.
-- Clears `Outcome` back to `None` and fires `OnRetry` so any other system (a
-  turn controller, once it exists) can reset its own state.
+  one is present, using the configured opening offset.
+- Clears `Outcome` back to `None` and fires `OnRetry` so any other system (the
+  combat controller) can reset its own state.
 
 ## Integration contract
 
@@ -36,9 +32,9 @@ the result. It never applies damage and never decides who goes next.
 - Attach `BattleOutcomeController` next to (or anywhere in) the battle scene and
   assign the player's and enemy's `Health` in the inspector, or call
   `SetCombatants(player, enemy)` at runtime once both are spawned.
-- Whatever combat controller Rahul builds should subscribe to `OnBattleEnded`
+- The combat controller should subscribe to `OnBattleEnded`
   and copy the result onto `BattleViewState.phase`
-  (`Visha.UI.BattlePhase.Victory` / `.Defeat`), which Charith's `BattleHUD`
+  (`Visha.UI.BattlePhase.Victory` / `.Defeat`), which `BattleHUD`
   already renders ("VICTORY" / "DEFEAT" labels).
 - Wire a retry button/input to call `Retry()`; it does not assume any particular
   UI, so it can be driven from a keypress, a HUD button, or a test.
@@ -61,12 +57,3 @@ resolves to Defeat, a simultaneous death favors Defeat, the outcome locks after
 the first result and `OnBattleEnded` fires only once, `Retry()` revives both
 combatants and clears poison and the enemy's attack pattern, `OnRetry` fires,
 and a disabled controller does not react to death.
-
-## Work remaining with the team
-
-Rahul's controller decides when a hit is lethal and should call into this
-controller's watched `Health` components (it already will, since it drives
-`Health.TakeDamage`); it then reads `Outcome` / `OnBattleEnded` to drive
-`BattleViewState.phase` and wires a retry action to `Retry()`. Akshat's
-player/enemy prefabs are where `Health` (and this controller, or its
-references) ultimately get placed once the scene is wired end to end.

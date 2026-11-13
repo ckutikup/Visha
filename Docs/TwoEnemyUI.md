@@ -2,9 +2,9 @@
 
 ## Scope
 
-This change supplies the UI and input contract for two enemies. It does not implement multi-enemy combat, enemy patterns, campaign progression, or damage. The existing campaign continues using the single-enemy snapshot.
+The HUD supports two enemies in the Inner Vault encounter. Combat rules and progression are handled by the combat and campaign controllers.
 
-## Review locally
+## Standalone preview
 
 1. Open this project with Unity 6000.6.3f1.
 2. Choose **Visha > UI > Open Two Enemy Preview**. Save any current scene changes when prompted.
@@ -16,9 +16,9 @@ This change supplies the UI and input contract for two enemies. It does not impl
 8. Check 1280x720, 1920x1080 and 1024x768 in the Game view.
 9. Stop Play and reopen Assets/Scenes/Campaign_Demo.unity to run the actual game. Do not add the preview to Build Profiles.
 
-Space previews enemies stepping forward in turn. The shared detail panel follows the actor, then restores the selected target. R safely cancels the sequence. The sample does not apply damage or advance campaign state. Record it as UI demonstration evidence until the combat integration is complete.
+Space previews enemies stepping forward in turn. The shared detail panel follows the actor, then restores the selected target. R safely cancels the sequence. The sample does not apply damage or advance campaign state. Use Campaign_Demo for the integrated battle.
 
-## Combat integration — Rahul
+## Combat interface
 
 Populate `BattleViewState.enemies` with up to two `EnemyViewState` entries. A null array preserves legacy single-enemy behavior; an empty array means no available targets.
 
@@ -29,13 +29,6 @@ The existing `AbilityRequested(BattleAbility, int)` event now returns the chosen
 Set `actingEnemyId` during `EnemyTurn` to show the acting enemy in the shared detail panel. It does not overwrite `SelectedEnemyId`. Reset it to -1 outside the enemy phase.
 
 The HUD copies enemy snapshots and does not mutate them. Only living enemies can be targeted. Bite is offered when any living enemy has poison, but confirmation is checked against the chosen enemy. Campaign overlays should continue calling `SetInputEnabled(false)`.
-
-## Other integrations
-
-- Balaji: supply per-enemy poison values; agree Fade's full enemy-phase behavior with Rahul. The HUD does not apply those rules.
-- Anshul: provide two enemy records with the same stable IDs used by combat and their individual intentions.
-- Shivani: supply a fresh snapshot on encounter start/retry and use the existing overlay input lock.
-- Akshat: one shared detail panel and two compact intention indicators occupy the upper-right band. The preview demonstrates front/back staging using current campaign sprites. Integrate movement with the combat controller’s actual action sequence; keep target identity independent of sprite position. `EnemyTargetAnchor` provides character clicking and a focus ring. The preview animation is not production combat choreography.
 
 ## Checks
 
