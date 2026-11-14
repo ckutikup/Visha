@@ -20,7 +20,7 @@ namespace Visha.Enemies
     /// </summary>
     public sealed class EnemyPatternRunner : MonoBehaviour
     {
-        [Tooltip("Which built-in pattern this enemy uses: the Temple Guardian or the Vault Sentinel.")]
+        [Tooltip("Which built-in pattern this enemy uses: the Temple Guardian, the Vault Sentinel or the Asura (final boss).")]
         [SerializeField] private PatternKind pattern = PatternKind.TempleGuardian;
 
         /// <summary>
@@ -30,12 +30,14 @@ namespace Visha.Enemies
         public enum PatternKind
         {
             TempleGuardian = 0,
-            VaultSentinel = 1
+            VaultSentinel = 1,
+            Asura = 2
         }
 
         private EnemyAttackPattern _pattern;
         private string _displayNameOverride;
         private int _openingOffset;
+        private bool _bossPhaseTwo;
 
         /// <summary>The pattern instance, created on first use so it works in play and in tests.</summary>
         private EnemyAttackPattern Pattern => _pattern ??= Build(pattern);
@@ -54,6 +56,7 @@ namespace Visha.Enemies
         {
             pattern = kind;
             _pattern = Build(kind);
+            _bossPhaseTwo = false;
             _openingOffset = Mathf.Max(0, openingOffset) % _pattern.Length;
             ResetPattern();
             _displayNameOverride = string.IsNullOrEmpty(displayName) ? null : displayName;
@@ -72,6 +75,8 @@ namespace Visha.Enemies
             {
                 case PatternKind.VaultSentinel:
                     return VaultSentinelPattern.Create();
+                case PatternKind.Asura:
+                    return AsuraPattern.CreatePhaseOne();
                 case PatternKind.TempleGuardian:
                 default:
                     return TempleGuardianPattern.Create();
@@ -108,9 +113,40 @@ namespace Visha.Enemies
         /// </summary>
         public EnemyAction TakeTurn() => Pattern.TakeTurn();
 
-        /// <summary>Restarts the pattern from its first move.</summary>
+        /// <summary>True for the final boss, which has two phases.</summary>
+        public bool IsBoss => pattern == PatternKind.Asura;
+
+        /// <summary>Current boss phase for BattleViewState.bossPhase: 1 or 2 for the boss, 0 otherwise.</summary>
+        public int BossPhase => IsBoss ? (_bossPhaseTwo ? 2 : 1) : 0;
+
+        /// <summary>Number of boss phases for BattleViewState.bossPhaseCount: 2 for the boss, 0 otherwise.</summary>
+        public int BossPhaseCount => IsBoss ? AsuraPattern.PhaseCount : 0;
+
+        /// <summary>
+        /// Call after each step that damages the boss (the player's ability and the
+        /// poison tick), before the boss acts. Once health is at or below half of max,
+        /// the boss switches to its phase 2 pattern, starting on Roar (a free turn),
+        /// and this returns true exactly once. Returns false for normal enemies, a dead
+        /// boss, or a boss already in phase 2.
+        /// </summary>
+        public bool UpdateBossPhase(int currentHealth, int maxHealth)
+        {
+            if (!IsBoss || _bossPhaseTwo || currentHealth <= 0) return false;
+            if (currentHealth > AsuraPattern.PhaseTwoThreshold(maxHealth)) return false;
+
+            _pattern = AsuraPattern.CreatePhaseTwo();
+            _bossPhaseTwo = true;
+            return true;
+        }
+
+        /// <summary>Restarts the pattern from its first move. A boss goes back to phase 1.</summary>
         public void ResetPattern()
         {
+            if (_bossPhaseTwo)
+            {
+                _pattern = Build(pattern);
+                _bossPhaseTwo = false;
+            }
             Pattern.Reset();
             for (int i = 0; i < _openingOffset; i++) Pattern.Advance();
         }
