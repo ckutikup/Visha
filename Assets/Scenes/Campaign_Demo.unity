@@ -2871,6 +2871,7 @@ GameObject:
   - component: {fileID: 798040399}
   - component: {fileID: 798040398}
   - component: {fileID: 798040400}
+  - component: {fileID: 798040401}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -2980,6 +2981,18 @@ MonoBehaviour:
   poisonMark: {fileID: 578811938}
   fadeAura: {fileID: 661886717}
   biteFlash: {fileID: 1801878001}
+--- !u!114 &798040401
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 798040393}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 90711ba0694d84dda8fe71d9636fea41, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Visha.Combat::TempleBlessing
 --- !u!1 &808548952
 GameObject:
   m_ObjectHideFlags: 0
@@ -3091,6 +3104,7 @@ GameObject:
   - component: {fileID: 871346973}
   - component: {fileID: 871346972}
   - component: {fileID: 871346971}
+  - component: {fileID: 871346974}
   m_Layer: 0
   m_Name: BattlePresentationAudio
   m_TagString: Untagged
@@ -3235,6 +3249,27 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &871346974
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 871346970}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7821f36e5fb1f478b9e95eec46374a4e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Visha.Combat.Flow::Visha.Combat.Flow.SanctumPresentation
+  blessing: {fileID: 798040401}
+  playerRenderer: {fileID: 690686217}
+  guardianRenderer: {fileID: 905415710}
+  audioSource: {fileID: 871346972}
+  blessingClip: {fileID: 8300000, guid: dd454450ce031406db388e5ede00d2c7, type: 3}
+  phaseChangeClip: {fileID: 8300000, guid: c034c315fc011468ab6c0bfbabac59d6, type: 3}
+  bossAttackClip: {fileID: 8300000, guid: 4f9cf2860c5714c0c8049f016a88ce11, type: 3}
+  blessingDuration: 0.65
+  phaseDuration: 0.75
 --- !u!1 &905415709
 GameObject:
   m_ObjectHideFlags: 0
