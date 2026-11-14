@@ -68,8 +68,6 @@ namespace Visha.Combat.Flow
             aura.sprite = actor.sprite;
             aura.gameObject.SetActive(active);
 
-            if (!active)
-                actor.color = Color.white;
         }
 
         private void LateUpdate()
@@ -98,17 +96,7 @@ namespace Visha.Combat.Flow
                 0.38f + pulse * 0.18f
             );
 
-            // Very subtle pulse on the Guardian itself.
-            actor.color = Color.Lerp(
-                Color.white,
-                new Color(
-                    0.88f,
-                    1f,
-                    0.92f,
-                    1f
-                ),
-                pulse * 0.35f
-            );
+
         }
 
         private void OnDestroy()
@@ -116,7 +104,6 @@ namespace Visha.Combat.Flow
             if (actor != null)
             {
                 actor.sprite = original;
-                actor.color = Color.white;
             }
 
             if (vaultSprite != null)

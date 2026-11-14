@@ -1,214 +1,156 @@
-using System.Collections;
 using UnityEngine;
+using Visha.Battle;
 using Visha.UI;
 
 namespace Visha.Combat.Flow
 {
-    /// <summary>
-    /// Presentation-only feedback for the Sanctum/final boss encounter.
-    /// Does not alter combat values, progression, or Blessing behaviour.
-    /// </summary>
     public sealed class SanctumPresentation : MonoBehaviour
     {
-        [Header("Gameplay")]
         [SerializeField] private TempleBlessing blessing;
-
-        [Header("Actors")]
         [SerializeField] private SpriteRenderer playerRenderer;
         [SerializeField] private SpriteRenderer guardianRenderer;
-
-        [Header("Audio")]
         [SerializeField] private AudioSource audioSource;
         [SerializeField] private AudioClip blessingClip;
         [SerializeField] private AudioClip phaseChangeClip;
         [SerializeField] private AudioClip bossAttackClip;
+        [SerializeField] private float blessingDuration = .65f;
+        [SerializeField] private float phaseDuration = .75f;
 
-        [Header("Timing")]
-        [SerializeField] private float blessingDuration = 0.65f;
-        [SerializeField] private float phaseDuration = 0.75f;
-
-        private Coroutine blessingRoutine;
-        private Coroutine phaseRoutine;
         private CombatFlowController combatFlow;
+        private BattleOutcomeController outcome;
+        private SpriteRenderer playerGlow, bossGlow;
+        private float playerUntil, bossUntil, playerDuration, bossDuration;
+        private Color bossColor;
         private int previousBossPhase;
+        private BattlePhase previousTurn = BattlePhase.Waiting;
 
         public void Configure(CombatFlowController flow)
         {
-            if (combatFlow != null)
-                combatFlow.OnStateUpdated -= HandleStateUpdated;
-
+            if (combatFlow != null) combatFlow.OnStateUpdated -= HandleStateUpdated;
             combatFlow = flow;
-            previousBossPhase = 0;
-
-            if (combatFlow != null)
+            ResetEffects();
+            if (isActiveAndEnabled && combatFlow != null)
                 combatFlow.OnStateUpdated += HandleStateUpdated;
         }
 
         private void OnEnable()
         {
-            if (blessing != null)
-                blessing.OnBlessingTriggered += HandleBlessingTriggered;
-
-            if (combatFlow != null)
-                combatFlow.OnStateUpdated += HandleStateUpdated;
+            if (blessing != null) blessing.OnBlessingTriggered += HandleBlessingTriggered;
+            outcome = FindAnyObjectByType<BattleOutcomeController>();
+            if (outcome != null) outcome.OnRetry += ResetEffects;
+            Configure(combatFlow != null ? combatFlow : FindAnyObjectByType<CombatFlowController>());
         }
 
         private void OnDisable()
         {
-            if (blessing != null)
-                blessing.OnBlessingTriggered -= HandleBlessingTriggered;
-
-            if (combatFlow != null)
-                combatFlow.OnStateUpdated -= HandleStateUpdated;
-        }
-
-        private void Start()
-        {
-            if (audioSource == null)
-                return;
-
-            audioSource.playOnAwake = false;
-            audioSource.loop = false;
-            audioSource.spatialBlend = 0f;
+            if (blessing != null) blessing.OnBlessingTriggered -= HandleBlessingTriggered;
+            if (outcome != null) outcome.OnRetry -= ResetEffects;
+            if (combatFlow != null) combatFlow.OnStateUpdated -= HandleStateUpdated;
+            ResetEffects();
         }
 
         private void HandleStateUpdated(BattleViewState state)
         {
-            if (state == null)
-                return;
-
-            if (previousBossPhase > 0 &&
-                state.bossPhase > previousBossPhase)
+            if (state == null) return;
+            if (state.bossPhase <= 0 || state.phase == BattlePhase.Waiting ||
+                state.phase == BattlePhase.Victory || state.phase == BattlePhase.Defeat)
             {
-                PlayPhaseChange();
+                ResetEffects();
+                return;
             }
-
+            if (previousBossPhase > state.bossPhase) ResetEffects();
+            if (previousBossPhase > 0 && state.bossPhase > previousBossPhase)
+                PlayPhaseChange();
+            if (state.phase == BattlePhase.EnemyTurn && previousTurn != BattlePhase.EnemyTurn && state.incomingDamage > 0)
+                PlayBossAttack();
             previousBossPhase = state.bossPhase;
+            previousTurn = state.phase;
         }
 
         private void HandleBlessingTriggered()
         {
-            if (blessingRoutine != null)
-                StopCoroutine(blessingRoutine);
-
-            blessingRoutine = StartCoroutine(BlessingEffect());
+            if (!isActiveAndEnabled) return;
+            playerDuration = Mathf.Max(.01f, blessingDuration);
+            playerUntil = Time.time + playerDuration;
             Play(blessingClip);
         }
 
         public void PlayBossAttack()
         {
+            if (!isActiveAndEnabled) return;
+            // Let a phase-change cue finish instead of replacing it with an attack pulse.
+            if (Time.time >= bossUntil)
+                StartBossGlow(.2f, new Color(1f, .55f, .32f));
             Play(bossAttackClip);
-
-            if (guardianRenderer != null)
-                StartCoroutine(BossAttackPulse());
         }
 
         public void PlayPhaseChange()
         {
-            if (phaseRoutine != null)
-                StopCoroutine(phaseRoutine);
-
-            phaseRoutine = StartCoroutine(PhaseChangeEffect());
+            if (!isActiveAndEnabled) return;
+            StartBossGlow(phaseDuration, new Color(.55f, 1f, .72f));
             Play(phaseChangeClip);
         }
 
-        private IEnumerator BlessingEffect()
+        private void StartBossGlow(float duration, Color color)
         {
-            if (playerRenderer == null)
-                yield break;
-
-            Color originalColor = playerRenderer.color;
-            Vector3 originalScale = playerRenderer.transform.localScale;
-
-            float elapsed = 0f;
-
-            while (elapsed < blessingDuration)
-            {
-                elapsed += Time.deltaTime;
-
-                float t = Mathf.Clamp01(elapsed / blessingDuration);
-                float pulse = Mathf.Sin(t * Mathf.PI * 4f) * 0.08f;
-
-                playerRenderer.color = Color.Lerp(
-                    originalColor,
-                    new Color(1f, 0.9f, 0.35f, 1f),
-                    Mathf.Sin(t * Mathf.PI)
-                );
-
-                playerRenderer.transform.localScale =
-                    originalScale * (1f + pulse);
-
-                yield return null;
-            }
-
-            playerRenderer.color = originalColor;
-            playerRenderer.transform.localScale = originalScale;
-
-            blessingRoutine = null;
+            bossDuration = Mathf.Max(.01f, duration);
+            bossUntil = Time.time + bossDuration;
+            bossColor = color;
         }
 
-        private IEnumerator BossAttackPulse()
+        private void LateUpdate()
         {
-            if (guardianRenderer == null)
-                yield break;
-
-            Color originalColor = guardianRenderer.color;
-            Vector3 originalScale = guardianRenderer.transform.localScale;
-
-            guardianRenderer.color =
-                new Color(1f, 0.55f, 0.32f, 1f);
-
-            guardianRenderer.transform.localScale =
-                originalScale * 1.06f;
-
-            yield return new WaitForSeconds(0.12f);
-
-            guardianRenderer.color = originalColor;
-            guardianRenderer.transform.localScale = originalScale;
+            UpdateGlow(ref playerGlow, playerRenderer, playerUntil, playerDuration, new Color(1f, .9f, .35f));
+            UpdateGlow(ref bossGlow, guardianRenderer, bossUntil, bossDuration, bossColor);
         }
 
-        private IEnumerator PhaseChangeEffect()
+        private void UpdateGlow(ref SpriteRenderer glow, SpriteRenderer actor, float until, float duration, Color color)
         {
-            if (guardianRenderer == null)
-                yield break;
-
-            Color originalColor = guardianRenderer.color;
-            Vector3 originalScale = guardianRenderer.transform.localScale;
-
-            float elapsed = 0f;
-
-            while (elapsed < phaseDuration)
+            bool visible = actor != null && actor.enabled && actor.gameObject.activeInHierarchy && Time.time < until;
+            if (!visible)
             {
-                elapsed += Time.deltaTime;
-
-                float t = Mathf.Clamp01(elapsed / phaseDuration);
-                float pulse = Mathf.Sin(t * Mathf.PI * 6f);
-
-                guardianRenderer.color = Color.Lerp(
-                    originalColor,
-                    new Color(0.55f, 1f, 0.72f, 1f),
-                    Mathf.Abs(pulse)
-                );
-
-                guardianRenderer.transform.localScale =
-                    originalScale *
-                    (1f + Mathf.Abs(pulse) * 0.07f);
-
-                yield return null;
+                if (glow != null) glow.enabled = false;
+                return;
             }
+            if (glow == null)
+            {
+                var go = new GameObject("SanctumGlow", typeof(SpriteRenderer));
+                go.transform.SetParent(actor.transform, false);
+                glow = go.GetComponent<SpriteRenderer>();
+            }
+            // A separate renderer leaves hit flashes, Fade alpha and idle movement untouched.
+            glow.sprite = actor.sprite;
+            glow.sharedMaterial = actor.sharedMaterial;
+            glow.sortingLayerID = actor.sortingLayerID;
+            glow.sortingOrder = actor.sortingOrder + 1;
+            glow.flipX = actor.flipX;
+            glow.flipY = actor.flipY;
+            float progress = 1f - Mathf.Clamp01((until - Time.time) / duration);
+            float pulse = Mathf.Sin(progress * Mathf.PI);
+            color.a = pulse * .45f * actor.color.a;
+            glow.color = color;
+            glow.transform.localScale = Vector3.one * (1f + pulse * .035f);
+            glow.enabled = true;
+        }
 
-            guardianRenderer.color = originalColor;
-            guardianRenderer.transform.localScale = originalScale;
+        private void ResetEffects()
+        {
+            playerUntil = bossUntil = 0;
+            previousBossPhase = 0;
+            previousTurn = BattlePhase.Waiting;
+            if (playerGlow != null) playerGlow.enabled = false;
+            if (bossGlow != null) bossGlow.enabled = false;
+        }
 
-            phaseRoutine = null;
+        private void OnDestroy()
+        {
+            if (playerGlow != null) Destroy(playerGlow.gameObject);
+            if (bossGlow != null) Destroy(bossGlow.gameObject);
         }
 
         private void Play(AudioClip clip)
         {
-            if (audioSource == null || clip == null)
-                return;
-
-            audioSource.PlayOneShot(clip);
+            if (audioSource != null && clip != null) audioSource.PlayOneShot(clip);
         }
     }
 }
