@@ -43,6 +43,7 @@ namespace Visha.Combat.Flow
         private Health enemyHealth;
         private Poison playerPoison;
         private Poison enemyPoison;
+        private TempleBlessing blessing;
         private Health secondEnemyHealth;
         private Poison secondEnemyPoison;
         private EnemyPatternRunner secondEnemyPattern;
@@ -98,6 +99,7 @@ namespace Visha.Combat.Flow
             enemyHealth = enemyGameObject.GetComponent<Health>();
             playerPoison = playerGameObject.GetComponent<Poison>();
             enemyPoison = enemyGameObject.GetComponent<Poison>();
+            blessing = playerGameObject.GetComponent<TempleBlessing>();
 
             if (venomStrike == null) venomStrike = playerGameObject.GetComponent<VenomStrike>();
             if (serpentsBite == null) serpentsBite = playerGameObject.GetComponent<SerpentsBite>();
@@ -283,6 +285,7 @@ namespace Visha.Combat.Flow
                 if (battleHUD != null) battleHUD.SetFeedback($"Poison · {enemyPoison.PoisonStacks * enemyPoison.DamagePerStack} damage");
                 enemyPoison.Tick();
                 if (IsBattleOver()) yield break;
+                UpdateBossPhase(enemyPatternRunner, enemyHealth);
                 yield return new WaitForSeconds(.3f);
             }
             SetPhase(BattlePhase.EnemyTurn);
@@ -304,8 +307,23 @@ namespace Visha.Combat.Flow
             if (IsBattleOver() || !combatActive) return;
             if (enemyPoison != null) enemyPoison.Tick();
             if (IsBattleOver()) return;
+            UpdateBossPhase(enemyPatternRunner, enemyHealth);
             ApplyEnemyAction();
             FinishRound();
+        }
+
+        /// <summary>
+        /// Called after each step that damages the boss (the player's ability, then the
+        /// poison tick) and before the boss acts. When the boss enters phase 2 its move
+        /// becomes Roar, so it still acts once that round. Does nothing for normal
+        /// enemies or a dead boss.
+        /// </summary>
+        private void UpdateBossPhase(EnemyPatternRunner runner, Health health)
+        {
+            if (runner == null || health == null || IsBattleOver()) return;
+            if (!runner.UpdateBossPhase(health.CurrentHealth, health.MaxHealth)) return;
+            Debug.Log($"Combat: {runner.EnemyName} entered phase {runner.BossPhase}");
+            Refresh();
         }
 
         private void ApplyEnemyAction()
@@ -581,6 +599,7 @@ namespace Visha.Combat.Flow
                 return false;
             }
             if (ability != BattleAbility.Fade && fade != null) fade.OnOtherAbilityUsed();
+            UpdateBossPhase(TargetPattern, TargetHealth);
             awakening.CompletePlayerAction();
             UpdateAppearance();
             Refresh();
@@ -617,7 +636,8 @@ namespace Visha.Combat.Flow
             EnemyPatternRunner targetPattern = TargetPattern;
             Poison targetPoison = TargetPoison;
             bool heavyThreat = targetPattern != null &&
-                (targetPattern.IntentLabel == "Heavy Blow" || targetPattern.IntentLabel == "Crush");
+                (targetPattern.IntentLabel == "Heavy Blow" || targetPattern.IntentLabel == "Crush"
+                 || targetPattern.IntentLabel == "Ruin" || targetPattern.IntentLabel == "Cataclysm");
             bool fullPoison = targetPoison.PoisonStacks == targetPoison.MaxStacks;
             bool empowered = awakening.TwinFangReady;
             if (!serpentsBite.TryUseOn(TargetObject)) return "Serpent's Bite cannot be used";
@@ -671,7 +691,10 @@ namespace Visha.Combat.Flow
             viewState.routineBoon = routine != null && routine.isActiveAndEnabled && routine.HasBoon;
             if (viewState.routineBoon) viewState.venomStacks++;
             viewState.phase = currentPhase;
-            // Null with one enemy, so the HUD keeps its single-enemy layout.
+            viewState.bossPhase = enemyPatternRunner != null ? enemyPatternRunner.BossPhase : 0;
+            viewState.bossPhaseCount = enemyPatternRunner != null ? enemyPatternRunner.BossPhaseCount : 0;
+            viewState.blessing = blessing != null && blessing.IsAvailable ? BlessingStatus.Ready
+                : blessing != null && blessing.IsSpent ? BlessingStatus.Spent : BlessingStatus.Unavailable;
             viewState.enemies = BuildEnemyRoster();
             viewState.actingEnemyId = HasSecondEnemy ? actingEnemyId : -1;
         }
