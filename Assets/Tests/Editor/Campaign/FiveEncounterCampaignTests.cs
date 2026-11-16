@@ -286,6 +286,7 @@ public class FiveEncounterCampaignTests
 
         Assert.AreEqual(CampaignState.Title, campaign.State);
         Assert.AreEqual(-1, campaign.HighestCompletedEncounter);
+        Assert.IsFalse(blessing.IsEnabled, "leaving the boss fight turns the Blessing off");
         for (int i = 1; i < EncounterPaths.Length; i++)
             Assert.IsFalse(campaign.CanEnterEncounter(i), $"encounter {i + 1} is locked on a fresh start");
     }

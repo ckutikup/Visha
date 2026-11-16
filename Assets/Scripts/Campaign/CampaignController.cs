@@ -162,6 +162,9 @@ namespace Visha.Campaign
         {
             if (!HasEncounters()) return;
             HighestCompletedEncounter = -1;
+            // Leaving the boss fight: the Blessing belongs to the Asura encounter only.
+            if (playerHealth != null && playerHealth.TryGetComponent(out TempleBlessing blessing))
+                blessing.DisableForEncounter();
             Progress.ReturnToTitle();
         }
 
