@@ -96,7 +96,7 @@ public class VaultPlayModeTests
         yield return Capture("inner-vault-survivor");
         second.GetComponent<Health>().TakeDamage(999);
         yield return null;
-        Assert.AreEqual(CampaignState.DemoComplete, campaign.State);
+        Assert.AreEqual(CampaignState.Victory, campaign.State, "the Sanctum follows the Vault");
 
         campaign.RestartCampaign();
         yield return null;

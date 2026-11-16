@@ -185,6 +185,14 @@ namespace Visha.Campaign
                 : fullPlayerHealth ? playerHealth.MaxHealth : playerHealth.CurrentHealth;
             enemyStartHealth = config.StartingHealth;
 
+            // Temple's Blessing is for the final boss only (Docs/FinalBoss.md). Each retry
+            // restores it through Health.ResetHealth, so it works once per attempt.
+            if (playerHealth != null && playerHealth.TryGetComponent(out TempleBlessing blessing))
+            {
+                if (config.Pattern == EnemyPatternRunner.PatternKind.Asura) blessing.EnableForEncounter();
+                else blessing.DisableForEncounter();
+            }
+
             Debug.Log($"Campaign: encounter {EncounterNumber}/{EncounterCount} - {config.DisplayName}");
 
             if (outcomeController != null) outcomeController.Retry();

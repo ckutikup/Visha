@@ -12,8 +12,8 @@ using Visha.UI;
 
 /// <summary>
 /// Plays Campaign_Demo through its real buttons and the real CombatFlowController:
-/// start, win, Next, lose, Retry, finish the three solo encounters and the
-/// two-enemy Vault, and Restart.
+/// start, win, Next, lose, Retry, finish the three solo encounters, the
+/// two-enemy Vault and the Asura in the Sanctum, see the ending, and return to the temple map.
 /// Lethal damage is applied directly so the test does not depend on balance values.
 /// </summary>
 public class CampaignDemoPlayModeTests
@@ -103,7 +103,7 @@ public class CampaignDemoPlayModeTests
         Assert.AreEqual(2, campaign.EncounterNumber);
         Assert.AreEqual("Guardian Warden", enemyPattern.EnemyName);
         Assert.AreEqual(campaign.CurrentEncounter.EnemySprite, enemySpriteRenderer.sprite);
-        Assert.AreEqual("COURTYARD  /  2 OF 4", screens.transform.Find("Encounter").GetComponent<Text>().text);
+        Assert.AreEqual("COURTYARD  /  2 OF 5", screens.transform.Find("Encounter").GetComponent<Text>().text);
         Assert.AreEqual(44, enemyHealth.CurrentHealth);
         Assert.AreEqual(1f, hud.transform.Find("EnemyStatus/HealthTrack/HealthFill").GetComponent<RectTransform>().anchorMax.x);
         Assert.AreEqual(0, enemyPoison.PoisonStacks);
@@ -141,7 +141,7 @@ public class CampaignDemoPlayModeTests
         yield return null;
         Assert.AreEqual(CampaignState.Victory, campaign.State);
 
-        // Encounter 4, the Vault: both enemies must fall before the demo ends
+        // Encounter 4, the Vault: both enemies must fall before the Sanctum opens
         Click("VictoryPanel/Card/NextButton");
         yield return null;
         Assert.AreEqual(4, campaign.EncounterNumber);
@@ -158,11 +158,28 @@ public class CampaignDemoPlayModeTests
         Assert.AreEqual(CampaignState.InBattle, campaign.State, "one Vault enemy still stands");
         secondEnemy.GetComponent<Health>().TakeDamage(999);
         yield return null;
+        Assert.AreEqual(CampaignState.Victory, campaign.State);
+
+        // Encounter 5, the Sanctum: the Asura alone, with Temple's Blessing, ends the campaign
+        Click("VictoryPanel/Card/NextButton");
+        yield return null;
+        Assert.AreEqual(5, campaign.EncounterNumber);
+        Assert.AreEqual("The Asura", enemyPattern.EnemyName);
+        Assert.AreEqual(76, enemyHealth.CurrentHealth);
+        Assert.AreEqual(1, enemyPattern.BossPhase);
+        Assert.IsFalse(campaign.GetComponent<VaultCampaignLink>().SecondEnemyInPlay, "the Asura fights alone");
+        Assert.IsTrue(playerHealth.GetComponent<TempleBlessing>().IsAvailable, "Temple's Blessing is ready");
+        Assert.AreEqual("SANCTUM  /  5 OF 5", screens.transform.Find("Encounter").GetComponent<Text>().text);
+        yield return AssertBattleAcceptsActions();
+
+        enemyHealth.TakeDamage(999);
+        yield return null;
         Assert.AreEqual(CampaignState.DemoComplete, campaign.State);
         Assert.IsTrue(ScreenVisible(BattleScreen.Complete));
         Assert.IsFalse(ScreenVisible(BattleScreen.Victory));
+        Assert.AreEqual("THE CURSE IS BROKEN", screens.transform.Find("CompletePanel/Heading").GetComponent<Text>().text);
 
-        // Restart: back to encounter 1 with a fresh battle
+        // Return to Temple Map: every encounter is replayable; replay encounter 1
         Click("CompletePanel/RestartButton");
         yield return null;
         Assert.IsFalse(ScreenVisible(BattleScreen.Complete));

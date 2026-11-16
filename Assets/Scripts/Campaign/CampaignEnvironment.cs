@@ -11,6 +11,8 @@ namespace Visha.Campaign
         [SerializeField] private Sprite courtyard;
         [SerializeField] private Sprite vault;
         [SerializeField] private int vaultFirstEncounter = 3;
+        [Tooltip("First encounter labelled Sanctum. It keeps the vault background.")]
+        [SerializeField] private int sanctumFirstEncounter = 5;
 
         private Color targetColor = Color.white;
         private Vector3 backgroundScale;
@@ -72,7 +74,8 @@ namespace Visha.Campaign
             previousEncounter = campaign.EncounterNumber;
             bool won = state == CampaignState.Victory || state == CampaignState.DemoComplete;
             targetColor = won ? new Color(1f, .95f, .82f) : inVault ? new Color(.83f, .88f, .93f) : new Color(.94f, .91f, .83f);
-            if (screens != null) screens.SetArea(inVault ? "Vault" : "Courtyard");
+            bool inSanctum = state != CampaignState.Title && campaign.EncounterNumber >= sanctumFirstEncounter;
+            if (screens != null) screens.SetArea(inSanctum ? "Sanctum" : inVault ? "Vault" : "Courtyard");
         }
     }
 }

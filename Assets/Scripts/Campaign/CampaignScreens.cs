@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.UI;
 using Visha.UI;
 
 namespace Visha.Campaign
@@ -18,6 +19,18 @@ namespace Visha.Campaign
         [SerializeField] private BattleScreenView view;
         [Tooltip("Lets the screens block combat input while an overlay is shown.")]
         [SerializeField] private BattleHUD hud;
+
+        [Header("Ending")]
+        [Tooltip("Heading on the complete screen once the final encounter is won.")]
+        [SerializeField] private string endingHeading = "THE CURSE IS BROKEN";
+        [Tooltip("Message on the complete screen once the final encounter is won.")]
+        [TextArea]
+        [SerializeField] private string endingMessage =
+            "The Asura falls and the temple's oath is broken. Vishakanya is free.\n" +
+            "All five encounters cleared. Return to the Temple Map to replay any encounter.";
+
+        public string EndingHeading => endingHeading;
+        public string EndingMessage => endingMessage;
 
         /// <summary>Assigns every reference at runtime, for tests and tooling.</summary>
         public void SetReferences(CampaignController newCampaign, BattleScreenView newView, BattleHUD newHud)
@@ -83,8 +96,25 @@ namespace Visha.Campaign
                 case CampaignState.InBattle: view.ShowBattle(); break;
                 case CampaignState.Victory: view.ShowVictory(enemy); break;
                 case CampaignState.Defeat: view.ShowDefeat(enemy); break;
-                case CampaignState.DemoComplete: view.ShowComplete(); break;
+                case CampaignState.DemoComplete: ShowEnding(); break;
             }
+        }
+
+        /// <summary>
+        /// The final victory screen: Charith's complete panel with the ending text.
+        /// Its Return to Temple Map button opens the map, where every cleared encounter can be replayed.
+        /// </summary>
+        private void ShowEnding()
+        {
+            view.ShowComplete();
+            SetPanelText("CompletePanel/Heading", endingHeading);
+            SetPanelText("CompletePanel/Message", endingMessage);
+        }
+
+        private void SetPanelText(string path, string value)
+        {
+            Transform child = view.transform.Find(path);
+            if (child != null && child.TryGetComponent(out Text text)) text.text = value;
         }
     }
 }

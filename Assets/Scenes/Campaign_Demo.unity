@@ -4303,6 +4303,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 23e95127b7dac4d6583e8d7520bf35d8, type: 2}
   - {fileID: 11400000, guid: 83fb1186c11c748ca99b9a8e798a2cc3, type: 2}
   - {fileID: 11400000, guid: 511e1fcea7884434da1cfe1f2f8ba856, type: 2}
+  - {fileID: 11400000, guid: 6eb1055b0f142f24d8b2c20b9d705617, type: 2}
   playerHealthRule: 0
 --- !u!4 &1513577505
 Transform:
