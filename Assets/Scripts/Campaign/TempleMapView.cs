@@ -22,8 +22,8 @@ namespace Visha.Campaign
             "At the temple steps, the first guardian repeats an old oath.\nLearn to build poison, spend it with Bite, and read the next attack.",
             "Beyond the courtyard, a second guardian raises its weapon.\nIt opens with Heavy Blow. Guard with Fade or plan a poison finisher.",
             "A broken chain lies before the sealed vault.\nSingle-enemy preview: Recover, Crush, then Shield Bash. Watch the heavy attack.",
-            "Two guardians will defend the inner vault with overlapping intentions.\nUnavailable in this build.",
-            "The curse still binds the final guardian.\nA telegraphed boss encounter is planned. Unavailable in this build."
+            "The Vault Guardian and the Vault Sentinel defend the inner vault together.\nBoth act every round. Choose your target, and save Fade for the Sentinel's Crush.",
+            "The Asura waits in the Sanctum, bound by the temple's curse.\nAt half health it Roars into a stronger second phase. Save Fade for Ruin and Cataclysm."
         };
         private void Awake() => campaign = GetComponent<CampaignController>();
         private void OnEnable() { if (campaign != null) campaign.StateChanged += OnState; }
@@ -154,7 +154,7 @@ namespace Visha.Campaign
             enter = Button("EnterEncounter", "Enter Encounter", 0, -365, 410, 65, EnterSelected);
             Button("ReturnToTitle", "Return to Title", -500, -365, 370, 65, () => { panel.SetActive(false); campaign.ReturnToTitle(); });
             replay = Button("Replay", "Replay Available Encounters", 500, -365, 460, 65, () => { selected = 0; Refresh(); });
-            Label("Five encounters planned · four available · Sanctum still in development", 0, -465, 1650, 45, 22);
+            Label("Five encounters · clear each one to open the next · defeat the Asura to break the curse", 0, -465, 1650, 45, 22);
         }
         private GameObject Element(string name, float x, float y, float w, float h)
         {
