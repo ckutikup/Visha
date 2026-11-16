@@ -15,7 +15,7 @@ using Visha.UI;
 /// to two enemies for the Vault only, the player can target the second enemy, both
 /// must fall for the demo to end, and a restart returns to one enemy.
 /// </summary>
-public class VaultPlayModeTests
+public class VaultPlayModeTests : CampaignSaveIsolation
 {
     private const string ScenePath = "Assets/Scenes/Campaign_Demo.unity";
 

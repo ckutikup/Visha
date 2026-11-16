@@ -58,12 +58,14 @@ namespace Visha.Combat.Flow.Tests
             Assert.AreEqual(1, Listeners.GetInvocationList().Length);
         }
 
-        [Test] public void BossAttackRunsOncePerTurnAndNormalEncountersStayQuiet()
+        [Test] public void EnemyPhaseDoesNotPlayAttackBeforePoisonResolves()
         {
             Publish(0, BattlePhase.EnemyTurn, 10);
             Assert.AreEqual(0, Get<float>("bossUntil"));
             Publish(1, BattlePhase.PlayerTurn);
             Publish(1, BattlePhase.EnemyTurn, 10);
+            Assert.AreEqual(0, Get<float>("bossUntil"));
+            effect.PlayBossAttack();
             Assert.Greater(Get<float>("bossUntil"), Time.time);
             Set("bossUntil", 0f);
             Publish(1, BattlePhase.EnemyTurn, 10);

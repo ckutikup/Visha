@@ -44,6 +44,40 @@ namespace Visha.Campaign
         [SerializeField] private List<EncounterConfig> encounters = new List<EncounterConfig>();
         [SerializeField] private PlayerHealthBetweenEncounters playerHealthRule = PlayerHealthBetweenEncounters.RestoreToFull;
 
+        [SerializeField] private bool saveProgress;
+        private int resumeEncounter;
+        public bool HasCheckpoint { get; private set; }
+        public bool SaveFailed { get; private set; }
+        public int ResumeEncounter => resumeEncounter;
+        private string SavePath => System.IO.Path.Combine(
+            Environment.GetEnvironmentVariable("VISHA_SAVE_DIRECTORY") ?? Application.persistentDataPath,
+            "campaign.json");
+
+        private void Awake()
+        {
+            if (!saveProgress) return;
+            var saved = CampaignSave.Load(SavePath, EncounterCount);
+            if (saved == null) return;
+            HighestCompletedEncounter = saved.highestCompleted;
+            resumeEncounter = saved.resumeEncounter;
+            HasCheckpoint = true;
+        }
+
+        private void SaveCheckpoint()
+        {
+            HasCheckpoint = true;
+            if (!saveProgress) return;
+            SaveFailed = !new CampaignSave { highestCompleted = HighestCompletedEncounter,
+                resumeEncounter = resumeEncounter }.Write(SavePath);
+        }
+
+        public void ContinueCampaign()
+        {
+            if (State != CampaignState.Title) return;
+            if (HasCheckpoint) EnterEncounter(resumeEncounter);
+            else StartCampaign();
+        }
+
         private CampaignProgress progress;
         private int playerStartHealth;
         private int enemyStartHealth;
@@ -107,6 +141,8 @@ namespace Visha.Campaign
             if (progress != null) progress.StateChanged -= HandleProgressChanged;
             progress = null;
             HighestCompletedEncounter = -1;
+            HasCheckpoint = false;
+            resumeEncounter = 0;
 
             if (isActiveAndEnabled) Subscribe();
         }
@@ -157,11 +193,10 @@ namespace Visha.Campaign
             BeginEncounter(fullPlayerHealth: true);
         }
 
-        /// <summary>Back to the start screen with a fresh campaign. The battle stays idle underneath.</summary>
+        /// <summary>Back to the start screen, preserving the campaign checkpoint. The battle stays idle underneath.</summary>
         public void ReturnToTitle()
         {
             if (!HasEncounters()) return;
-            HighestCompletedEncounter = -1;
             // Leaving the boss fight: the Blessing belongs to the Asura encounter only.
             if (playerHealth != null && playerHealth.TryGetComponent(out TempleBlessing blessing))
                 blessing.DisableForEncounter();
@@ -200,6 +235,8 @@ namespace Visha.Campaign
 
             if (outcomeController != null) outcomeController.Retry();
             else HandleEncounterReset();
+            resumeEncounter = Progress.EncounterIndex;
+            SaveCheckpoint();
         }
 
         private void HandleEncounterReset()
@@ -215,7 +252,11 @@ namespace Visha.Campaign
         {
             if (Progress == null || !isActiveAndEnabled) return;
             if (State == CampaignState.InBattle && outcome == BattleOutcome.Victory)
+            {
                 HighestCompletedEncounter = Mathf.Max(HighestCompletedEncounter, Progress.EncounterIndex);
+                resumeEncounter = Mathf.Min(HighestCompletedEncounter + 1, EncounterCount - 1);
+                SaveCheckpoint();
+            }
             Progress.ReportOutcome(outcome);
         }
 

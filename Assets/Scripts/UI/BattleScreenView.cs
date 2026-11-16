@@ -7,7 +7,7 @@ namespace Visha.UI
 {
     public enum BattleScreen { Battle, Title, Victory, Defeat, Complete }
 
-    public class BattleScreenView : MonoBehaviour
+    public partial class BattleScreenView : MonoBehaviour
     {
         [SerializeField] private GameObject titlePanel, victoryPanel, defeatPanel, completePanel;
         [SerializeField] private Text encounterLabel, victoryMessage, defeatMessage, feedbackLabel;
@@ -93,6 +93,7 @@ namespace Visha.UI
             if (screen != value) pending = false;
             screen = value;
             feedbackLabel.text = string.Empty;
+            ResetNewGameConfirmation();
             Refresh();
             if (EventSystem.current != null)
             {
@@ -130,6 +131,7 @@ namespace Visha.UI
 
         private void Refresh()
         {
+            RefreshCampaignOptions();
             titlePanel.SetActive(screen == BattleScreen.Title);
             victoryPanel.SetActive(screen == BattleScreen.Victory);
             defeatPanel.SetActive(screen == BattleScreen.Defeat);

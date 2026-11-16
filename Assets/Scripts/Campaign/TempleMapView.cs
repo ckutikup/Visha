@@ -13,7 +13,7 @@ namespace Visha.Campaign
         private Button enter, replay;
         private readonly Button[] nodes = new Button[5];
         private int selected;
-        private bool vaultArrivalSeen;
+        private readonly System.Collections.Generic.HashSet<int> arrivalsSeen = new System.Collections.Generic.HashSet<int>();
         private VaultArrivalView arrival;
         private Font font;
         public bool IsOpen => panel != null && panel.activeSelf;
@@ -31,7 +31,7 @@ namespace Visha.Campaign
         private void OnState(CampaignState state)
         {
             if (arrival != null && arrival.IsOpen) arrival.Cancel();
-            if (state == CampaignState.Title) vaultArrivalSeen = false;
+            if (state == CampaignState.Title) arrivalsSeen.Clear();
             if (panel != null) panel.SetActive(false);
             SetUnderlyingInput(true);
         }
@@ -68,26 +68,42 @@ namespace Visha.Campaign
             selected = index;
             Refresh();
         }
+        public void EnterNext()
+        {
+            if (campaign.State != CampaignState.Victory) return;
+            EnterWithArrival(campaign.EncounterNumber, campaign.NextEncounter);
+        }
+
+        public void ContinueCampaign()
+        {
+            if (campaign.State != CampaignState.Title) return;
+            EnterWithArrival(campaign.HasCheckpoint ? campaign.ResumeEncounter : 0, campaign.ContinueCampaign);
+        }
+
+        private void EnterWithArrival(int destination, System.Action enterEncounter)
+        {
+            if (destination >= 2 && !arrivalsSeen.Contains(destination))
+            {
+                if (arrival == null) arrival = gameObject.AddComponent<VaultArrivalView>();
+                var screens = FindAnyObjectByType<BattleScreenView>();
+                var titleFont = screens.transform.Find("TitlePanel/Instructions").GetComponent<Text>().font;
+                arrival.ShowChapter(screens.transform, titleFont, destination, () =>
+                {
+                    arrivalsSeen.Add(destination);
+                    enterEncounter();
+                }, () => screens.RejectNavigation(string.Empty));
+            }
+            else enterEncounter();
+        }
+
         public void EnterSelected()
         {
             if (!IsOpen || !campaign.CanEnterEncounter(selected)) return;
             if (arrival != null && arrival.IsOpen) return;
-            if (selected >= 2 && !vaultArrivalSeen)
-            {
-                int destination = selected;
-                if (arrival == null) arrival = gameObject.AddComponent<VaultArrivalView>();
-                arrival.Show(panel.transform.parent, font, () =>
-                {
-                    vaultArrivalSeen = campaign.EnterEncounter(destination);
-                }, () =>
-                {
-                    if (IsOpen && UnityEngine.EventSystems.EventSystem.current != null)
-                        UnityEngine.EventSystems.EventSystem.current.SetSelectedGameObject(enter.gameObject);
-                });
-                return;
-            }
-            campaign.EnterEncounter(selected);
+            int destination = selected;
+            EnterWithArrival(destination, () => campaign.EnterEncounter(destination));
         }
+
         private void Refresh()
         {
             for (int i = 0; i < nodes.Length; i++)

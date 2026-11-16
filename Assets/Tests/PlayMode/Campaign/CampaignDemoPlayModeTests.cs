@@ -1,5 +1,6 @@
 #if UNITY_EDITOR
 using System.Collections;
+using System.IO;
 using NUnit.Framework;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -16,7 +17,7 @@ using Visha.UI;
 /// two-enemy Vault and the Asura in the Sanctum, see the ending, and return to the temple map.
 /// Lethal damage is applied directly so the test does not depend on balance values.
 /// </summary>
-public class CampaignDemoPlayModeTests
+public class CampaignDemoPlayModeTests : CampaignSaveIsolation
 {
     private const string ScenePath = "Assets/Scenes/Campaign_Demo.unity";
 
@@ -60,9 +61,9 @@ public class CampaignDemoPlayModeTests
         {
             if (path.Contains("RestartButton")) map.SelectNode(0);
             map.EnterSelected();
-            var arrival = campaign.GetComponent<VaultArrivalView>();
-            if (arrival != null && arrival.IsOpen) arrival.Continue();
         }
+        var arrival = campaign.GetComponent<VaultArrivalView>();
+        if (arrival != null && arrival.IsOpen) arrival.Continue();
     }
 
     /// <summary>Uses Venom Strike through the HUD and checks the turn loop accepted it.</summary>
@@ -192,7 +193,7 @@ public class CampaignDemoPlayModeTests
     }
 
     [UnityTest]
-    public IEnumerator ReturnToStart_FromDefeat_ShowsTitleAndStartsFresh()
+    public IEnumerator ReturnToTitle_FromDefeat_ContinuesSavedEncounter()
     {
         Click("TitlePanel/StartButton");
         yield return null;
@@ -210,9 +211,9 @@ public class CampaignDemoPlayModeTests
 
         Click("TitlePanel/StartButton");
         yield return null;
-        Assert.AreEqual(1, campaign.EncounterNumber);
+        Assert.AreEqual(2, campaign.EncounterNumber);
         Assert.AreEqual(playerHealth.MaxHealth, playerHealth.CurrentHealth);
-        Assert.AreEqual(30, enemyHealth.CurrentHealth);
+        Assert.AreEqual(44, enemyHealth.CurrentHealth);
         yield return AssertBattleAcceptsActions();
     }
     [UnityTest]
@@ -425,7 +426,7 @@ public class CampaignDemoPlayModeTests
     public IEnumerator MapLocksFutureNodesAndRetainsCompletedNodesOnReplay()
     {
         var map = campaign.GetComponent<TempleMapView>();
-        screens.RequestStart(); yield return null;
+        screens.transform.Find("TitlePanel/TempleMap").GetComponent<Button>().onClick.Invoke(); yield return null;
         Assert.IsTrue(map.IsOpen);
         Assert.AreEqual(CampaignState.Title, campaign.State);
         map.SelectNode(1); map.EnterSelected();
@@ -443,7 +444,7 @@ public class CampaignDemoPlayModeTests
         Assert.IsTrue(campaign.CanEnterEncounter(1));
         Assert.IsFalse(campaign.CanEnterEncounter(2));
         campaign.ReturnToTitle(); yield return null;
-        Assert.AreEqual(-1, campaign.HighestCompletedEncounter);
+        Assert.AreEqual(0, campaign.HighestCompletedEncounter);
     }
 
     [UnityTest]
@@ -550,5 +551,133 @@ public class CampaignDemoPlayModeTests
         }
     }
 
+    [UnityTest]
+    public IEnumerator CheckpointReloadContinuesNextFightAndNewGameNeedsConfirmation()
+    {
+        Click("TitlePanel/StartButton");
+        yield return null;
+        enemyHealth.TakeDamage(999);
+        yield return null;
+        Assert.IsTrue(campaign.HasCheckpoint);
+        Assert.AreEqual(1, campaign.ResumeEncounter);
+        yield return Capture("checkpoint-victory");
+        yield return LoadScene();
+        yield return Capture("checkpoint-title");
+        Assert.AreEqual(0, campaign.HighestCompletedEncounter);
+        Assert.AreEqual("Continue", screens.transform.Find("TitlePanel/StartButton").GetComponentInChildren<Text>().text);
+        Click("TitlePanel/NewGame");
+        Assert.AreEqual(CampaignState.Title, campaign.State, "first click must not erase the save");
+        yield return Capture("checkpoint-confirm");
+        Click("TitlePanel/StartButton");
+        yield return null;
+        Assert.AreEqual(2, campaign.EncounterNumber);
+        Assert.AreEqual(playerHealth.MaxHealth, playerHealth.CurrentHealth);
+        campaign.ReturnToTitle();
+        yield return null;
+        Click("TitlePanel/NewGame");
+        Click("TitlePanel/NewGame");
+        yield return null;
+        Assert.AreEqual(1, campaign.EncounterNumber);
+        Assert.AreEqual(-1, campaign.HighestCompletedEncounter);
+        yield return LoadScene();
+        Assert.AreEqual(-1, campaign.HighestCompletedEncounter);
+        Assert.AreEqual(0, campaign.ResumeEncounter);
+    }
+
+    [UnityTest]
+    public IEnumerator VictoryMapIsOptionalAndNextEntersFollowingEncounter()
+    {
+        Click("TitlePanel/StartButton"); yield return null;
+        enemyHealth.TakeDamage(999); yield return null;
+        var map = campaign.GetComponent<TempleMapView>();
+        Assert.IsFalse(map.IsOpen);
+        var mapButton = screens.transform.Find("VictoryPanel/Card/TempleMap").GetComponent<Button>();
+        mapButton.onClick.Invoke();
+        Assert.IsTrue(map.IsOpen);
+        campaign.ReturnToTitle(); yield return null;
+        Click("TitlePanel/StartButton"); yield return null;
+        Assert.AreEqual(2, campaign.EncounterNumber);
+        enemyHealth.TakeDamage(999); yield return null;
+        screens.transform.Find("VictoryPanel/Card/NextButton").GetComponent<Button>().onClick.Invoke();
+        var arrival = campaign.GetComponent<VaultArrivalView>();
+        Assert.IsTrue(arrival.IsOpen);
+        arrival.Cancel();
+        Assert.AreEqual(CampaignState.Victory, campaign.State);
+        Assert.IsTrue(screens.transform.Find("VictoryPanel/Card/NextButton").GetComponent<Button>().interactable);
+        Click("VictoryPanel/Card/NextButton"); yield return null;
+        Assert.AreEqual(3, campaign.EncounterNumber);
+        Assert.IsFalse(map.IsOpen);
+    }
+
+    [UnityTest]
+    public IEnumerator SanctumHasDistinctArtAndCanBeWonWithNormalAbilities()
+    {
+        campaign.StartCampaign();
+        for (int i = 0; i < 3; i++)
+        {
+            enemyHealth.TakeDamage(999); yield return null;
+            campaign.NextEncounter(); yield return null;
+        }
+        Assert.AreEqual("InnerVault", GameObject.Find("CampaignBackground").GetComponent<SpriteRenderer>().sprite.name);
+        yield return Capture("inner-vault-room");
+        enemyHealth.TakeDamage(999);
+        GameObject.Find("SecondEnemy").GetComponent<Health>().TakeDamage(999);
+        yield return null;
+        screens.RequestNext(); yield return null;
+        var arrival = campaign.GetComponent<VaultArrivalView>();
+        Assert.IsTrue(arrival.IsOpen);
+        yield return Capture("sanctum-story");
+        arrival.Continue(); yield return new WaitForSeconds(.6f);
+        Assert.AreEqual("Asura", enemySpriteRenderer.sprite.name);
+        Assert.AreEqual("TempleSanctum", GameObject.Find("CampaignBackground").GetComponent<SpriteRenderer>().sprite.name);
+        Assert.Greater(enemySpriteRenderer.bounds.size.y, 4f);
+        yield return Capture("asura-opening");
+        yield return UseAbility(BattleAbility.VenomStrike);
+        yield return UseAbility(BattleAbility.VenomStrike);
+        hud.ChooseAbility(BattleAbility.Fade);
+        yield return new WaitForSeconds(1.05f);
+        yield return Capture("asura-ruin");
+        yield return new WaitForSeconds(2f);
+        yield return UseAbility(BattleAbility.VenomStrike);
+        yield return UseAbility(BattleAbility.VenomStrike);
+        Assert.AreEqual(2, enemyPattern.BossPhase);
+        yield return Capture("asura-phase-two");
+        yield return UseAbility(BattleAbility.Fade);
+        yield return UseAbility(BattleAbility.VenomStrike);
+        yield return UseAbility(BattleAbility.SerpentsBite);
+        Assert.AreEqual(CampaignState.DemoComplete, campaign.State);
+        Assert.Greater(playerHealth.CurrentHealth, 0);
+        yield return Capture("asura-victory");
+        campaign.ReturnToTitle();
+        campaign.EnterEncounter(0); yield return null;
+        Assert.AreNotEqual("Asura", enemySpriteRenderer.sprite.name, "replay must restore regular enemy art");
+    }
+
+    private IEnumerator UseAbility(BattleAbility ability)
+    {
+        hud.ChooseAbility(ability);
+        if (ability != BattleAbility.Fade) hud.SelectTarget();
+        yield return new WaitForSeconds(2.6f);
+    }
+
+    private IEnumerator Capture(string name)
+    {
+        string folder=System.Environment.GetEnvironmentVariable("VISHA_UI_CAPTURE_DIR");
+        if(string.IsNullOrEmpty(folder)) yield break;
+        Directory.CreateDirectory(folder);
+        var camera=Camera.main;
+        foreach(var size in new[]{new Vector2Int(1280,720),new Vector2Int(1024,768),new Vector2Int(1920,1080)})
+        {
+            var rt=new RenderTexture(size.x,size.y,24); camera.targetTexture=rt;
+            foreach(var canvas in Object.FindObjectsByType<Canvas>(FindObjectsSortMode.None))
+                if(canvas.isRootCanvas) {canvas.renderMode=RenderMode.ScreenSpaceCamera;canvas.worldCamera=camera;canvas.planeDistance=1;}
+            yield return null; Canvas.ForceUpdateCanvases(); camera.Render();
+            var before=RenderTexture.active;RenderTexture.active=rt;
+            var image=new Texture2D(size.x,size.y,TextureFormat.RGB24,false);
+            image.ReadPixels(new Rect(0,0,size.x,size.y),0,0);image.Apply();
+            File.WriteAllBytes(Path.Combine(folder,$"{name}-{size.x}x{size.y}.png"),image.EncodeToPNG());
+            Object.Destroy(image);RenderTexture.active=before;camera.targetTexture=null;rt.Release();Object.Destroy(rt);
+        }
+    }
 }
 #endif

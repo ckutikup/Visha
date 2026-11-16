@@ -28,6 +28,9 @@ namespace Visha.UI
         private void LateUpdate()
         {
             if(!target || !worldCamera) return;
+            var actor = target.GetComponent<SpriteRenderer>();
+            if (aboveTarget && actor != null && actor.sprite != null)
+                headOffset = actor.sprite.bounds.max.y * target.lossyScale.y;
             Camera uiCamera = canvas && canvas.renderMode != RenderMode.ScreenSpaceOverlay
                 ? canvas.worldCamera : null;
             Vector2 point;
@@ -38,6 +41,8 @@ namespace Visha.UI
                 var parent = (RectTransform)rect.parent;
                 Vector2 half = rect.rect.size * .5f;
                 Rect bounds = parent.rect;
+                if (headOffset > 4f && GetComponent<IntentView>() != null)
+                    point = new Vector2(bounds.center.x, bounds.yMax - 190);
                 point.x = Mathf.Clamp(point.x, bounds.xMin + half.x + 24, bounds.xMax - half.x - 24);
                 point.y = Mathf.Clamp(point.y, bounds.yMin + half.y + 24, bounds.yMax - half.y - 24);
                 rect.anchoredPosition = point;

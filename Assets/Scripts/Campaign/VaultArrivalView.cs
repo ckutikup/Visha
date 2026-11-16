@@ -24,6 +24,38 @@ namespace Visha.Campaign
             if (EventSystem.current != null) EventSystem.current.SetSelectedGameObject(first);
         }
 
+        public void ShowChapter(Transform parent, Font font, int destination, Action proceed, Action cancel)
+        {
+            Show(parent, font, proceed, cancel);
+            string chapter, title, story, hint, button;
+            if (destination == 4)
+            {
+                chapter = "III / THE SANCTUM"; title = "The source of the curse";
+                story = "The final seal breaks. Beyond it, the Asura waits beside the shattered altar.\nThe guardians were bound to his will. End the curse and release them.";
+                hint = "Temple's Blessing protects you from one lethal hit.\nWatch for Ruin. At half health, the Asura changes his attack pattern.";
+                button = "Face the Asura";
+            }
+            else if (destination == 3)
+            {
+                chapter = "II / THE INNER VAULT"; title = "Two guardians. One final seal.";
+                story = "Two chains hold the Sanctum shut. Two cursed guardians defend them.\nVishakanya must defeat both to reach the heart of the temple.";
+                hint = "Both enemies act each round. Focus your poison and read both intentions.\nFade protects against the entire enemy phase.";
+                button = "Break the seal";
+            }
+            else
+            {
+                chapter = "II / THE VAULT"; title = "Guardian Awakening";
+                story = "The temple restores your guardian armor and awakens your dagger.\nYour first Awakening is ready.";
+                hint = "Press 4 to awaken for two actions. Bite becomes Twin Fang once, leaving 2 poison.\nLater, earn charge with maximum-poison Bite or Fade against heavy attacks.";
+                button = "Enter the Vault";
+            }
+            panel.transform.Find("Chapter").GetComponent<Text>().text = chapter;
+            panel.transform.Find("Title").GetComponent<Text>().text = title;
+            panel.transform.Find("Story").GetComponent<Text>().text = story;
+            panel.transform.Find("Hint").GetComponent<Text>().text = hint;
+            panel.transform.Find("Continue").GetComponentInChildren<Text>().text = button;
+        }
+
         public void Continue() => Close(true);
         public void Cancel() => Close(false);
         private void Close(bool proceed)
@@ -49,7 +81,7 @@ namespace Visha.Campaign
             Label("Story", "The seal breaks. The temple restores your guardian armor and awakens your dagger.\nYour first Awakening is ready.", .38f,.55f,28,font,new Color(.73f,.8f,.76f));
             Label("Hint", "Press 4 to awaken for two actions. Bite becomes Twin Fang once, leaving 2 poison.\nLater, earn charge with maximum-poison Bite or Fade against heavy attacks.", .26f,.36f,24,font,new Color(.73f,.8f,.76f));
             AddButton("Continue", "Enter the Vault", .52f,.77f, Continue,font);
-            AddButton("Back", "Back to map", .23f,.48f, Cancel,font);
+            AddButton("Back", "Back", .23f,.48f, Cancel,font);
             panel.SetActive(false);
         }
         private Text Label(string name,string value,float bottom,float top,int size,Font font,Color color)

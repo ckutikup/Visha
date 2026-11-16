@@ -55,10 +55,12 @@ namespace Visha.Campaign
             if (campaign == null || view == null) return;
             if (hud != null) view.SetHUD(hud);
             var map = campaign.GetComponent<TempleMapView>();
-            view.BindNavigation(map != null ? (System.Action)map.Open : Guard(campaign.StartCampaign),
-                                map != null ? (System.Action)map.Open : Guard(campaign.NextEncounter),
+            view.BindNavigation(map != null ? (System.Action)map.ContinueCampaign : Guard(campaign.ContinueCampaign),
+                                map != null ? (System.Action)map.EnterNext : Guard(campaign.NextEncounter),
                                 Guard(campaign.RetryEncounter), map != null ? (System.Action)map.Open : Guard(campaign.RestartCampaign),
                                 Guard(campaign.ReturnToTitle));
+            view.ConfigureCampaignOptions(map != null ? (System.Action)map.Open : null,
+                Guard(campaign.RestartCampaign));
             campaign.StateChanged += Show;
         }
 
@@ -79,6 +81,7 @@ namespace Visha.Campaign
         private void Unbind()
         {
             if (campaign != null) campaign.StateChanged -= Show;
+            if (view != null) view.ConfigureCampaignOptions(null, null);
             if (view != null) view.BindNavigation(null, null, null, null, null);
         }
 
@@ -90,6 +93,8 @@ namespace Visha.Campaign
             view.SetEncounter(number, campaign.EncounterCount);
             string enemy = campaign.CurrentEncounter != null ? campaign.CurrentEncounter.DisplayName : null;
 
+            view.SetCheckpoint(campaign.HasCheckpoint, campaign.ResumeEncounter + 1,
+                campaign.HighestCompletedEncounter + 1, campaign.EncounterCount, campaign.SaveFailed);
             switch (state)
             {
                 case CampaignState.Title: view.ShowTitle(); break;

@@ -12,7 +12,7 @@ using Visha.Combat.Flow;
 using Visha.Enemies;
 using Visha.UI;
 
-public class VaultAwakeningPlayModeTests
+public class VaultAwakeningPlayModeTests : CampaignSaveIsolation
 {
     [UnityTest] public IEnumerator VaultUnlockActivationTwinFangAndRetry()
     {

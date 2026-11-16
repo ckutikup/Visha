@@ -6,7 +6,7 @@ using Visha.UI;
 
 namespace Visha.Combat.Flow
 {
-    public sealed class CombatActionPresentation : MonoBehaviour
+    public sealed partial class CombatActionPresentation : MonoBehaviour
     {
         [SerializeField] private CharacterIdleMotion player;
         [SerializeField] private CharacterIdleMotion enemy;
@@ -105,6 +105,11 @@ namespace Visha.Combat.Flow
         public IEnumerator EnemyAction(bool attacks, Action impact, bool heavy = false, string moveName = "Strike")
         {
             if (enemy == null || player == null) { impact(); yield break; }
+            if (attacks && (moveName == "Ruin" || moveName == "Cataclysm"))
+            {
+                yield return BossSlam(moveName, impact);
+                yield break;
+            }
             if (attacks)
             {
                 enemy.ActionTilt = heavy ? -9f : moveName == "Shield Bash" ? 6f : -4f;
