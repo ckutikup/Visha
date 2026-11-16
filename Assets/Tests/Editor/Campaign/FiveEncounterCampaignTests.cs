@@ -277,7 +277,7 @@ public class FiveEncounterCampaignTests
     }
 
     [Test]
-    public void ReturnToTitle_AfterTheEnding_LocksTheRouteAgain()
+    public void ReturnToTitle_AfterTheEnding_PreservesClearedEncounters()
     {
         ReachSanctum();
         Win();
@@ -285,10 +285,10 @@ public class FiveEncounterCampaignTests
         campaign.ReturnToTitle();
 
         Assert.AreEqual(CampaignState.Title, campaign.State);
-        Assert.AreEqual(-1, campaign.HighestCompletedEncounter);
+        Assert.AreEqual(SanctumIndex, campaign.HighestCompletedEncounter);
         Assert.IsFalse(blessing.IsEnabled, "leaving the boss fight turns the Blessing off");
         for (int i = 1; i < EncounterPaths.Length; i++)
-            Assert.IsFalse(campaign.CanEnterEncounter(i), $"encounter {i + 1} is locked on a fresh start");
+            Assert.IsTrue(campaign.CanEnterEncounter(i), $"encounter {i + 1} remains replayable");
     }
 
     [Test]

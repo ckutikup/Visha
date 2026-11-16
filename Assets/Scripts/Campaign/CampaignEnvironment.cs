@@ -10,8 +10,15 @@ namespace Visha.Campaign
         [SerializeField] private SpriteRenderer background;
         [SerializeField] private Sprite courtyard;
         [SerializeField] private Sprite vault;
+        [SerializeField] private Sprite innerVault, sanctum;
+        private bool sanctumEnraged;
+        public void SetSanctumPhase(int phase)
+        {
+            sanctumEnraged = phase > 1;
+            if (campaign != null) Refresh(campaign.State);
+        }
         [SerializeField] private int vaultFirstEncounter = 3;
-        [Tooltip("First encounter labelled Sanctum. It keeps the vault background.")]
+        [Tooltip("First encounter in the Sanctum.")]
         [SerializeField] private int sanctumFirstEncounter = 5;
 
         private Color targetColor = Color.white;
@@ -67,7 +74,9 @@ namespace Visha.Campaign
             bool inVault = state != CampaignState.Title && campaign.EncounterNumber >= vaultFirstEncounter;
             if (background != null)
             {
-                background.sprite = inVault ? vault : courtyard;
+                background.sprite = state != CampaignState.Title && campaign.EncounterNumber >= sanctumFirstEncounter && sanctum != null ? sanctum
+                    : state != CampaignState.Title && campaign.EncounterNumber == 4 && innerVault != null ? innerVault
+                    : inVault ? vault : courtyard;
                 if (state == CampaignState.InBattle && previousEncounter != campaign.EncounterNumber)
                     background.color = new Color(.3f, .34f, .36f);
             }
@@ -75,6 +84,7 @@ namespace Visha.Campaign
             bool won = state == CampaignState.Victory || state == CampaignState.DemoComplete;
             targetColor = won ? new Color(1f, .95f, .82f) : inVault ? new Color(.83f, .88f, .93f) : new Color(.94f, .91f, .83f);
             bool inSanctum = state != CampaignState.Title && campaign.EncounterNumber >= sanctumFirstEncounter;
+            if (inSanctum && !won && sanctumEnraged) targetColor = new Color(1f, .72f, .88f);
             if (screens != null) screens.SetArea(inSanctum ? "Sanctum" : inVault ? "Vault" : "Courtyard");
         }
     }

@@ -22,15 +22,15 @@ namespace Visha.Combat.Flow
         private float playerUntil, bossUntil, playerDuration, bossDuration;
         private Color bossColor;
         private int previousBossPhase;
-        private BattlePhase previousTurn = BattlePhase.Waiting;
+        private Visha.Campaign.CampaignEnvironment environment;
 
         public void Configure(CombatFlowController flow)
         {
-            if (combatFlow != null) combatFlow.OnStateUpdated -= HandleStateUpdated;
+            if (combatFlow != null) { combatFlow.OnStateUpdated -= HandleStateUpdated; combatFlow.BossAttackStarted -= HandleBossAttack; }
             combatFlow = flow;
             ResetEffects();
             if (isActiveAndEnabled && combatFlow != null)
-                combatFlow.OnStateUpdated += HandleStateUpdated;
+                { combatFlow.OnStateUpdated += HandleStateUpdated; combatFlow.BossAttackStarted += HandleBossAttack; }
         }
 
         private void OnEnable()
@@ -45,13 +45,15 @@ namespace Visha.Combat.Flow
         {
             if (blessing != null) blessing.OnBlessingTriggered -= HandleBlessingTriggered;
             if (outcome != null) outcome.OnRetry -= ResetEffects;
-            if (combatFlow != null) combatFlow.OnStateUpdated -= HandleStateUpdated;
+            if (combatFlow != null) { combatFlow.OnStateUpdated -= HandleStateUpdated; combatFlow.BossAttackStarted -= HandleBossAttack; }
             ResetEffects();
         }
 
         private void HandleStateUpdated(BattleViewState state)
         {
             if (state == null) return;
+            if (environment == null) environment = FindAnyObjectByType<Visha.Campaign.CampaignEnvironment>();
+            if (environment != null) environment.SetSanctumPhase(state.bossPhase);
             if (state.bossPhase <= 0 || state.phase == BattlePhase.Waiting ||
                 state.phase == BattlePhase.Victory || state.phase == BattlePhase.Defeat)
             {
@@ -61,11 +63,12 @@ namespace Visha.Combat.Flow
             if (previousBossPhase > state.bossPhase) ResetEffects();
             if (previousBossPhase > 0 && state.bossPhase > previousBossPhase)
                 PlayPhaseChange();
-            if (state.phase == BattlePhase.EnemyTurn && previousTurn != BattlePhase.EnemyTurn && state.incomingDamage > 0)
-                PlayBossAttack();
+
             previousBossPhase = state.bossPhase;
-            previousTurn = state.phase;
+
         }
+
+        private void HandleBossAttack(string move) => PlayBossAttack();
 
         private void HandleBlessingTriggered()
         {
@@ -87,7 +90,7 @@ namespace Visha.Combat.Flow
         public void PlayPhaseChange()
         {
             if (!isActiveAndEnabled) return;
-            StartBossGlow(phaseDuration, new Color(.55f, 1f, .72f));
+            StartBossGlow(phaseDuration, new Color(.8f, .4f, 1f));
             Play(phaseChangeClip);
         }
 
@@ -137,7 +140,7 @@ namespace Visha.Combat.Flow
         {
             playerUntil = bossUntil = 0;
             previousBossPhase = 0;
-            previousTurn = BattlePhase.Waiting;
+
             if (playerGlow != null) playerGlow.enabled = false;
             if (bossGlow != null) bossGlow.enabled = false;
         }

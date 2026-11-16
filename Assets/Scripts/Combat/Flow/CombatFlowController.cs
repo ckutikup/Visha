@@ -57,6 +57,7 @@ namespace Visha.Combat.Flow
 
         /// <summary>Fired when the view state is updated, for UI to render.</summary>
         public event Action<BattleViewState> OnStateUpdated;
+        public event Action<string> BossAttackStarted;
         public event Action<BattleAbility> OnAbilityUsed;
 
         public BattlePhase CurrentPhase => currentPhase;
@@ -290,6 +291,7 @@ namespace Visha.Combat.Flow
             }
             SetPhase(BattlePhase.EnemyTurn);
             int incoming = enemyPatternRunner.IncomingDamage;
+            if (enemyPatternRunner.BossPhase > 0 && incoming > 0) BossAttackStarted?.Invoke(enemyPatternRunner.IntentLabel);
             int predicted = fade != null ? fade.ReduceDamage(incoming) : incoming;
             if (battleHUD != null) battleHUD.SetFeedback(incoming > 0
                 ? $"{enemyPatternRunner.IntentLabel} · {predicted} damage"
