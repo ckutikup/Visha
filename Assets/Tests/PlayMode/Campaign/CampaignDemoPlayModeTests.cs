@@ -217,6 +217,29 @@ public class CampaignDemoPlayModeTests : CampaignSaveIsolation
         yield return AssertBattleAcceptsActions();
     }
     [UnityTest]
+    public IEnumerator ReturnToTitleClearsVictoryAndDefeatAudio()
+    {
+        Click("TitlePanel/StartButton");
+        yield return null;
+        var source = GameObject.Find("BattlePresentationAudio").GetComponent<AudioSource>();
+        enemyHealth.TakeDamage(999);
+        yield return null;
+        Assert.AreEqual("Victory", source.clip.name);
+        campaign.ReturnToTitle();
+        yield return null;
+        Assert.IsNull(source.clip);
+
+        campaign.EnterEncounter(0);
+        yield return null;
+        playerHealth.TakeDamage(999);
+        yield return null;
+        Assert.AreEqual("Defeat", source.clip.name);
+        campaign.ReturnToTitle();
+        yield return null;
+        Assert.IsNull(source.clip);
+    }
+
+    [UnityTest]
     public IEnumerator KillingBiteKeepsVictoryAudio_AndNextEncounterClearsIt()
     {
         Click("TitlePanel/StartButton");

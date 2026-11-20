@@ -4,7 +4,7 @@
 
 1. Open the project with Unity 6000.6.3f1.
 2. Open `Assets/Scenes/Campaign_Demo.unity`.
-3. Press Play, choose Enter the Temple, and select an available encounter on the map.
+3. Press Play, then choose Start or Continue. Use Temple Map to select an unlocked encounter.
 
 The campaign scene is already configured. `BattleUI_Demo` and the two-enemy preview are separate development scenes.
 
@@ -20,7 +20,35 @@ The campaign scene is already configured. `BattleUI_Demo` and the two-enemy prev
 
 ## Build
 
-In File > Build Profiles, select the target platform and include `Campaign_Demo` as the first scene. Save build output outside the repository. Install the matching Unity platform module if it is missing.
+The release build uses Unity 6000.6.3f1 and the `DemoBuild.BuildMac` editor method.
+It builds only `Assets/Scenes/Campaign_Demo.unity` as a windowed 1280x720 macOS
+application, so the standalone build does not include the battle or UI preview
+scenes. Install Unity's macOS Build Support module if it is missing.
+
+Close the Unity Editor, open Terminal in the project root (the folder containing
+Assets and ProjectSettings), and run the following command. Update the Unity
+executable path if the editor is installed elsewhere.
+
+```sh
+UNITY_EDITOR="/Applications/Unity/Hub/Editor/6000.6.3f1/Unity.app/Contents/MacOS/Unity"
+VISHA_BUILD_PATH="/private/tmp/VishaPresentation.app" "$UNITY_EDITOR" \
+  -batchmode -quit \
+  -projectPath "$PWD" \
+  -executeMethod Visha.Combat.Flow.EditorTools.DemoBuild.BuildMac \
+  -logFile /private/tmp/Visha-build.log
+```
+
+Launch the resulting app from Finder or run:
+
+```sh
+open "/private/tmp/VishaPresentation.app"
+```
+
+The app path above is the planned output location; no standalone app has been
+built or verified yet. Before release, launch the app outside Unity and record
+the tested macOS version, hardware architecture, display sizes, controls, audio,
+campaign progression, save, retry, and ending results here. Do not describe the
+candidate as verified until those checks pass.
 
 ## Tests
 

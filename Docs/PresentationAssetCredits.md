@@ -1,21 +1,25 @@
-# Presentation asset credits
+# Presentation asset inventory and credits
 
-This inventory lists the presentation assets included in the project. Earlier individual character sprites and the original courtyard remain available; the current campaign uses the shared atlas and dusk backdrop below.
+This inventory covers the presentation files currently in the Unity project. The
+repository history and Unity import metadata identify where the files are stored,
+but do not record a creator, upstream source, or license for the project art and
+sound files. Their provenance and redistribution terms therefore remain
+unverified; this document does not claim that they are original or attribution-free.
+Confirm those details with the contributors before making a distributable release.
 
-| Asset | Creator | Source | License | Required attribution |
-| --- | --- | --- | --- | --- |
-| Vishakanya, Temple Guardian, Guardian Warden, Vault Sentinel | Visha project team | This repository: `Assets/Art/Characters/` | Original project assets, included with the game | None |
-| Temple Courtyard | Visha project team | This repository: `Assets/Art/Environment/TempleCourtyard.png` | Original project asset, included with the game | None |
-| Poison Mark, Fade Aura, Bite Flash | Visha project team | This repository: `Assets/Art/Effects/` | Original project assets, included with the game | None |
-| Hit, Venom Strike, Serpent's Bite, Fade, Victory, Defeat | Visha project team | This repository: `Assets/Audio/` | Original synthesized project audio, included with the game | None |
+| Asset group | Project files | Creator/source and license status |
+| --- | --- | --- |
+| Character art | `Assets/Art/Characters/` (Vishakanya, Temple Guardian, Guardian Warden, Vault Sentinel, Asura, and the Temple/Courtyard atlases) | Not recorded in the repository; confirm with the contributor. |
+| Environment art | `Assets/Art/Environment/` (Temple Courtyard, Courtyard Dusk, Temple Vault, Inner Vault, Temple Sanctum) | Not recorded in the repository; confirm with the contributor. |
+| Combat effects | `Assets/Art/Effects/` (Poison Mark, Fade Aura, Bite Flash) | Not recorded in the repository; confirm with the contributor. |
+| UI art | `Assets/Art/UI/` (Diamond, Guardian Helm) | Not recorded in the repository; confirm with the contributor. |
+| Sound effects | `Assets/Audio/` (Hit, Venom Strike, Serpent's Bite, Fade, Victory, Defeat, Menu Confirm) | Not recorded in the repository; confirm with the contributor. |
+| Fonts | `Assets/Fonts/Barlow-Regular.ttf`, `Assets/Fonts/Barlow-SemiBold.ttf` | Barlow Project Authors; upstream source is recorded as `https://github.com/jpt/barlow`. The SIL Open Font License 1.1 notice is retained in `Assets/Fonts/Barlow-License.txt`; keep it with redistributed font files. |
 
-| Current character atlas | Project presentation revision | `Assets/Art/Characters/TempleCombatants.png` | Included project asset | None |
-| Current courtyard backdrop | Project presentation revision | `Assets/Art/Environment/TempleCourtyardDusk.png` | Included project asset | None |
+The temple drone is synthesized at runtime by `DemoSoundControl`; dust and ground
+shadows are drawn at runtime by the project scripts. They do not use imported
+image or audio files.
 
-MenuConfirm.wav is a short synthesized two-note interface cue. Ground shadows are procedural ellipses created at runtime.
-
-CourtyardCombatants.png supplies the current simplified character sprites. TempleCombatants.png is the earlier presentation variant.
-
-TempleVault.png is the background for the first Vault encounter. Barlow Regular and SemiBold come from https://github.com/google/fonts/tree/main/ofl/barlow; the SIL Open Font License and copyright notice are included in Assets/Fonts/Barlow-License.txt.
-
-The quiet TempleDrone ambience is synthesized at runtime from sine tones in DemoSoundControl. Dust is drawn from Unity’s white texture. These add no external media dependencies.
+The imported art and audio files remain in the project. No external creator,
+source, or license terms have been added where the repository does not provide
+them.

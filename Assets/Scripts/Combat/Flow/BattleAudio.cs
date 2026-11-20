@@ -1,4 +1,5 @@
 using UnityEngine;
+using Visha.Campaign;
 using Visha.Battle;
 using Visha.UI;
 
@@ -7,6 +8,7 @@ namespace Visha.Combat.Flow
     public sealed class BattleAudio : MonoBehaviour
     {
         [SerializeField] private AudioSource audioSource;
+        [SerializeField] private CampaignController campaign;
         [SerializeField] private CombatFlowController combatFlow;
         [SerializeField] private BattleOutcomeController outcomeController;
         [SerializeField] private Health playerHealth;
@@ -25,9 +27,11 @@ namespace Visha.Combat.Flow
 
         private void OnEnable()
         {
+            if (campaign == null) campaign = FindAnyObjectByType<CampaignController>();
             if (playerHealth != null) playerHealth.OnHealthChanged += HandlePlayerHealthChanged;
             if (enemyHealth != null) enemyHealth.OnHealthChanged += HandleEnemyHealthChanged;
             if (combatFlow != null) combatFlow.OnAbilityUsed += HandleAbilityUsed;
+            if (campaign != null) campaign.StateChanged += HandleCampaignStateChanged;
             if (outcomeController != null)
             {
                 outcomeController.OnBattleEnded += HandleBattleEnded;
@@ -53,6 +57,7 @@ namespace Visha.Combat.Flow
             if (playerHealth != null) playerHealth.OnHealthChanged -= HandlePlayerHealthChanged;
             if (enemyHealth != null) enemyHealth.OnHealthChanged -= HandleEnemyHealthChanged;
             if (combatFlow != null) combatFlow.OnAbilityUsed -= HandleAbilityUsed;
+            if (campaign != null) campaign.StateChanged -= HandleCampaignStateChanged;
             if (outcomeController != null)
             {
                 outcomeController.OnBattleEnded -= HandleBattleEnded;
@@ -70,8 +75,19 @@ namespace Visha.Combat.Flow
         private void HandleEnemyHealthChanged(int current, int maximum)
         {
             if (previousEnemyHealth >= 0 && current < previousEnemyHealth)
-                Play(combatFlow != null && combatFlow.CurrentPhase == BattlePhase.Poison ? venomStrikeClip : hitClip);
+            {
+                if (combatFlow != null && combatFlow.CurrentPhase == BattlePhase.Poison)
+                    Play(venomStrikeClip);
+                else if (combatFlow == null || combatFlow.CurrentPhase != BattlePhase.Resolving)
+                    Play(hitClip);
+            }
             previousEnemyHealth = current;
+        }
+
+        private void HandleCampaignStateChanged(CampaignState state)
+        {
+            if (state == CampaignState.Title || state == CampaignState.InBattle)
+                StopCurrentSound();
         }
 
         private void HandleAbilityUsed(BattleAbility ability)
@@ -101,13 +117,16 @@ namespace Visha.Combat.Flow
 
         private void HandleRetry()
         {
-            if (audioSource != null)
-            {
-                audioSource.Stop();
-                audioSource.clip = null;
-            }
+            StopCurrentSound();
             previousPlayerHealth = playerHealth != null ? playerHealth.CurrentHealth : -1;
             previousEnemyHealth = enemyHealth != null ? enemyHealth.CurrentHealth : -1;
+        }
+
+        private void StopCurrentSound()
+        {
+            if (audioSource == null) return;
+            audioSource.Stop();
+            audioSource.clip = null;
         }
 
         private void Play(AudioClip clip, bool isOutcome = false)
