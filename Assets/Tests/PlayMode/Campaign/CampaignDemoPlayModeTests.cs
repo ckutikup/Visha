@@ -653,6 +653,80 @@ public class CampaignDemoPlayModeTests : CampaignSaveIsolation
         Assert.AreNotEqual("Asura", enemySpriteRenderer.sprite.name, "replay must restore regular enemy art");
     }
 
+    [UnityTest]
+    public IEnumerator FullCampaignCanBeWonWithoutDirectDamage()
+    {
+        Click("TitlePanel/StartButton");
+        for (int encounter = 1; encounter <= 5; encounter++)
+        {
+            Assert.AreEqual(encounter, campaign.EncounterNumber);
+            int turn = 0;
+            bool fadedLastTurn = false;
+            while (campaign.State == CampaignState.InBattle && turn++ < 24)
+            {
+                var health = enemyHealth;
+                int target = 0;
+                if (health.IsDead)
+                {
+                    health = GameObject.Find("SecondEnemy").GetComponent<Health>();
+                    target = 1;
+                }
+                var poison = health.GetComponent<Poison>();
+                var pattern = health.GetComponent<EnemyPatternRunner>();
+                int incoming = pattern.IncomingDamage;
+                if (encounter == 4 && !enemyHealth.IsDead)
+                    incoming += GameObject.Find("SecondEnemy").GetComponent<EnemyPatternRunner>().IncomingDamage;
+                BattleAbility ability;
+                if (poison.PoisonStacks > 0 && health.CurrentHealth <= poison.PoisonStacks * 4)
+                    ability = BattleAbility.SerpentsBite;
+                else if (!fadedLastTurn && incoming >= 9)
+                    ability = BattleAbility.Fade;
+                else ability = BattleAbility.VenomStrike;
+                hud.ChooseAbility(ability);
+                if (ability != BattleAbility.Fade)
+                {
+                    if (encounter == 4) hud.SelectEnemy(target);
+                    else hud.SelectTarget();
+                }
+                fadedLastTurn = ability == BattleAbility.Fade;
+                yield return new WaitForSeconds(3.5f);
+            }
+            Assert.Greater(playerHealth.CurrentHealth, 0, $"encounter {encounter}");
+            Assert.AreEqual(encounter == 5 ? CampaignState.DemoComplete : CampaignState.Victory, campaign.State);
+            if (encounter < 5) Click("VictoryPanel/Card/NextButton");
+            yield return null;
+        }
+    }
+
+    [UnityTest]
+    public IEnumerator CampaignInterfaceShowsAbilityRulesAndTargetSelection()
+    {
+        yield return Capture("ui-title");
+        var map = campaign.GetComponent<TempleMapView>();
+        map.Open();
+        yield return Capture("ui-map");
+        map.EnterSelected();
+        yield return null;
+        hud.PreviewAbility(BattleAbility.VenomStrike);
+        Assert.IsTrue(System.Array.Exists(hud.GetComponentsInChildren<Text>(),
+            label => label.text.Contains("before enemies act")));
+        yield return Capture("ui-venom-help");
+        hud.PreviewAbility(BattleAbility.Fade);
+        Assert.IsTrue(System.Array.Exists(hud.GetComponentsInChildren<Text>(),
+            label => label.text.Contains("no consecutive uses")));
+        yield return Capture("ui-fade-help");
+        for (int i = 0; i < 3; i++)
+        {
+            enemyHealth.TakeDamage(999); yield return null;
+            campaign.NextEncounter(); yield return null;
+        }
+        hud.ChooseAbility(BattleAbility.VenomStrike);
+        yield return Capture("ui-two-enemy-targeting");
+        hud.CancelTargeting();
+        Assert.IsTrue(System.Array.Exists(hud.GetComponentsInChildren<Text>(),
+            label => label.text.Contains("max-poison Bite")));
+    }
+
     private IEnumerator UseAbility(BattleAbility ability)
     {
         hud.ChooseAbility(ability);

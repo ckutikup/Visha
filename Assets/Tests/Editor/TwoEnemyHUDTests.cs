@@ -47,6 +47,18 @@ public class TwoEnemyHUDTests
         Assert.AreEqual(0, calls); Assert.AreEqual(20, hud.SelectedEnemyId);
         hud.SelectTarget(); Assert.AreEqual(20, target); Assert.AreEqual(1, calls);
     }
+    [Test] public void CyclingWithoutAnAbilityDoesNotOfferAttackConfirmation()
+    {
+        hud.CycleEnemyTarget();
+        var feedback = (UnityEngine.UI.Text)new SerializedObject(hud)
+            .FindProperty("feedbackLabel").objectReferenceValue;
+        StringAssert.Contains("choose an ability", feedback.text);
+        hud.SelectTarget();
+        Assert.AreEqual(0, calls);
+        hud.ChooseAbility(BattleAbility.VenomStrike);
+        hud.CycleEnemyTarget();
+        StringAssert.Contains("Enter confirms", feedback.text);
+    }
     [Test] public void SnapshotsAreCopiedAndReorderingPreservesIdentity()
     {
         state.enemies[1].poison = 0;

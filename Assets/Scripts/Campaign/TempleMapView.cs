@@ -6,7 +6,7 @@ namespace Visha.Campaign
 {
     public sealed class TempleMapView : MonoBehaviour
     {
-        [SerializeField] private Sprite courtyard, vault;
+        [SerializeField] private Sprite courtyard, vault, sanctum;
         private CampaignController campaign;
         private GameObject panel;
         private Text description;
@@ -21,7 +21,7 @@ namespace Visha.Campaign
         private static readonly string[] Challenges = {
             "At the temple steps, the first guardian repeats an old oath.\nLearn to build poison, spend it with Bite, and read the next attack.",
             "Beyond the courtyard, a second guardian raises its weapon.\nIt opens with Heavy Blow. Guard with Fade or plan a poison finisher.",
-            "A broken chain lies before the sealed vault.\nSingle-enemy preview: Recover, Crush, then Shield Bash. Watch the heavy attack.",
+            "A broken chain lies before the sealed vault.\nThe Sentinel cycles through Recover, Crush and Shield Bash. Watch the heavy attack.",
             "The Vault Guardian and the Vault Sentinel defend the inner vault together.\nBoth act every round. Choose your target, and save Fade for the Sentinel's Crush.",
             "The Asura waits in the Sanctum, bound by the temple's curse.\nAt half health it Roars into a stronger second phase. Save Fade for Ruin and Cataclysm."
         };
@@ -140,20 +140,9 @@ namespace Visha.Campaign
             {
                 float x = -580 + area * 580;
                 var image = Element("Area", x, 130, 535, 290).AddComponent<Image>();
-                image.sprite = area == 0 ? courtyard : vault;
-                image.color = area == 2 ? new Color(.32f, .26f, .4f) : new Color(.7f, .75f, .72f);
+                image.sprite = area == 0 ? courtyard : area == 2 && sanctum != null ? sanctum : vault;
+                image.color = Color.white;
                 image.raycastTarget = false;
-                // A stepped roof and pillars mark the authored temple route.
-                for (int tier = 0; tier < 3; tier++)
-                {
-                    var roof = Element("TempleRoof", x, 210 + tier * 22, 120 - tier * 28, 5).AddComponent<Image>();
-                    roof.color = new Color(.83f, .7f, .43f, .5f); roof.raycastTarget = false;
-                }
-                for (int side = -1; side <= 1; side += 2)
-                {
-                    var pillar = Element("TemplePillar", x + side * 44, 166, 5, 80).AddComponent<Image>();
-                    pillar.color = new Color(.83f, .7f, .43f, .5f); pillar.raycastTarget = false;
-                }
             }
             float[] positions = { -720, -440, -140, 140, 580 };
             for (int i = 0; i < 4; i++)

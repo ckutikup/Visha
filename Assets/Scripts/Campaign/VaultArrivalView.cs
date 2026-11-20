@@ -46,7 +46,7 @@ namespace Visha.Campaign
             {
                 chapter = "II / THE VAULT"; title = "Guardian Awakening";
                 story = "The temple restores your guardian armor and awakens your dagger.\nYour first Awakening is ready.";
-                hint = "Press 4 to awaken for two actions. Bite becomes Twin Fang once, leaving 2 poison.\nLater, earn charge with maximum-poison Bite or Fade against heavy attacks.";
+                hint = "Press 4 to awaken for two actions. Bite becomes Twin Fang once, leaving 2 poison.\nLater, gain charge with maximum-poison Bite or Fade against attacks of 8+ damage.";
                 button = "Enter the Vault";
             }
             panel.transform.Find("Chapter").GetComponent<Text>().text = chapter;
@@ -79,7 +79,7 @@ namespace Visha.Campaign
             Label("Chapter", "II  /  THE VAULT", .72f,.80f,30,font,new Color(.82f,.7f,.44f));
             Label("Title", "Guardian Awakening", .56f,.70f,48,font,new Color(.91f,.9f,.8f));
             Label("Story", "The seal breaks. The temple restores your guardian armor and awakens your dagger.\nYour first Awakening is ready.", .38f,.55f,28,font,new Color(.73f,.8f,.76f));
-            Label("Hint", "Press 4 to awaken for two actions. Bite becomes Twin Fang once, leaving 2 poison.\nLater, earn charge with maximum-poison Bite or Fade against heavy attacks.", .26f,.36f,24,font,new Color(.73f,.8f,.76f));
+            Label("Hint", "Press 4 to awaken for two actions. Bite becomes Twin Fang once, leaving 2 poison.\nLater, gain charge with maximum-poison Bite or Fade against attacks of 8+ damage.", .26f,.36f,24,font,new Color(.73f,.8f,.76f));
             AddButton("Continue", "Enter the Vault", .52f,.77f, Continue,font);
             AddButton("Back", "Back", .23f,.48f, Cancel,font);
             panel.SetActive(false);

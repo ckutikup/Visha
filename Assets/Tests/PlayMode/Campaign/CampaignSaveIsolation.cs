@@ -1,23 +1,26 @@
 #if UNITY_EDITOR
 using System;
 using System.IO;
-using NUnit.Framework;
+using System.Collections;
+using UnityEngine.TestTools;
 
 public class CampaignSaveIsolation
 {
     private string previousDirectory, testDirectory;
-    [SetUp]
-    public void IsolateSave()
+    [UnitySetUp]
+    public IEnumerator IsolateSave()
     {
         previousDirectory = Environment.GetEnvironmentVariable("VISHA_SAVE_DIRECTORY");
         testDirectory = Path.Combine(Path.GetTempPath(), "visha-campaign-test-" + Guid.NewGuid());
         Environment.SetEnvironmentVariable("VISHA_SAVE_DIRECTORY", testDirectory);
+        yield return null;
     }
-    [TearDown]
-    public void RestoreSaveDirectory()
+    [UnityTearDown]
+    public IEnumerator RestoreSaveDirectory()
     {
         Environment.SetEnvironmentVariable("VISHA_SAVE_DIRECTORY", previousDirectory);
         if (Directory.Exists(testDirectory)) Directory.Delete(testDirectory, true);
+        yield return null;
     }
 }
 #endif

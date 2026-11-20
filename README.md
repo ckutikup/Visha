@@ -16,9 +16,9 @@ Enemies display their next action before you choose. In two-enemy battles, each 
 
 ## Current Progress
 
-The playable campaign includes four encounters across the Courtyard and Vault, including a two-enemy Inner Vault battle. It includes a temple map, encounter progression, retry, attack feedback and the Vault Awakening introduction.
+The campaign has five encounters across the Courtyard, Vault and Sanctum, including a two-enemy Inner Vault and the two-phase Asura boss. Completing the boss reveals the ending; cleared encounters can be replayed from the temple map.
 
-The Sanctum boss, Temple’s Blessing and final ending are in development. Final balancing and full-campaign playtesting remain in progress.
+Temple's Blessing protects Vishakanya from one lethal hit in the boss fight, leaving her at 1 HP. Retry restores it. Encounter checkpoints preserve unlocked progress between sessions; Continue restarts the saved encounter at full health, rather than restoring a turn mid-battle.
 
 ## Run the Game
 
@@ -26,7 +26,7 @@ The Sanctum boss, Temple’s Blessing and final ending are in development. Final
 2. Add the project folder in Unity Hub.
 3. Open it with **Unity 6000.6.3f1**.
 4. Open `Assets/Scenes/Campaign_Demo.unity`.
-5. Press **Play**, choose **Enter the Temple**, and select an available encounter.
+5. Press **Play**, then choose **Start Game** or **Continue**. Use **Temple Map** to replay unlocked encounters.
 
 `Campaign_Demo` is the main game scene. Other demo and preview scenes are for development.
 

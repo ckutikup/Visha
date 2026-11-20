@@ -52,7 +52,7 @@ namespace Visha.UI
             awakeningText.text=active ? $"AWAKENED · {awakeningState.awakeningActions} actions left"
                 : awakeningState.awakeningUsed ? "Awakening spent"
                 : awakeningState.awakeningCharges>=3 ? "AWAKEN  [4] · two actions"
-                : $"AWAKENING  {awakeningState.awakeningCharges}/3 · charge with Bite / heavy guard";
+                : $"AWAKENING  {awakeningState.awakeningCharges}/3 · max-poison Bite / Fade vs 8+ damage";
             awakeningButton.interactable=!active && !awakeningState.awakeningUsed && awakeningState.awakeningCharges>=3 && inputEnabled && !submitted && actorsAlive && phase==BattlePhase.PlayerTurn;
         }
     }
