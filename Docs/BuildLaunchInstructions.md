@@ -4,7 +4,7 @@
 
 1. Open the project with Unity 6000.6.3f1.
 2. Open `Assets/Scenes/Campaign_Demo.unity`.
-3. Press Play, choose Enter the Temple, and select an available encounter on the map.
+3. Press Play, then choose Start or Continue. Use Temple Map to select an unlocked encounter.
 
 The campaign scene is already configured. `BattleUI_Demo` and the two-enemy preview are separate development scenes.
 
@@ -25,14 +25,15 @@ It builds only `Assets/Scenes/Campaign_Demo.unity` as a windowed 1280x720 macOS
 application, so the standalone build does not include the battle or UI preview
 scenes. Install Unity's macOS Build Support module if it is missing.
 
-After the team approves the candidate, run this from Terminal (update the Unity
-executable path if the editor is installed elsewhere):
+Close the Unity Editor, open Terminal in the project root (the folder containing
+Assets and ProjectSettings), and run the following command. Update the Unity
+executable path if the editor is installed elsewhere.
 
 ```sh
 UNITY_EDITOR="/Applications/Unity/Hub/Editor/6000.6.3f1/Unity.app/Contents/MacOS/Unity"
 VISHA_BUILD_PATH="/private/tmp/VishaPresentation.app" "$UNITY_EDITOR" \
   -batchmode -quit \
-  -projectPath "/Users/akshataggarwal/Documents/ChatGPT/SER594 PROJECT" \
+  -projectPath "$PWD" \
   -executeMethod Visha.Combat.Flow.EditorTools.DemoBuild.BuildMac \
   -logFile /private/tmp/Visha-build.log
 ```
