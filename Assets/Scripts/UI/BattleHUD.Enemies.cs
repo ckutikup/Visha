@@ -103,7 +103,9 @@ namespace Visha.UI
             selectedEnemyId = eligible[(index + 1) % eligible.Length].targetId;
             selected = false;
             RefreshSelectedEnemy();
-            SetFeedback($"Target: {enemyName} · Enter confirms · Esc cancels");
+            SetFeedback(pendingAbility.HasValue
+                ? $"Target: {enemyName} · Enter confirms · Esc cancels"
+                : $"Target: {enemyName} · choose an ability");
             RefreshControls();
         }
         private void RefreshEnemyPanels(bool targeting)

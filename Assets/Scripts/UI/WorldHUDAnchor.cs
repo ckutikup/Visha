@@ -41,11 +41,16 @@ namespace Visha.UI
                 var parent = (RectTransform)rect.parent;
                 Vector2 half = rect.rect.size * .5f;
                 Rect bounds = parent.rect;
+                // Use the visible camera area, including when rendering at another aspect ratio.
+                Rect pixels = worldCamera.pixelRect;
+                if (RectTransformUtility.ScreenPointToLocalPointInRectangle(parent, pixels.min, uiCamera, out var lower)
+                    && RectTransformUtility.ScreenPointToLocalPointInRectangle(parent, pixels.max, uiCamera, out var upper))
+                    bounds = Rect.MinMaxRect(lower.x, lower.y, upper.x, upper.y);
                 if (headOffset > 4f && GetComponent<IntentView>() != null)
                     point = new Vector2(bounds.center.x, bounds.yMax - 190);
                 point.x = Mathf.Clamp(point.x, bounds.xMin + half.x + 24, bounds.xMax - half.x - 24);
                 point.y = Mathf.Clamp(point.y, bounds.yMin + half.y + 24, bounds.yMax - half.y - 24);
-                rect.anchoredPosition = point;
+                rect.localPosition = new Vector3(point.x, point.y, rect.localPosition.z);
             }
         }
     }

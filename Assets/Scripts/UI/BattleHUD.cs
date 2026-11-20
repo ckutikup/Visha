@@ -257,7 +257,14 @@ namespace Visha.UI
             fill.rectTransform.anchorMax = anchor;
         }
 
-        public void SetFeedback(string message) => feedbackLabel.text = message ?? string.Empty;
+        public void SetFeedback(string message)
+        {
+            feedbackLabel.resizeTextForBestFit = true;
+            feedbackLabel.resizeTextMinSize = 18;
+            feedbackLabel.resizeTextMaxSize = feedbackLabel.fontSize;
+            feedbackLabel.horizontalOverflow = HorizontalWrapMode.Wrap;
+            feedbackLabel.text = message ?? string.Empty;
+        }
         public void SelectTarget()
         {
             if (HasEnemyRoster) { SelectEnemy(selectedEnemyId); return; }
@@ -298,15 +305,15 @@ namespace Visha.UI
         {
             if (!inputEnabled || !compactAbilities || phase != BattlePhase.PlayerTurn || submitted || pendingAbility.HasValue) return;
             string message = ability == BattleAbility.VenomStrike
-                ? $"Venom Strike · +{venomStacks} poison; each stack deals {poisonDamagePerStack} damage per turn"
+                ? $"Venom Strike · +{venomStacks} poison; {poisonDamagePerStack}/stack before enemies act; stacks persist"
                 : ability == BattleAbility.SerpentsBite
                     ? poison > 0 ? $"Serpent's Bite · {poison * biteDamagePerStack} damage; consumes all poison" : "Serpent's Bite · use Venom Strike to add poison first"
-                    : fadeAvailable ? $"Fade · reduce the next enemy phase by {fadeReductionPercent}%" : "Fade is recovering · use Venom Strike or Bite first";
+                    : fadeAvailable ? $"Fade · reduce all attacks this enemy phase by {fadeReductionPercent}%; no consecutive uses" : "Fade is recovering · use Venom Strike or Bite first";
             if (HasEnemyRoster && ability == BattleAbility.SerpentsBite && poison == 0 && HasPoisonedTarget())
                 message = "Serpent’s Bite · choose an enemy with poison";
             if (ability == BattleAbility.SerpentsBite && awakeningState != null && awakeningState.twinFangReady)
                 message = poison > 0
-                    ? $"Twin Fang · {poison * biteDamagePerStack} damage; consumes poison; leaves 2 on another living enemy, otherwise this target"
+                    ? $"Twin Fang · {poison * biteDamagePerStack} damage; consumes poison; leaves 2 on another living enemy, otherwise this target if it survives"
                     : "Twin Fang · choose an enemy with poison";
             SetFeedback(message);
         }

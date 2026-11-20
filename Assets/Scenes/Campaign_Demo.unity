@@ -4360,6 +4360,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Visha.Campaign::Visha.Campaign.TempleMapView
   courtyard: {fileID: 21300000, guid: fd63ea6970d504c1287b940de2daadac, type: 3}
   vault: {fileID: 21300000, guid: e2345ed15036443708b4908eae7e0da3, type: 3}
+  sanctum: {fileID: 21300000, guid: 58f272665e229458783091dfc6fcfe1e, type: 3}
 --- !u!114 &1513577508
 MonoBehaviour:
   m_ObjectHideFlags: 0
