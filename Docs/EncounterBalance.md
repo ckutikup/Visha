@@ -7,7 +7,8 @@ Anshul's audit of the five encounters on main at 60190d5: are they understandabl
 - Data: every encounter asset, the Vault config, the patterns, and the ability values actually set in `Campaign_Demo.unity` (player 50 HP, Venom +2, poison cap 5 at 2 per stack, Bite 4 per stack, Fade 50%).
 - Telegraphs: a new EditMode test, `EncounterIntentionTests`, loads the shipped assets and checks for every enemy that what the HUD shows before each enemy turn is exactly what executes.
 - Strategies: a turn-by-turn simulation that follows `CombatFlowController` exactly, including when poison ticks, the boss phase check, Fade's rounding and cooldown, Awakening charges and Twin Fang, Routine Break, and Temple's Blessing. For each encounter it finds the best possible play, and it also runs fixed strategies a real player might use.
-- In-game playtest: still to do. Unity's editor license had expired on this machine when I ran this, so the in-editor runs, the play time and the full test run are marked unverified below.
+- In-game playtest: I played the full campaign in the editor with the new values (Campaign_Demo, from the title screen), then replayed the Inner Vault twice to check both target orders and the no-Fade loss. Results are in the playtest section below and match the simulation exactly.
+- Tests: full EditMode (317 / 317) and PlayMode (32 / 32) runs pass with these changes.
 
 ## The encounters
 
@@ -85,9 +86,36 @@ These are in other members' systems, so I haven't changed them. Each one can mak
 
 Files: the two encounter assets, `CampaignSceneSetup` (so re-running Shivani's setup keeps 34), and the tests that check the shipped values (`EncounterAssetTests`, `FiveEncounterCampaignTests`, `CampaignDemoPlayModeTests`, `FinalBossEncounterTests`). Docs: `EnemyPattern.md`, `FinalBoss.md`.
 
+## In-game playtest (new values)
+
+One full campaign in the editor, played by me (I know the patterns, so this is close to best play), no retries.
+
+| # | Encounter | Time to win | Turns | HP left | Retries | Route |
+| - | --------- | ----------- | ----- | ------- | ------- | ----- |
+| 1 | Temple Guardian | 0:54 | 4 | 42 / 50 | 0 | Venom, Fade (Heavy Blow), Venom (+1 from Routine Break), Bite |
+| 2 | Guardian Warden | 0:51 | 5 | 38 / 50 | 0 | Fade, Venom (+1), Venom, Fade, Bite |
+| 3 | Vault Sentinel | 1:16 | 5 | 34 / 50 | 0 | Awaken, Venom, Fade (Crush), Venom, Bite before the next Crush |
+| 4 | Inner Vault | 1:27 | 6 | 21 / 50 | 0 | Sentinel first: Venom, Venom, Bite; then Guardian: Venom, Fade, Venom |
+| 5 | The Asura | 1:33 | 7 | 26 / 50 | 0 | Venom, Venom, Fade (Ruin), Venom, Venom, Fade (Cleave), Bite. Blessing not needed |
+
+Whole campaign from title screen to the final victory card: about 6 minutes.
+
+Inner Vault replays:
+
+| Order | Result | Turns | HP left |
+| ----- | ------ | ----- | ------- |
+| Guardian first, Fade the Crush | Win | 6 | 13 / 50 |
+| Sentinel first, no Fade | Loss | 5 | 0 |
+
+The loss is explainable from what's on screen: the telegraphed Crush (16) went unfaded and left 13 HP, the Bite killed the Sentinel, and then the Guardian's telegraphed Heavy Blow (9) landed on 9 HP while the "Fade through this heavy attack" hint was showing. Retry was offered straight away.
+
+Also seen in the playtest:
+
+- The Awakening problem below is real in game: after pressing 4 and then Venom, the Sentinel still acted (its intent moved from Recover to Crush) and the HUD showed "1 actions left".
+- In the Asura fight the poison tick crossed 35 HP, and the shown Cursed Claw switched to Roar (0) before the boss acted, as described above.
+- Small UI notes for Charith: the Inner Vault victory card says "Vault Guardian defeated" even when the Sentinel died last, and the HUD says "1 actions left" instead of "1 action left".
+
 ## Still to verify
 
-- In-game playthrough of all five encounters with the new values: duration, turns, HP left and retries per encounter. Unverified (editor license on my machine).
-- Time against the 10 to 15 minute target: unverified. Simulated best play is 4 + 5 + 5 + 6 + 7 = 27 player turns; at a few seconds of animation per turn that's short of 10 minutes for an experienced player, so the target depends on reading, map and story screens, and retries.
+- Time against the 10 to 15 minute target: measured at about 6 minutes for an experienced player with no retries, so it's under target for someone who knows the game. A first-time player reading hints, the map and story screens, and retrying a fight or two is likely to be closer to the target, but that is unverified until the team test.
 - Unfamiliar-player test: needs the team. For each tester, record the first full campaign separately from any repeat, and per encounter note time, turns, HP left, retries, the strategy they used, and anything they said was confusing (especially Awakening).
-- Full EditMode and PlayMode test runs with these changes: pending, same license issue.
