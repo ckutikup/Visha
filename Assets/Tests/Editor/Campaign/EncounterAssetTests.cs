@@ -14,7 +14,7 @@ public class EncounterAssetTests
 
     private static readonly (string path, string name, int kind, int maxHealth)[] Expected =
     {
-        ("Assets/Data/Encounters/Encounter1_TempleGuardian.asset", "Temple Guardian", 0, 30),
+        ("Assets/Data/Encounters/Encounter1_TempleGuardian.asset", "Temple Guardian", 0, 34),
         ("Assets/Data/Encounters/Encounter2_GuardianWarden.asset", "Guardian Warden", 0, 44),
         ("Assets/Data/Encounters/Encounter3_VaultSentinel.asset", "Vault Sentinel", 1, 46)
     };

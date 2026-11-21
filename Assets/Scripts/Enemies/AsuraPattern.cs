@@ -61,7 +61,7 @@ namespace Visha.Enemies
 
         /// <summary>
         /// Health at or below which phase 2 starts (half of max health, rounded down).
-        /// With the agreed 76 max health this is 38.
+        /// With the current 70 max health this is 35.
         /// </summary>
         public static int PhaseTwoThreshold(int maxHealth)
         {
