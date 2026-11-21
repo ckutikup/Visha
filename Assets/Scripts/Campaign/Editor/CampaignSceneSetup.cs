@@ -31,7 +31,7 @@ namespace Visha.Campaign.EditorTools
         // The three encounters agreed with Anshul (see Docs/EnemyPattern.md).
         private static readonly (string file, string name, EnemyPatternRunner.PatternKind kind, int maxHealth)[] DefaultEncounters =
         {
-            ("Encounter1_TempleGuardian", "Temple Guardian", EnemyPatternRunner.PatternKind.TempleGuardian, 30),
+            ("Encounter1_TempleGuardian", "Temple Guardian", EnemyPatternRunner.PatternKind.TempleGuardian, 34),
             ("Encounter2_GuardianWarden", "Guardian Warden", EnemyPatternRunner.PatternKind.TempleGuardian, 44),
             ("Encounter3_VaultSentinel", "Vault Sentinel", EnemyPatternRunner.PatternKind.VaultSentinel, 46)
         };

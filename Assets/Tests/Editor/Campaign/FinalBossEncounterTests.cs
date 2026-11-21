@@ -17,15 +17,15 @@ public class FinalBossEncounterTests
         Assert.IsNotNull(config, $"missing {AssetPath}");
         Assert.AreEqual("The Asura", config.DisplayName);
         Assert.AreEqual(EnemyPatternRunner.PatternKind.Asura, config.Pattern);
-        Assert.AreEqual(76, config.MaxHealth);
+        Assert.AreEqual(70, config.MaxHealth, "lowered from 76 in the balance audit (Docs/EncounterBalance.md)");
         Assert.AreEqual(config.MaxHealth, config.StartingHealth, "the boss starts at full health");
         Assert.AreEqual(0, config.OpeningOffset, "the boss opens on Recover");
     }
 
     [Test]
-    public void PhaseTwoStartsAtThirtyEight()
+    public void PhaseTwoStartsAtThirtyFive()
     {
         var config = AssetDatabase.LoadAssetAtPath<EncounterConfig>(AssetPath);
-        Assert.AreEqual(38, AsuraPattern.PhaseTwoThreshold(config.MaxHealth));
+        Assert.AreEqual(35, AsuraPattern.PhaseTwoThreshold(config.MaxHealth));
     }
 }
