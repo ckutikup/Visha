@@ -23,7 +23,7 @@ namespace Visha.Campaign
             "Beyond the courtyard, a second guardian raises its weapon.\nIt opens with Heavy Blow. Guard with Fade or plan a poison finisher.",
             "A broken chain lies before the sealed vault.\nThe Sentinel cycles through Recover, Crush and Shield Bash. Watch the heavy attack.",
             "The Vault Guardian and the Vault Sentinel defend the inner vault together.\nBoth act every round. Choose your target, and save Fade for the Sentinel's Crush.",
-            "The Asura waits in the Sanctum, bound by the temple's curse.\nAt half health it Roars into a stronger second phase. Save Fade for Ruin and Cataclysm."
+            "The Asura, source of the temple's curse, waits in the Sanctum.\nAt half health it Roars into a stronger second phase. Save Fade for Ruin and Cataclysm."
         };
         private void Awake() => campaign = GetComponent<CampaignController>();
         private void OnEnable() { if (campaign != null) campaign.StateChanged += OnState; }

@@ -4282,9 +4282,9 @@ MonoBehaviour:
   view: {fileID: 535435517}
   hud: {fileID: 4906326237023900643}
   endingHeading: THE CURSE IS BROKEN
-  endingMessage: 'The Asura falls and the temple''s oath is broken. Vishakanya is free.
+  endingMessage: 'The Asura falls. His curse breaks and the bound guardians are released.
 
-    All five encounters cleared. Return to the Temple Map to replay any encounter.'
+    The temple is reclaimed. Return to the Temple Map to replay any encounter.'
 --- !u!114 &1513577504
 MonoBehaviour:
   m_ObjectHideFlags: 0

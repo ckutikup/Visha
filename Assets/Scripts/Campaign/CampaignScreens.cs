@@ -26,8 +26,8 @@ namespace Visha.Campaign
         [Tooltip("Message on the complete screen once the final encounter is won.")]
         [TextArea]
         [SerializeField] private string endingMessage =
-            "The Asura falls and the temple's oath is broken. Vishakanya is free.\n" +
-            "All five encounters cleared. Return to the Temple Map to replay any encounter.";
+            "The Asura falls. His curse breaks and the bound guardians are released.\n" +
+            "The temple is reclaimed. Return to the Temple Map to replay any encounter.";
 
         public string EndingHeading => endingHeading;
         public string EndingMessage => endingMessage;
