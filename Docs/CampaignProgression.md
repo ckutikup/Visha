@@ -20,7 +20,7 @@ CampaignController owns encounter progress and connects battle outcomes to Campa
 
 ## Checkpoints
 
-CampaignSave stores the highest cleared encounter and the encounter to resume in `campaign.json` under Application.persistentDataPath. Continue starts that encounter at full health. Individual turns are not saved. Returning to the title preserves progress; New Game requires confirmation before replacing it. Invalid or unreadable saves fall back to a fresh campaign. A write failure is shown in the title status.
+CampaignSave stores the highest cleared encounter and the encounter to resume in `campaign.json` under Application.persistentDataPath. Continue starts the furthest unlocked encounter at full health; replaying an earlier fight does not move that checkpoint backward. After completion, Replay Finale starts the Asura fight again. Individual turns are not saved. Returning to the title preserves progress; New Game requires confirmation before replacing it. Invalid or unreadable saves show a warning on the title before Start Game replaces them. Write failures are shown on result screens and in the title status; progress remains available for the current session.
 
 ## Verification
 
