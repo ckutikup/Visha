@@ -135,7 +135,7 @@ public class CombatSequencePlayModeTests : CampaignSaveIsolation
         yield return WaitForPlayerTurn();
 
         Assert.AreEqual(2, enemyPoison.PoisonStacks, "exactly one Venom Strike resolved");
-        Assert.AreEqual(26, enemy.CurrentHealth, "poison ticked once");
+        Assert.AreEqual(enemy.MaxHealth - 4, enemy.CurrentHealth, "poison ticked once");
         Assert.AreEqual(46, player.CurrentHealth, "the enemy struck once");
         Assert.AreEqual(1, playerHits);
         Assert.IsFalse(fade.IsActive, "Fade requests during the round were ignored");
@@ -160,7 +160,7 @@ public class CombatSequencePlayModeTests : CampaignSaveIsolation
         Assert.AreEqual(BattlePhase.PlayerTurn, flow.CurrentPhase);
         Assert.IsFalse(Busy);
         Assert.IsFalse(HudSubmitted, "RejectAction releases the HUD");
-        Assert.AreEqual(30, enemy.CurrentHealth);
+        Assert.AreEqual(enemy.MaxHealth, enemy.CurrentHealth);
         Assert.AreEqual(50, player.CurrentHealth, "no enemy turn was spent");
 
         // Fade, then Fade again on the next turn.
@@ -189,13 +189,13 @@ public class CombatSequencePlayModeTests : CampaignSaveIsolation
         yield return WaitForState(CampaignState.Defeat);
         Assert.AreEqual(CampaignState.Defeat, campaign.State, "Strike 4 is lethal at 4 HP");
         yield return new WaitForSeconds(1f);
-        Assert.AreEqual(26, enemy.CurrentHealth, "nothing ran after the death");
+        Assert.AreEqual(enemy.MaxHealth - 4, enemy.CurrentHealth, "nothing ran after the death");
         Assert.AreEqual("Strike", enemyPattern.IntentLabel, "pattern did not advance after the death");
 
         campaign.RetryEncounter();
         yield return null;
         Assert.AreEqual(50, player.CurrentHealth);
-        Assert.AreEqual(30, enemy.CurrentHealth);
+        Assert.AreEqual(enemy.MaxHealth, enemy.CurrentHealth);
         Assert.AreEqual(0, enemyPoison.PoisonStacks);
         Assert.AreEqual("Strike", enemyPattern.IntentLabel);
         Assert.AreEqual(BattlePhase.PlayerTurn, flow.CurrentPhase);
@@ -206,7 +206,7 @@ public class CombatSequencePlayModeTests : CampaignSaveIsolation
 
         yield return Use(BattleAbility.VenomStrike);
         Assert.AreEqual(46, player.CurrentHealth);
-        Assert.AreEqual(26, enemy.CurrentHealth);
+        Assert.AreEqual(enemy.MaxHealth - 4, enemy.CurrentHealth);
     }
 
     [UnityTest]
@@ -325,14 +325,15 @@ public class CombatSequencePlayModeTests : CampaignSaveIsolation
         };
 
         yield return Use(BattleAbility.VenomStrike);
-        Assert.AreEqual(72, enemy.CurrentHealth);
+        Assert.AreEqual(enemy.MaxHealth - 4, enemy.CurrentHealth);
         Assert.AreEqual("Cursed Claw", enemyPattern.IntentLabel);
-        enemy.TakeDamage(32);
+        int threshold = AsuraPattern.PhaseTwoThreshold(enemy.MaxHealth);
+        enemy.TakeDamage(enemy.CurrentHealth - threshold - 2);
 
         enemyTurnIntents.Clear();
         yield return Use(BattleAbility.Fade);
 
-        Assert.AreEqual(36, enemy.CurrentHealth);
+        Assert.AreEqual(threshold - 2, enemy.CurrentHealth);
         Assert.AreEqual(2, enemyPattern.BossPhase);
         Assert.AreEqual(50, player.CurrentHealth, "Roar replaced Cursed Claw; nothing landed");
         CollectionAssert.AreEqual(new[] { "Cursed Claw 5", "Roar 0" }, enemyTurnIntents,
@@ -342,7 +343,7 @@ public class CombatSequencePlayModeTests : CampaignSaveIsolation
         Assert.AreEqual(1, phaseChanges);
 
         yield return Use(BattleAbility.VenomStrike);
-        Assert.AreEqual(28, enemy.CurrentHealth);
+        Assert.AreEqual(threshold - 10, enemy.CurrentHealth);
         Assert.AreEqual(38, player.CurrentHealth);
         Assert.AreEqual("Hex", enemyPattern.IntentLabel);
         Assert.AreEqual(1, phaseChanges, "the phase changes only once");
@@ -356,12 +357,13 @@ public class CombatSequencePlayModeTests : CampaignSaveIsolation
 
         yield return Use(BattleAbility.VenomStrike);
         enemyPoison.AddStacks(3);
-        enemy.TakeDamage(14);
+        int threshold = AsuraPattern.PhaseTwoThreshold(enemy.MaxHealth);
+        enemy.TakeDamage(enemy.CurrentHealth - threshold - 20);
         enemyTurnIntents.Clear();
 
         yield return Use(BattleAbility.SerpentsBite);
 
-        Assert.AreEqual(38, enemy.CurrentHealth);
+        Assert.AreEqual(threshold, enemy.CurrentHealth);
         Assert.AreEqual(2, enemyPattern.BossPhase);
         Assert.AreEqual(50, player.CurrentHealth);
         CollectionAssert.AreEqual(new[] { "Roar 0" }, enemyTurnIntents, "Roar is shown for the whole enemy turn");
@@ -387,7 +389,7 @@ public class CombatSequencePlayModeTests : CampaignSaveIsolation
         campaign.RetryEncounter();
         yield return null;
         var view = (BattleViewState)typeof(CombatFlowController).GetField("viewState", Private).GetValue(flow);
-        Assert.AreEqual(76, enemy.CurrentHealth);
+        Assert.AreEqual(enemy.MaxHealth, enemy.CurrentHealth);
         Assert.AreEqual(0, enemyPoison.PoisonStacks);
         Assert.AreEqual(1, enemyPattern.BossPhase);
         Assert.AreEqual(1, view.bossPhase);
@@ -399,7 +401,7 @@ public class CombatSequencePlayModeTests : CampaignSaveIsolation
         yield return new WaitForSeconds(1.5f);
         Assert.AreEqual(50, player.CurrentHealth, "no callback from the lost attempt");
         yield return Use(BattleAbility.VenomStrike);
-        Assert.AreEqual(72, enemy.CurrentHealth);
+        Assert.AreEqual(enemy.MaxHealth - 4, enemy.CurrentHealth);
         Assert.AreEqual("Cursed Claw", enemyPattern.IntentLabel, "the phase 1 cycle runs again");
     }
 }
