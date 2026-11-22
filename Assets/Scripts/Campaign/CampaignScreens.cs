@@ -26,8 +26,8 @@ namespace Visha.Campaign
         [Tooltip("Message on the complete screen once the final encounter is won.")]
         [TextArea]
         [SerializeField] private string endingMessage =
-            "The Asura falls and the temple's oath is broken. Vishakanya is free.\n" +
-            "All five encounters cleared. Return to the Temple Map to replay any encounter.";
+            "The Asura falls. His curse breaks and the bound guardians are released.\n" +
+            "The temple is reclaimed. Return to the Temple Map to replay any encounter.";
 
         public string EndingHeading => endingHeading;
         public string EndingMessage => endingMessage;
@@ -94,15 +94,17 @@ namespace Visha.Campaign
             string enemy = campaign.CurrentEncounter != null ? campaign.CurrentEncounter.DisplayName : null;
 
             view.SetCheckpoint(campaign.HasCheckpoint, campaign.ResumeEncounter + 1,
-                campaign.HighestCompletedEncounter + 1, campaign.EncounterCount, campaign.SaveFailed);
+                campaign.HighestCompletedEncounter + 1, campaign.EncounterCount, campaign.SaveFailed, campaign.LoadFailed);
             switch (state)
             {
                 case CampaignState.Title: view.ShowTitle(); break;
                 case CampaignState.InBattle: view.ShowBattle(); break;
-                case CampaignState.Victory: view.ShowVictory(enemy); break;
+                case CampaignState.Victory: view.ShowVictory(campaign.EncounterNumber == 4 ? "Vault guardians" : enemy); break;
                 case CampaignState.Defeat: view.ShowDefeat(enemy); break;
                 case CampaignState.DemoComplete: ShowEnding(); break;
             }
+            if (campaign.SaveFailed && state != CampaignState.InBattle && state != CampaignState.Title)
+                view.ShowSaveWarning();
         }
 
         /// <summary>

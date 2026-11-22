@@ -42,14 +42,16 @@ namespace Visha.UI
             Refresh();
         }
 
-        public void SetCheckpoint(bool exists, int nextEncounter, int cleared, int total, bool failed)
+        public void SetCheckpoint(bool exists, int nextEncounter, int cleared, int total, bool failed, bool loadFailed = false)
         {
             hasCheckpoint = exists;
             if (newGame == null) return;
-            startButton.GetComponentInChildren<Text>().text = exists ? "Continue" : "Start Game";
+            startButton.GetComponentInChildren<Text>().text = exists ? (cleared >= total ? "Replay Finale" : "Continue") : "Start Game";
             nextButton.GetComponentInChildren<Text>().text = "Next Encounter";
             if (checkpointLabel != null)
                 checkpointLabel.text = failed ? "Progress could not be saved. Keep the game open and check storage access."
+                    : loadFailed ? "Checkpoint could not be loaded. Start Game replaces it with a fresh campaign."
+                    : exists && cleared >= total ? "Campaign complete · replay the finale or choose any encounter on the Temple Map."
                     : exists ? $"{cleared} / {total} encounters cleared · continue at encounter {nextEncounter} · saved locally"
                     : "Progress saves at encounter checkpoints. Continuing restarts the fight at full health.";
         }
