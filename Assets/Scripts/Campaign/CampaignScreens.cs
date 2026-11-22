@@ -99,7 +99,7 @@ namespace Visha.Campaign
             {
                 case CampaignState.Title: view.ShowTitle(); break;
                 case CampaignState.InBattle: view.ShowBattle(); break;
-                case CampaignState.Victory: view.ShowVictory(enemy); break;
+                case CampaignState.Victory: view.ShowVictory(campaign.EncounterNumber == 4 ? "Vault guardians" : enemy); break;
                 case CampaignState.Defeat: view.ShowDefeat(enemy); break;
                 case CampaignState.DemoComplete: ShowEnding(); break;
             }
