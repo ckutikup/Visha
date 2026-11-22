@@ -48,6 +48,7 @@ namespace Visha.Campaign
         private int resumeEncounter;
         public bool HasCheckpoint { get; private set; }
         public bool SaveFailed { get; private set; }
+        public bool LoadFailed { get; private set; }
         public int ResumeEncounter => resumeEncounter;
         private string SavePath => System.IO.Path.Combine(
             Environment.GetEnvironmentVariable("VISHA_SAVE_DIRECTORY") ?? Application.persistentDataPath,
@@ -57,15 +58,20 @@ namespace Visha.Campaign
         {
             if (!saveProgress) return;
             var saved = CampaignSave.Load(SavePath, EncounterCount);
-            if (saved == null) return;
+            if (saved == null)
+            {
+                LoadFailed = System.IO.File.Exists(SavePath);
+                return;
+            }
             HighestCompletedEncounter = saved.highestCompleted;
-            resumeEncounter = saved.resumeEncounter;
+            resumeEncounter = Mathf.Max(saved.resumeEncounter, Mathf.Min(saved.highestCompleted + 1, EncounterCount - 1));
             HasCheckpoint = true;
         }
 
         private void SaveCheckpoint()
         {
             HasCheckpoint = true;
+            LoadFailed = false;
             if (!saveProgress) return;
             SaveFailed = !new CampaignSave { highestCompleted = HighestCompletedEncounter,
                 resumeEncounter = resumeEncounter }.Write(SavePath);
@@ -235,7 +241,7 @@ namespace Visha.Campaign
 
             if (outcomeController != null) outcomeController.Retry();
             else HandleEncounterReset();
-            resumeEncounter = Progress.EncounterIndex;
+            resumeEncounter = Mathf.Max(Progress.EncounterIndex, Mathf.Min(HighestCompletedEncounter + 1, EncounterCount - 1));
             SaveCheckpoint();
         }
 

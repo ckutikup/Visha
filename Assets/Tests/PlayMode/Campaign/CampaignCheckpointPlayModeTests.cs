@@ -59,6 +59,7 @@ public class CampaignCheckpointPlayModeTests : CampaignSaveIsolation
         Assert.AreEqual(-1, campaign.HighestCompletedEncounter, reason + ": nothing may be unlocked");
         Assert.IsFalse(campaign.CanEnterEncounter(1), reason + ": encounter 2 must stay locked");
         Assert.AreEqual("Start Game", Label("TitlePanel/StartButton"), reason);
+        StringAssert.Contains("could not be loaded", Label("TitlePanel/Checkpoint"));
     }
 
     [UnityTest]
@@ -113,6 +114,7 @@ public class CampaignCheckpointPlayModeTests : CampaignSaveIsolation
         enemyHealth.TakeDamage(999);
         yield return null;
         Assert.IsTrue(campaign.SaveFailed, "the failed write is recorded");
+        StringAssert.Contains("could not be saved", Label("Feedback"));
 
         Button("VictoryPanel/Card/ReturnButton").onClick.Invoke();
         yield return null;
@@ -191,6 +193,38 @@ public class CampaignCheckpointPlayModeTests : CampaignSaveIsolation
         Assert.AreEqual(CampaignState.InBattle, campaign.State);
         Assert.AreEqual(3, campaign.EncounterNumber);
         Assert.AreEqual(1, campaign.HighestCompletedEncounter, "entering from the map keeps earlier progress");
+    }
+
+    [UnityTest]
+    public IEnumerator ReplayDoesNotReplaceTheFurthestCheckpoint()
+    {
+        WriteCheckpointFile(JsonUtility.ToJson(new CampaignSave { highestCompleted = 2, resumeEncounter = 0 }));
+        yield return LoadScene();
+        Assert.AreEqual(3, campaign.ResumeEncounter);
+        campaign.EnterEncounter(0);
+        yield return null;
+        playerHealth.TakeDamage(999);
+        yield return null;
+        campaign.ReturnToTitle();
+        yield return LoadScene();
+        Assert.AreEqual(3, campaign.ResumeEncounter);
+        Assert.AreEqual(2, campaign.HighestCompletedEncounter);
+        campaign.ContinueCampaign();
+        yield return null;
+        Assert.AreEqual(4, campaign.EncounterNumber);
+    }
+
+    [UnityTest]
+    public IEnumerator CompletedCampaignOffersReplayFinale()
+    {
+        WriteCheckpointFile(JsonUtility.ToJson(new CampaignSave { highestCompleted = 4, resumeEncounter = 4 }));
+        yield return LoadScene();
+        Assert.AreEqual("Replay Finale", Label("TitlePanel/StartButton"));
+        StringAssert.Contains("Campaign complete", Label("TitlePanel/Checkpoint"));
+        campaign.ContinueCampaign();
+        yield return null;
+        Assert.AreEqual(5, campaign.EncounterNumber);
+        Assert.AreEqual(4, campaign.HighestCompletedEncounter);
     }
 
     [UnitySetUp]

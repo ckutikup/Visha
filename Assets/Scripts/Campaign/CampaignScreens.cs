@@ -94,7 +94,7 @@ namespace Visha.Campaign
             string enemy = campaign.CurrentEncounter != null ? campaign.CurrentEncounter.DisplayName : null;
 
             view.SetCheckpoint(campaign.HasCheckpoint, campaign.ResumeEncounter + 1,
-                campaign.HighestCompletedEncounter + 1, campaign.EncounterCount, campaign.SaveFailed);
+                campaign.HighestCompletedEncounter + 1, campaign.EncounterCount, campaign.SaveFailed, campaign.LoadFailed);
             switch (state)
             {
                 case CampaignState.Title: view.ShowTitle(); break;
@@ -103,6 +103,8 @@ namespace Visha.Campaign
                 case CampaignState.Defeat: view.ShowDefeat(enemy); break;
                 case CampaignState.DemoComplete: ShowEnding(); break;
             }
+            if (campaign.SaveFailed && state != CampaignState.InBattle && state != CampaignState.Title)
+                view.ShowSaveWarning();
         }
 
         /// <summary>

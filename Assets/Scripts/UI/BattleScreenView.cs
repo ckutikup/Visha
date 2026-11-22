@@ -109,6 +109,12 @@ namespace Visha.UI
             }
         }
 
+        public void ShowSaveWarning()
+        {
+            feedbackLabel.text = "Progress could not be saved. Keep the game open until storage is available.";
+            feedbackLabel.transform.SetAsLastSibling();
+        }
+
         public void RejectNavigation(string reason)
         {
             pending = false;
