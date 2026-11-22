@@ -756,7 +756,7 @@ namespace Visha.Combat.Flow
             UpdateAppearance();
             if (sound != null) sound.PlayRoutineBreak();
             Refresh();
-            if (battleHUD != null) battleHUD.SetFeedback("Guardian Awakening · two actions · Twin Fang leaves 2 poison");
+            if (battleHUD != null) battleHUD.SetFeedback("Awakened for 2 player actions · enemies still act · Twin Fang leaves poison on a living enemy");
         }
 
         private void UpdateAppearance()
