@@ -136,7 +136,7 @@ public class FiveEncounterCampaignTests
         Assert.AreEqual(CampaignState.InBattle, campaign.State);
         Assert.AreEqual(EnemyPatternRunner.PatternKind.Asura, bossPattern.Kind);
         Assert.AreEqual("The Asura", bossPattern.EnemyName);
-        Assert.AreEqual(76, bossHealth.CurrentHealth);
+        Assert.AreEqual(70, bossHealth.CurrentHealth);
         Assert.AreEqual(0, bossPoison.PoisonStacks);
         Assert.AreEqual(1, bossPattern.BossPhase);
         Assert.AreEqual(AsuraPattern.Recover.Label, bossPattern.IntentLabel);

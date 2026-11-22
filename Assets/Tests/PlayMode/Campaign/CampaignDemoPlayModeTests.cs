@@ -166,7 +166,7 @@ public class CampaignDemoPlayModeTests : CampaignSaveIsolation
         yield return null;
         Assert.AreEqual(5, campaign.EncounterNumber);
         Assert.AreEqual("The Asura", enemyPattern.EnemyName);
-        Assert.AreEqual(76, enemyHealth.CurrentHealth);
+        Assert.AreEqual(70, enemyHealth.CurrentHealth);
         Assert.AreEqual(1, enemyPattern.BossPhase);
         Assert.IsFalse(campaign.GetComponent<VaultCampaignLink>().SecondEnemyInPlay, "the Asura fights alone");
         Assert.IsTrue(playerHealth.GetComponent<TempleBlessing>().IsAvailable, "Temple's Blessing is ready");
@@ -187,7 +187,7 @@ public class CampaignDemoPlayModeTests : CampaignSaveIsolation
         Assert.AreEqual(CampaignState.InBattle, campaign.State);
         Assert.AreEqual(1, campaign.EncounterNumber);
         Assert.AreEqual("Temple Guardian", enemyPattern.EnemyName);
-        Assert.AreEqual(30, enemyHealth.CurrentHealth);
+        Assert.AreEqual(34, enemyHealth.CurrentHealth);
         Assert.AreEqual(playerHealth.MaxHealth, playerHealth.CurrentHealth);
         yield return AssertBattleAcceptsActions();
     }

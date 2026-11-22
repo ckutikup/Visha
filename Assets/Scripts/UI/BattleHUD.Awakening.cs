@@ -49,9 +49,9 @@ namespace Visha.UI
             }
             awakeningButton.gameObject.SetActive(true);
             bool active=awakeningState.awakeningActions>0;
-            awakeningText.text=active ? $"AWAKENED · {awakeningState.awakeningActions} actions left"
+            awakeningText.text=active ? $"AWAKENED · {awakeningState.awakeningActions} player action{(awakeningState.awakeningActions == 1 ? "" : "s")} left"
                 : awakeningState.awakeningUsed ? "Awakening spent"
-                : awakeningState.awakeningCharges>=3 ? "AWAKEN  [4] · two actions"
+                : awakeningState.awakeningCharges>=3 ? "AWAKEN  [4] · lasts 2 player actions"
                 : $"AWAKENING  {awakeningState.awakeningCharges}/3 · max-poison Bite / Fade vs 8+ damage";
             awakeningButton.interactable=!active && !awakeningState.awakeningUsed && awakeningState.awakeningCharges>=3 && inputEnabled && !submitted && actorsAlive && phase==BattlePhase.PlayerTurn;
         }

@@ -8,9 +8,9 @@ Code: `AsuraPattern.cs` (moves and phase rule) and `EnemyPatternRunner` (`Patter
 
 | Value | Number |
 | --- | --- |
-| Max health | 76 (same as the concept) |
+| Max health | 70 (was 76, the concept's value; lowered in the balance audit) |
 | Starting health | full |
-| Phase 2 starts at | 38 HP or below (half of max, rounded down) |
+| Phase 2 starts at | 35 HP or below (half of max, rounded down) |
 | Player health | 50 (same as every other fight) |
 
 ## Phase 1
@@ -52,6 +52,8 @@ I simulated the fight with the combat contract v2 rules: Venom +2 stacks (cap 5)
 | Encounter 4, Inner Vault (two enemies) | 21 / 50 | dies |
 | Encounter 5, the Asura | 18 / 50, about 8 turns | dies |
 
+Update after the balance audit (Docs/EncounterBalance.md): at 76 HP the sensible non-perfect strategies only survived on 1 HP thanks to the Blessing, so max health is now 70. Perfect play leaves 26 / 50 and disciplined Fade play 12 / 50; play without Fade still needs the Blessing. The table above is the original 76 HP design.
+
 So the boss is the hardest fight in the game but still clearly winnable. The Blessing then gives one extra safety net on top. The original concept numbers (76 HP with a single 0 / 20 / 8 / 0 / 24 cycle) left only 10 / 50 with perfect play and had no second phase, so I kept the concept's health and moved the damage into two readable phases.
 
 Other values I tried:
@@ -68,7 +70,7 @@ If playtests find it too hard, lower Cataclysm first (it's the spike in phase 2)
 
 Rahul (combat flow):
 
-- Configure the boss like any other enemy: `runner.Configure(PatternKind.Asura, "The Asura")`. The encounter asset already has pattern 2 and 76 HP.
+- Configure the boss like any other enemy: `runner.Configure(PatternKind.Asura, "The Asura")`. The encounter asset has pattern 2 and 70 HP.
 - After each step that damages the boss (the player's ability, then the poison tick), call `runner.UpdateBossPhase(health.CurrentHealth, health.MaxHealth)` before the boss acts. It returns true exactly once, on the turn phase 2 starts. If the poison tick kills the boss, the boss is dead and nothing changes.
 - When it returns true, the boss's current move has already become Roar (0 damage), so that enemy phase is a free turn. Refresh the intent from `IntentLabel` / `IncomingDamage` as usual.
 - Every turn, set `viewState.bossPhase = runner.BossPhase` and `viewState.bossPhaseCount = runner.BossPhaseCount`. Both are 0 for normal enemies, so it's safe to set them for every fight.
@@ -91,7 +93,7 @@ Balaji (abilities): nothing in the boss depends on the Blessing. Poison, Bite an
 - phase 2 is stronger but keeps a free turn;
 - every attack can earn Awakening when Faded;
 - labels fit the HUD;
-- the threshold is 38 for 76 HP;
+- the threshold is half of max health (35 for the shipped 70 HP);
 - the phase changes exactly once, opens on Roar, and doesn't happen when the boss is dead;
 - the telegraph matches the executed move in phase 2;
 - retry and re-configure go back to phase 1;

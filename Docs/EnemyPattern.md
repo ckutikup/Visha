@@ -49,7 +49,7 @@ One active enemy per encounter. The player starts every encounter at full health
 
 | # | Display name    | Enemy type     | Max HP | Starting HP |
 | - | --------------- | -------------- | ------ | ----------- |
-| 1 | Temple Guardian | TempleGuardian | 30     | full        |
+| 1 | Temple Guardian | TempleGuardian | 34     | full        |
 | 2 | Guardian Warden | TempleGuardian | 44     | full        |
 | 3 | Vault Sentinel  | VaultSentinel  | 46     | full        |
 
@@ -63,11 +63,13 @@ Fade halves and can't be used twice in a row):
 | # | Best play            | Never uses Fade      |
 | - | -------------------- | -------------------- |
 | 1 | 42 / 50 HP, 4 turns  | 37 / 50 HP, 4 turns  |
-| 2 | 38 / 50 HP, 5 turns  | 33 / 50 HP, 5 turns  |
-| 3 | 34 / 50 HP, 5 turns  | 26 / 50 HP, 4 turns  |
+| 2 | 38 / 50 HP, 5 turns  | 28 / 50 HP, 5 turns  |
+| 3 | 34 / 50 HP, 5 turns  | 26 / 50 HP, 5 turns  |
 
 Each encounter is harder than the one before, and good Fade timing matters more in
-each one. These are starting values for playtesting; all of them are editable.
+each one. Encounter 1 was raised from 30 to 34 HP after the balance audit, so Bite
+saves a turn there instead of poison alone being just as good. The full audit,
+including the Inner Vault and the Asura, is in Docs/EncounterBalance.md.
 
 The encounter data itself is stored in Shivani's `EncounterConfig` assets
 (`Visha.Campaign`), which pick the enemy type through
